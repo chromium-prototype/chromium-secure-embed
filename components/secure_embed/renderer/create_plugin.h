@@ -16,6 +16,7 @@ class RenderFrame;
 
 namespace secure_embed {
 
+// Returns true if a SecureEmbedWebPlugin is created.
 bool MayCreatePlugin(
     content::RenderFrame* render_frame,
     const blink::WebPluginParams& params,
