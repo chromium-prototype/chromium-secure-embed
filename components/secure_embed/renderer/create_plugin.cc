@@ -4,7 +4,6 @@
 
 #include "components/secure_embed/renderer/create_plugin.h"
 
-#include "base/logging.h"
 #include "components/secure_embed/common/constants.h"
 #include "third_party/blink/public/web/web_plugin_params.h"
 
