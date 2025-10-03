@@ -22,3 +22,20 @@ component("renderer") {
 
   public_deps = [ "//components/secure_embed/common:mojom" ]
 }
+
+source_set("browser_tests") {
+  testonly = true
+
+  defines = [ "HAS_OUT_OF_PROC_TEST_RUNNER" ]
+
+  sources = [ "secure_embed_web_plugin_browsertest.cc" ]
+
+  deps = [
+    "//base/test:test_support",
+    "//components/secure_embed/common:mojom",
+    "//content/public/browser",
+    "//content/shell:content_shell_lib",
+    "//content/test:browsertest_support",
+    "//content/test:test_support",
+  ]
+}
