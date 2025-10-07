@@ -5,34 +5,30 @@
 #include "components/secure_embed/browser/secure_embed_host.h"
 
 #include "base/logging.h"
+#include "base/memory/ptr_util.h"
 #include "content/public/browser/render_frame_host.h"
+#include "mojo/public/cpp/bindings/self_owned_associated_receiver.h"
 
 namespace secure_embed {
 
 // static
 size_t SecureEmbedHost::instance_count_for_testing_ = 0;
 
-SecureEmbedHost::SecureEmbedHost(
-    content::RenderFrameHost* render_frame_host,
-    mojo::PendingAssociatedReceiver<mojom::SecureEmbedHost> receiver)
-    : receiver_(this, std::move(receiver)) {
+SecureEmbedHost::SecureEmbedHost(content::RenderFrameHost* render_frame_host) {
   ++instance_count_for_testing_;
-
-  // Set up disconnect handler to delete this when the mojo connection is lost
-  // (e.g., when the SecureEmbedWebPlugin is destroyed).
-  receiver_.set_disconnect_handler(base::BindOnce(
-      [](SecureEmbedHost* host) { delete host; }, base::Unretained(this)));
 }
 
 SecureEmbedHost::~SecureEmbedHost() {
   --instance_count_for_testing_;
 }
 
-void SecureEmbedHost::BindSecureEmbedHost(
+// static
+void SecureEmbedHost::Create(
     content::RenderFrameHost* render_frame_host,
-    mojo::PendingAssociatedReceiver<secure_embed::mojom::SecureEmbedHost>
-        receiver) {
-  new SecureEmbedHost(render_frame_host, std::move(receiver));
+    mojo::PendingAssociatedReceiver<mojom::SecureEmbedHost> receiver) {
+  mojo::MakeSelfOwnedAssociatedReceiver(
+      base::WrapUnique(new SecureEmbedHost(render_frame_host)),
+      std::move(receiver));
 }
 
 void SecureEmbedHost::Attach(int64_t content_id) {

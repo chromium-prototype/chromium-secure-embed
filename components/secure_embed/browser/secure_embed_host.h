@@ -7,8 +7,8 @@
 
 #include "base/component_export.h"
 #include "components/secure_embed/common/secure_embed.mojom.h"
-#include "mojo/public/cpp/bindings/associated_receiver.h"
 #include "mojo/public/cpp/bindings/pending_associated_receiver.h"
+#include "mojo/public/cpp/bindings/self_owned_associated_receiver.h"
 
 namespace content {
 class RenderFrameHost;
@@ -19,18 +19,14 @@ namespace secure_embed {
 class COMPONENT_EXPORT(SECURE_EMBED) SecureEmbedHost
     : public mojom::SecureEmbedHost {
  public:
-  SecureEmbedHost(
-      content::RenderFrameHost* render_frame_host,
-      mojo::PendingAssociatedReceiver<mojom::SecureEmbedHost> receiver);
   ~SecureEmbedHost() override;
 
   SecureEmbedHost(const SecureEmbedHost&) = delete;
   SecureEmbedHost& operator=(const SecureEmbedHost&) = delete;
 
-  static void BindSecureEmbedHost(
+  static void Create(
       content::RenderFrameHost* render_frame_host,
-      mojo::PendingAssociatedReceiver<secure_embed::mojom::SecureEmbedHost>
-          receiver);
+      mojo::PendingAssociatedReceiver<mojom::SecureEmbedHost> receiver);
 
   // mojom::SecureEmbedHost implementation:
   void Attach(int64_t content_id) override;
@@ -38,7 +34,7 @@ class COMPONENT_EXPORT(SECURE_EMBED) SecureEmbedHost
   static size_t GetInstanceCountForTesting();
 
  private:
-  mojo::AssociatedReceiver<mojom::SecureEmbedHost> receiver_;
+  explicit SecureEmbedHost(content::RenderFrameHost* render_frame_host);
 
   // Count of all alive instances for testing.
   static size_t instance_count_for_testing_;
