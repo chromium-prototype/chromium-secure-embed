@@ -38,12 +38,21 @@ class SecureEmbedHostTracker {
 
   ~SecureEmbedHostTracker() = default;
 
-  void AddMockHost(MockSecureEmbedHost* host) { mock_hosts_.push_back(host); }
+  void AddMockHost(MockSecureEmbedHost* host) {
+    mock_hosts_.push_back(host);
+    if (host_added_callback_) {
+      std::move(host_added_callback_).Run();
+    }
+  }
 
   void RemoveMockHost(MockSecureEmbedHost* host) {
     auto it = std::find(mock_hosts_.begin(), mock_hosts_.end(), host);
     CHECK(it != mock_hosts_.end());
     mock_hosts_.erase(it);
+  }
+
+  void SetHostAddedCallback(base::OnceClosure callback) {
+    host_added_callback_ = std::move(callback);
   }
 
   const std::vector<MockSecureEmbedHost*>& mock_hosts() const {
@@ -61,6 +70,7 @@ class SecureEmbedHostTracker {
 
  private:
   std::vector<MockSecureEmbedHost*> mock_hosts_;
+  base::OnceClosure host_added_callback_;
 };
 
 class MockSecureEmbedHost : public mojom::SecureEmbedHost {
@@ -188,6 +198,12 @@ class SecureEmbedRendererTest : public content::ContentBrowserTest {
         [&](int64_t content_id) { run_loop.Quit(); }));
     run_loop.Run();
     return true;
+  }
+
+  void WaitForHostAdded() {
+    base::RunLoop run_loop;
+    tracker_.SetHostAddedCallback(run_loop.QuitClosure());
+    run_loop.Run();
   }
 
   MockSecureEmbedHost* GetMockHost(size_t index) {
@@ -327,6 +343,54 @@ IN_PROC_BROWSER_TEST_F(SecureEmbedRendererTest, RemoveEmbedFromDOM) {
 
   // Verify no hosts remain
   EXPECT_EQ(0u, GetMockHostCount());
+}
+
+IN_PROC_BROWSER_TEST_F(SecureEmbedRendererTest, RemoveAndReinsertEmbed) {
+  // Verifies that removing an embed element from the DOM (while keeping it
+  // alive in JS) destroys the SecureEmbedHost connection, and re-inserting
+  // it creates a new SecureEmbedHost connection.
+  NavigateToTestUrl(kTestUrl);
+
+  ASSERT_EQ(1, CountEmbedElementsInPage());
+  ASSERT_EQ(1u, GetMockHostCount());
+
+  MockSecureEmbedHost* first_host = GetMockHost(0);
+  ASSERT_NE(nullptr, first_host);
+  ASSERT_TRUE(WaitForAttachCall(first_host));
+
+  base::RunLoop disconnect_loop;
+  bool first_host_disconnected = false;
+  first_host->SetDisconnectCallback(base::BindLambdaForTesting([&]() {
+    first_host_disconnected = true;
+    first_host = nullptr;
+    disconnect_loop.Quit();
+  }));
+
+  // Remove the embed element from the DOM but keep a JS reference to it
+  ASSERT_TRUE(content::ExecJs(web_contents(),
+                              "window.savedEmbed = document.embeds[0]; "
+                              "window.savedEmbed.remove();"));
+
+  disconnect_loop.Run();
+  EXPECT_TRUE(first_host_disconnected);
+  EXPECT_EQ(0, CountEmbedElementsInPage());
+  EXPECT_EQ(0u, GetMockHostCount());
+
+  // Re-insert the embed element back into the DOM
+  ASSERT_TRUE(content::ExecJs(web_contents(),
+                              "document.body.appendChild(window.savedEmbed);"));
+
+  EXPECT_EQ(1, CountEmbedElementsInPage());
+
+  WaitForHostAdded();
+  ASSERT_EQ(1u, GetMockHostCount());
+
+  MockSecureEmbedHost* second_host = GetMockHost(0);
+  ASSERT_NE(nullptr, second_host);
+
+  // Wait for the new host to receive the Attach call
+  ASSERT_TRUE(WaitForAttachCall(second_host));
+  EXPECT_EQ(1, second_host->attach_call_count());
 }
 
 }  // namespace secure_embed
