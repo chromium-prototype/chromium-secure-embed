@@ -52,6 +52,7 @@ class SecureEmbedHostTracker {
   }
 
   void SetHostAddedCallback(base::OnceClosure callback) {
+    DCHECK(!host_added_callback_);
     host_added_callback_ = std::move(callback);
   }
 
@@ -200,7 +201,10 @@ class SecureEmbedRendererTest : public content::ContentBrowserTest {
     return true;
   }
 
-  void WaitForHostAdded() {
+  void WaitForHostAdded(size_t expected_count) {
+    if (GetMockHostCount() >= expected_count) {
+      return;
+    }
     base::RunLoop run_loop;
     tracker_.SetHostAddedCallback(run_loop.QuitClosure());
     run_loop.Run();
@@ -292,8 +296,8 @@ IN_PROC_BROWSER_TEST_F(SecureEmbedRendererTest, PluginDestruction) {
   for (size_t i = 0; i < 3; i++) {
     MockSecureEmbedHost* host = GetMockHost(i);
     auto loop = std::make_unique<base::RunLoop>();
-    host->SetDisconnectCallback(
-        base::BindLambdaForTesting([&, i, loop_ptr = loop.get()]() {
+    host->SetDisconnectCallback(base::BindLambdaForTesting(
+        [&hosts_disconnected, i, loop_ptr = loop.get()]() {
           hosts_disconnected[i] = true;
           loop_ptr->Quit();
         }));
@@ -382,7 +386,7 @@ IN_PROC_BROWSER_TEST_F(SecureEmbedRendererTest, RemoveAndReinsertEmbed) {
 
   EXPECT_EQ(1, CountEmbedElementsInPage());
 
-  WaitForHostAdded();
+  WaitForHostAdded(1u);
   ASSERT_EQ(1u, GetMockHostCount());
 
   MockSecureEmbedHost* second_host = GetMockHost(0);
