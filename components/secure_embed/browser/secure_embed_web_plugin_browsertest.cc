@@ -15,7 +15,7 @@
 #include "content/public/test/content_browser_test.h"
 #include "content/public/test/content_browser_test_content_browser_client.h"
 #include "content/shell/browser/shell.h"
-#include "mojo/public/cpp/bindings/associated_receiver.h"
+#include "mojo/public/cpp/bindings/self_owned_associated_receiver.h"
 #include "testing/gtest/include/gtest/gtest.h"
 #include "third_party/blink/public/common/associated_interfaces/associated_interface_registry.h"
 
@@ -26,52 +26,16 @@ namespace {
 constexpr char kTestUrl[] = "/secure_embed/embed_tag.html";
 constexpr char kMultipleEmbedsUrl[] = "/secure_embed/multiple_embeds.html";
 
-class SecureEmbedHostTracker;
+class MockSecureEmbedHost;
 
-class MockSecureEmbedHost : public mojom::SecureEmbedHost {
- public:
-  explicit MockSecureEmbedHost(SecureEmbedHostTracker* tracker)
-      : tracker_(tracker) {}
-  ~MockSecureEmbedHost() override = default;
-
-  void Bind(mojo::PendingAssociatedReceiver<mojom::SecureEmbedHost> receiver);
-
-  // mojom::SecureEmbedHost implementation
-  void Attach(int64_t content_id) override {
-    attach_call_count_++;
-    last_content_id_ = content_id;
-    if (attach_callback_) {
-      std::move(attach_callback_).Run(content_id);
-    }
-  }
-
-  void SetAttachCallback(base::OnceCallback<void(int64_t)> callback) {
-    attach_callback_ = std::move(callback);
-  }
-
-  void SetDisconnectCallback(base::OnceClosure callback) {
-    disconnect_callback_ = std::move(callback);
-  }
-
-  int attach_call_count() const { return attach_call_count_; }
-  int64_t last_content_id() const { return last_content_id_; }
-  bool is_connected() const { return receiver_.is_bound(); }
-
- private:
-  raw_ptr<SecureEmbedHostTracker> tracker_;
-  mojo::AssociatedReceiver<mojom::SecureEmbedHost> receiver_{this};
-  int attach_call_count_ = 0;
-  int64_t last_content_id_ = -1;
-  base::OnceCallback<void(int64_t)> attach_callback_;
-  base::OnceClosure disconnect_callback_;
-};
-
-// Helper class to track MockSecureEmbedHost instances.
-// Note: MockSecureEmbedHost instances delete themselves on disconnect,
-// so this tracker only holds raw pointers for observation purposes.
+// Helper class for tracking MockSecureEmbedHost instances.
 class SecureEmbedHostTracker {
  public:
   SecureEmbedHostTracker() = default;
+
+  SecureEmbedHostTracker(const SecureEmbedHostTracker&) = delete;
+  SecureEmbedHostTracker& operator=(const SecureEmbedHostTracker&) = delete;
+
   ~SecureEmbedHostTracker() = default;
 
   void AddMockHost(MockSecureEmbedHost* host) { mock_hosts_.push_back(host); }
@@ -99,19 +63,50 @@ class SecureEmbedHostTracker {
   std::vector<MockSecureEmbedHost*> mock_hosts_;
 };
 
-void MockSecureEmbedHost::Bind(
-    mojo::PendingAssociatedReceiver<mojom::SecureEmbedHost> receiver) {
-  receiver_.Bind(std::move(receiver));
-  receiver_.set_disconnect_handler(base::BindOnce(
-      [](MockSecureEmbedHost* host) {
-        if (host->disconnect_callback_) {
-          std::move(host->disconnect_callback_).Run();
-        }
-        host->tracker_->RemoveMockHost(host);
-        delete host;
-      },
-      base::Unretained(this)));
-}
+class MockSecureEmbedHost : public mojom::SecureEmbedHost {
+ public:
+  explicit MockSecureEmbedHost(SecureEmbedHostTracker* tracker)
+      : tracker_(tracker) {
+    tracker_->AddMockHost(this);
+  }
+
+  ~MockSecureEmbedHost() override { tracker_->RemoveMockHost(this); }
+
+  // Called by SelfOwnedAssociatedReceiver's connection_error_handler when
+  // the mojo connection is disconnected.
+  void OnDisconnect() {
+    if (disconnect_callback_) {
+      std::move(disconnect_callback_).Run();
+    }
+  }
+
+  // mojom::SecureEmbedHost implementation
+  void Attach(int64_t content_id) override {
+    attach_call_count_++;
+    last_content_id_ = content_id;
+    if (attach_callback_) {
+      std::move(attach_callback_).Run(content_id);
+    }
+  }
+
+  void SetAttachCallback(base::OnceCallback<void(int64_t)> callback) {
+    attach_callback_ = std::move(callback);
+  }
+
+  void SetDisconnectCallback(base::OnceClosure callback) {
+    disconnect_callback_ = std::move(callback);
+  }
+
+  int attach_call_count() const { return attach_call_count_; }
+  int64_t last_content_id() const { return last_content_id_; }
+
+ private:
+  raw_ptr<SecureEmbedHostTracker> tracker_;
+  int attach_call_count_ = 0;
+  int64_t last_content_id_ = -1;
+  base::OnceCallback<void(int64_t)> attach_callback_;
+  base::OnceClosure disconnect_callback_;
+};
 
 class SecureEmbedTestContentBrowserClient
     : public content::ContentBrowserTestContentBrowserClient {
@@ -129,9 +124,19 @@ class SecureEmbedTestContentBrowserClient
                content::RenderFrameHost* render_frame_host,
                mojo::PendingAssociatedReceiver<mojom::SecureEmbedHost>
                    receiver) {
-              auto* mock_host = new MockSecureEmbedHost(tracker);
-              mock_host->Bind(std::move(receiver));
-              tracker->AddMockHost(mock_host);
+              auto mock_host = std::make_unique<MockSecureEmbedHost>(tracker);
+              auto* mock_host_ptr = mock_host.get();
+
+              // Let SelfOwnedAssociatedReceiver manage the lifetime.
+              auto receiver_ref = mojo::MakeSelfOwnedAssociatedReceiver(
+                  std::move(mock_host), std::move(receiver));
+
+              // Set up the disconnect handler to call OnDisconnect.
+              if (receiver_ref) {
+                receiver_ref->set_connection_error_handler(
+                    base::BindOnce(&MockSecureEmbedHost::OnDisconnect,
+                                   base::Unretained(mock_host_ptr)));
+              }
             },
             base::Unretained(tracker_), &render_frame_host));
   }
@@ -206,8 +211,6 @@ IN_PROC_BROWSER_TEST_F(SecureEmbedRendererTest, EmbedTagCreatesPlugin) {
   MockSecureEmbedHost* host = GetMockHost(0);
   ASSERT_NE(nullptr, host);
 
-  EXPECT_TRUE(host->is_connected());
-
   ASSERT_TRUE(WaitForAttachCall(host));
   EXPECT_EQ(1, host->attach_call_count());
 
@@ -225,7 +228,6 @@ IN_PROC_BROWSER_TEST_F(SecureEmbedRendererTest, MultipleEmbedTags) {
   for (size_t i = 0; i < 3; i++) {
     MockSecureEmbedHost* host = GetMockHost(i);
     ASSERT_NE(nullptr, host);
-    ASSERT_TRUE(host->is_connected());
     ASSERT_TRUE(WaitForAttachCall(host));
     ASSERT_EQ(1, host->attach_call_count());
     // TODO(secure-embed): Update this expectation when content_id is
@@ -245,7 +247,6 @@ IN_PROC_BROWSER_TEST_F(SecureEmbedRendererTest, PluginDestruction) {
   ASSERT_NE(nullptr, first_host);
 
   ASSERT_TRUE(WaitForAttachCall(first_host));
-  ASSERT_TRUE(first_host->is_connected());
 
   base::RunLoop disconnect_loop;
   bool first_host_disconnected = false;
@@ -268,7 +269,6 @@ IN_PROC_BROWSER_TEST_F(SecureEmbedRendererTest, PluginDestruction) {
     MockSecureEmbedHost* host = GetMockHost(i);
     ASSERT_NE(nullptr, host);
     ASSERT_TRUE(WaitForAttachCall(host));
-    EXPECT_TRUE(host->is_connected());
   }
 
   std::vector<std::unique_ptr<base::RunLoop>> disconnect_loops;
