@@ -59,7 +59,7 @@ class SecureEmbedWebPlugin : public blink::WebPlugin {
   mojo::AssociatedRemote<mojom::SecureEmbedHost> host_;
   raw_ptr<blink::WebPluginContainer> container_ = nullptr;
 
-  // The guest contents ID parsed from the `src` attribute of the embed tag.
+  // The guest contents ID parsed from the `data-content-id` attribute.
   int contents_id_ = -1;
 };
 
