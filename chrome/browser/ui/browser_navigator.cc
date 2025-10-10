@@ -530,6 +530,11 @@ std::unique_ptr<content::WebContents> CreateTargetContents(
     create_params.initially_hidden = true;
   }
 
+#if !BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_DESKTOP_ANDROID)
+  create_params.secure_embed_delegate =
+      params.browser->window()->GetSecureEmbedDelegate();
+#endif
+
 #if defined(USE_AURA)
   if (params.browser->window() && params.browser->window()->GetNativeWindow()) {
     create_params.context = params.browser->window()->GetNativeWindow();

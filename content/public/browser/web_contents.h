@@ -132,6 +132,7 @@ class RenderViewHost;
 class RenderWidgetHost;
 class RenderWidgetHostView;
 class ScreenOrientationDelegate;
+class SecureEmbedDelegate;
 class SiteInstance;
 class UnownedInnerWebContentsClient;
 class WebContentsDelegate;
@@ -231,6 +232,9 @@ class WebContents : public PageNavigator, public base::SupportsUserData {
 
     // If non-null then this WebContents will be hosted by a BrowserPlugin.
     raw_ptr<BrowserPluginGuestDelegate> guest_delegate = nullptr;
+
+    // If non-null ###
+    raw_ptr<SecureEmbedDelegate> secure_embed_delegate = nullptr;
 
     // Used to specify the location context which display the new view should
     // belong. This can be unset if not needed.

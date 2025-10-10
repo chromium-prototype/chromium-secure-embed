@@ -58,6 +58,7 @@ class AutofillBubbleHandler;
 }  // namespace autofill
 
 namespace content {
+class SecureEmbedDelegate;
 class WebContents;
 struct NativeWebKeyboardEvent;
 enum class KeyboardEventProcessingResult;
@@ -656,6 +657,9 @@ class BrowserWindow : public ui::BaseWindow {
   // fact that this is not true in some tests is a problem with the tests. See
   // https://crbug.com/360163254.
   virtual BrowserView* AsBrowserView() = 0;
+
+  // ### If the window
+  virtual content::SecureEmbedDelegate* GetSecureEmbedDelegate() = 0;
 
  protected:
   friend struct BrowserWindowDeleter;
