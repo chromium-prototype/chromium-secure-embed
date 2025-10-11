@@ -45,7 +45,7 @@ SecureEmbedWebPlugin* SecureEmbedWebPlugin::Create(
 SecureEmbedWebPlugin::SecureEmbedWebPlugin(
     mojo::AssociatedRemote<mojom::SecureEmbedHost> host,
     int contents_id)
-    : host_(std::move(host)), contents_id_(contents_id) {}
+    : contents_id_(contents_id), host_(std::move(host)) {}
 
 SecureEmbedWebPlugin::~SecureEmbedWebPlugin() = default;
 
@@ -53,14 +53,34 @@ bool SecureEmbedWebPlugin::Initialize(blink::WebPluginContainer* container) {
   container_ = container;
 
   if (host_) {
-    host_->Attach(contents_id_);
+    mojo::PendingAssociatedRemote<mojom::SecureEmbed> pending_remote;
+    receiver_.Bind(pending_remote.InitWithNewEndpointAndPassReceiver());
+    receiver_.set_disconnect_handler(
+        base::BindOnce(&SecureEmbedWebPlugin::OnSecureEmbedHostDisconnected,
+                       base::Unretained(this)));
+
+    // Pass the remote to the browser via Attach(). As of now, there is no
+    // benefit to the browser process SecureEmbedHost having a remote until
+    // after attaching. If that changes, we can revisit adding some sort of
+    // `BindSecureEmbed` or something similar.
+    host_->Attach(contents_id_, std::move(pending_remote));
   }
   return true;
 }
 
 void SecureEmbedWebPlugin::Destroy() {
+  receiver_.reset();
   host_.reset();
   delete this;
+}
+
+void SecureEmbedWebPlugin::OnSecureEmbedHostDisconnected() {
+  receiver_.reset();
+  host_.reset();
+
+  // If the browser side of the connection goes down, we're in an unexpected
+  // state and likely need to flag this plugin as broken.
+  CHECK(false);
 }
 
 blink::WebPluginContainer* SecureEmbedWebPlugin::Container() const {
@@ -113,6 +133,12 @@ void SecureEmbedWebPlugin::DidFinishLoading() {
 
 void SecureEmbedWebPlugin::DidFailLoading(const blink::WebURLError& error) {
   NOTIMPLEMENTED();
+}
+
+void SecureEmbedWebPlugin::OnAttached() {
+  // TODO(secure-embed): Here for testing only. Remove when there's a real
+  // SecureEmbed method to implement.
+  LOG(INFO) << "SecureEmbedWebPlugin::OnAttached() called";
 }
 
 }  // namespace secure_embed

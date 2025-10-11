@@ -34,7 +34,9 @@ class COMPONENT_EXPORT(SECURE_EMBED) SecureEmbedHost
   static size_t GetInstanceCountForTesting();
 
   // mojom::SecureEmbedHost implementation:
-  void Attach(int64_t content_id) override;
+  void Attach(
+      int64_t content_id,
+      mojo::PendingAssociatedRemote<mojom::SecureEmbed> secure_embed) override;
 
   // content::CrossProcessFrameConnectorBase:
   void SetView(content::RenderWidgetHostViewChildFrame* view,
@@ -103,8 +105,12 @@ class COMPONENT_EXPORT(SECURE_EMBED) SecureEmbedHost
  private:
   explicit SecureEmbedHost(content::RenderFrameHost* render_frame_host);
 
+  void OnSecureEmbedDisconnected();
+
   // Count of all alive instances for testing.
   static size_t instance_count_for_testing_;
+
+  mojo::AssociatedRemote<mojom::SecureEmbed> secure_embed_;
 };
 
 }  // namespace secure_embed
