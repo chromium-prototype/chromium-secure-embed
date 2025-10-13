@@ -5,6 +5,7 @@
 #include "components/secure_embed/renderer/secure_embed_web_plugin.h"
 
 #include "base/notimplemented.h"
+#include "base/notreached.h"
 #include "base/strings/string_number_conversions.h"
 #include "cc/paint/paint_canvas.h"
 #include "cc/paint/paint_flags.h"
@@ -80,7 +81,7 @@ void SecureEmbedWebPlugin::OnSecureEmbedHostDisconnected() {
 
   // If the browser side of the connection goes down, we're in an unexpected
   // state and likely need to flag this plugin as broken.
-  CHECK(false);
+  NOTREACHED();
 }
 
 blink::WebPluginContainer* SecureEmbedWebPlugin::Container() const {
