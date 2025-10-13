@@ -56,6 +56,9 @@ bool SecureEmbedWebPlugin::Initialize(blink::WebPluginContainer* container) {
   if (host_) {
     mojo::PendingAssociatedRemote<mojom::SecureEmbed> pending_remote =
         receiver_.BindNewEndpointAndPassRemote();
+    host_.set_disconnect_handler(
+        base::BindOnce(&SecureEmbedWebPlugin::OnSecureEmbedHostDisconnected,
+                       base::Unretained(this)));
     receiver_.set_disconnect_handler(
         base::BindOnce(&SecureEmbedWebPlugin::OnSecureEmbedHostDisconnected,
                        base::Unretained(this)));
