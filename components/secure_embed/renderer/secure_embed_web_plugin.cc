@@ -53,17 +53,17 @@ bool SecureEmbedWebPlugin::Initialize(blink::WebPluginContainer* container) {
   container_ = container;
 
   if (host_) {
-    mojo::PendingAssociatedRemote<mojom::SecureEmbed> pending_remote;
-    receiver_.Bind(pending_remote.InitWithNewEndpointAndPassReceiver());
+    mojo::PendingAssociatedRemote<mojom::SecureEmbed> pending_remote =
+        receiver_.BindNewEndpointAndPassRemote();
     receiver_.set_disconnect_handler(
         base::BindOnce(&SecureEmbedWebPlugin::OnSecureEmbedHostDisconnected,
                        base::Unretained(this)));
 
-    // Pass the remote to the browser via Attach(). As of now, there is no
-    // benefit to the browser process SecureEmbedHost having a remote until
-    // after attaching. If that changes, we can revisit adding some sort of
-    // `BindSecureEmbed` or something similar.
-    host_->Attach(contents_id_, std::move(pending_remote));
+    // Set up the SecureEmbed interface first.
+    host_->SetSecureEmbed(std::move(pending_remote));
+
+    // Then attach with the content ID.
+    host_->Attach(contents_id_);
   }
   return true;
 }

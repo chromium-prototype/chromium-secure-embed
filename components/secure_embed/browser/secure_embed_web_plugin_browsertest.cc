@@ -98,16 +98,18 @@ class MockSecureEmbedHost : public mojom::SecureEmbedHost {
   }
 
   // mojom::SecureEmbedHost implementation
-  void Attach(
-      int64_t content_id,
+  void SetSecureEmbed(
       mojo::PendingAssociatedRemote<mojom::SecureEmbed> secure_embed) override {
-    attach_call_count_++;
-    last_content_id_ = content_id;
-
     secure_embed_.Bind(std::move(secure_embed));
     secure_embed_.set_disconnect_handler(
         base::BindOnce(&MockSecureEmbedHost::OnSecureEmbedDisconnected,
                        base::Unretained(this)));
+  }
+
+  void Attach(int64_t content_id) override {
+    CHECK(secure_embed_);
+    attach_call_count_++;
+    last_content_id_ = content_id;
 
     if (attach_callback_) {
       std::move(attach_callback_).Run(content_id);

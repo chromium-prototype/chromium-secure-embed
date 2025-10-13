@@ -37,12 +37,17 @@ void SecureEmbedHost::Create(
       std::move(receiver));
 }
 
-void SecureEmbedHost::Attach(
-    int64_t content_id,
+void SecureEmbedHost::SetSecureEmbed(
     mojo::PendingAssociatedRemote<mojom::SecureEmbed> secure_embed) {
   secure_embed_.Bind(std::move(secure_embed));
   secure_embed_.set_disconnect_handler(base::BindOnce(
       &SecureEmbedHost::OnSecureEmbedDisconnected, base::Unretained(this)));
+}
+
+void SecureEmbedHost::Attach(int64_t content_id) {
+  // Should never call Attach without having a valid SecureEmbed remote already
+  // bound.
+  CHECK(secure_embed_);
 
   int guest_id = static_cast<int>(content_id);
   guest_contents::GuestContentsHandle* guest_handle =
@@ -77,8 +82,8 @@ size_t SecureEmbedHost::GetInstanceCountForTesting() {
 
 void SecureEmbedHost::OnSecureEmbedDisconnected() {
   // This will get hit when the renderer's SecureEmbedWebPlugin is destroyed. In
-  // that scenario, `this` will get destroyed next as it's lifetime is managed
-  // by a SelfOwnedAssociatedReceiver.
+  // that scenario, `this` will get destroyed next as its lifetime is managed by
+  // a SelfOwnedAssociatedReceiver.
   secure_embed_.reset();
 }
 
