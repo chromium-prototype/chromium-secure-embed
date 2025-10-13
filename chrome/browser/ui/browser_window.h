@@ -658,7 +658,10 @@ class BrowserWindow : public ui::BaseWindow {
   // https://crbug.com/360163254.
   virtual BrowserView* AsBrowserView() = 0;
 
-  // ### If the window
+  // If the browser window is going to use the secure embed functionality
+  // to embed user content inside an HTML-based UI, it should return the
+  // appropriate delegate to help the embedding here. It will be set on
+  // the WebContents for user content.
   virtual content::SecureEmbedDelegate* GetSecureEmbedDelegate() = 0;
 
  protected:

@@ -2282,7 +2282,7 @@ class CONTENT_EXPORT WebContentsImpl
   // NULL otherwise.
   std::unique_ptr<BrowserPluginGuest> browser_plugin_guest_;
 
-  // ###
+  // Helps manage being embeded with SecureEmbed.
   raw_ptr<SecureEmbedDelegate> secure_embed_delegate_;
 
   // Helper classes ------------------------------------------------------------

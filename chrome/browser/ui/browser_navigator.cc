@@ -47,6 +47,7 @@
 #include "components/no_state_prefetch/browser/no_state_prefetch_manager.h"
 #include "components/policy/core/common/policy_pref_names.h"
 #include "components/prefs/pref_service.h"
+#include "components/secure_embed/buildflags/buildflags.h"
 #include "content/public/browser/browser_url_handler.h"
 #include "content/public/browser/navigation_entry.h"
 #include "content/public/browser/picture_in_picture_window_controller.h"
@@ -530,7 +531,8 @@ std::unique_ptr<content::WebContents> CreateTargetContents(
     create_params.initially_hidden = true;
   }
 
-#if !BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_DESKTOP_ANDROID)
+#if BUILDFLAG(ENABLE_SECURE_EMBED) && \
+    (!BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_DESKTOP_ANDROID))
   create_params.secure_embed_delegate =
       params.browser->window()->GetSecureEmbedDelegate();
 #endif

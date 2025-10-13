@@ -171,11 +171,6 @@ void WebUIBrowserPageHandler::GetGuestIdForTabId(
     mojo::ReportBadMessage("Tab has no contents");
     return;
   }
-  LOG(ERROR) << "Page WebContents:" << tab_contents;
-  if (controller_) {
-    LOG(ERROR) << "UI WebContents:"
-               << controller_->browser_window()->GetUIWebContents();
-  }
 
   // The RenderFrameHost takes ownership of this object via the DocumentService.
   new WebUIBrowserGuestHandler(render_frame_host(), std::move(receiver),

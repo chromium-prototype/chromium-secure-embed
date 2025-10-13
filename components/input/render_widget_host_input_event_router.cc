@@ -584,7 +584,6 @@ RenderWidgetTargetResult RenderWidgetHostInputEventRouter::FindViewAtLocation(
   DCHECK_GT(device_scale_factor, 0.0f);
   gfx::PointF point_in_pixels =
       gfx::ConvertPointToPixels(point, device_scale_factor);
-  LOG(ERROR) << query->PrintHitTestData();
   viz::Target target = query->FindTargetForLocationStartingFrom(
       source, point_in_pixels, root_view->GetFrameSinkId());
   frame_sink_id = target.frame_sink_id;
@@ -606,7 +605,6 @@ RenderWidgetTargetResult RenderWidgetHostInputEventRouter::FindViewAtLocation(
     query_renderer = true;
 
   auto* view = FindViewFromFrameSinkId(frame_sink_id);
-  LOG(ERROR) << "Got ID:" << frame_sink_id << " corresponing view:" << view;
   // Send the event to |root_view| if |view| is not in |root_view|'s sub-tree
   // anymore.
   if (!view) {
@@ -1545,7 +1543,6 @@ void RenderWidgetHostInputEventRouter::StopFling() {
 void RenderWidgetHostInputEventRouter::AddFrameSinkIdOwner(
     const viz::FrameSinkId& id,
     RenderWidgetHostViewInput* owner) {
-  LOG(ERROR) << "AddFrameSinkIdOwner:" << id << " " << owner;
   DCHECK(owner_map_.find(id) == owner_map_.end());
   // We want to be notified if the owner is destroyed so we can remove it from
   // our map.
@@ -1555,7 +1552,6 @@ void RenderWidgetHostInputEventRouter::AddFrameSinkIdOwner(
 
 void RenderWidgetHostInputEventRouter::RemoveFrameSinkIdOwner(
     const viz::FrameSinkId& id) {
-  LOG(ERROR) << "RemoveFrameSinkIdOwner:" << id;
   auto it_to_remove = owner_map_.find(id);
   if (it_to_remove != owner_map_.end()) {
     // If we remove a view from the observer list, we need to be sure to do a

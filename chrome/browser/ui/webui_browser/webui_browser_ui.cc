@@ -86,9 +86,6 @@ WebUIBrowserUI::WebUIBrowserUI(content::WebUI* web_ui)
       web_ui->GetWebContents()->GetBrowserContext(),
       chrome::kChromeUIWebuiBrowserHost);
 
-  source->OverrideContentSecurityPolicy(
-      network::mojom::CSPDirectiveName::ObjectSrc, "object-src about://blank;");
-
   // Add required resources.
   webui::SetupWebUIDataSource(source, kWebuiBrowserResources,
                               IDR_WEBUI_BROWSER_WEBUI_BROWSER_HTML);
