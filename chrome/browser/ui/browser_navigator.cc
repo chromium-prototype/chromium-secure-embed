@@ -531,8 +531,7 @@ std::unique_ptr<content::WebContents> CreateTargetContents(
     create_params.initially_hidden = true;
   }
 
-#if BUILDFLAG(ENABLE_SECURE_EMBED) && \
-    (!BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_DESKTOP_ANDROID))
+#if BUILDFLAG(ENABLE_SECURE_EMBED)
   create_params.secure_embed_delegate =
       params.browser->window()->GetSecureEmbedDelegate();
 #endif

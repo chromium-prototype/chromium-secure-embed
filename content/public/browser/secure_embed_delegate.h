@@ -14,7 +14,7 @@ namespace content {
 // Implementations of this class are passed to WebContents that are going to be
 // embedded via SecureEmebed, to help them communicate with their embedder.
 //
-// TODO(morlovich): If this remains this simple, we may want to replace it
+// TODO(secure-embed): If this remains this simple, we may want to replace it
 // with just passing a WebContents*.
 class CONTENT_EXPORT SecureEmbedDelegate {
  public:
