@@ -12,6 +12,10 @@
 #include "mojo/public/cpp/bindings/pending_associated_receiver.h"
 #include "mojo/public/cpp/bindings/self_owned_associated_receiver.h"
 
+namespace input {
+class RenderWidgetHostViewComposite;
+}  // namespace input
+
 namespace content {
 class RenderFrameHost;
 }  // namespace content
@@ -41,8 +45,10 @@ class COMPONENT_EXPORT(SECURE_EMBED) SecureEmbedHost
   // content::CrossProcessFrameConnectorBase:
   void SetView(content::RenderWidgetHostViewChildFrame* view,
                bool allow_paint_holding) override;
-  content::RenderWidgetHostViewBase* GetParentRenderWidgetHostView() override;
-  content::RenderWidgetHostViewBase* GetRootRenderWidgetHostView() override;
+  content::RenderFrameHost* GetChildRenderFrameHost() const override;
+  input::RenderWidgetHostViewComposite* GetParentRenderWidgetHostView()
+      override;
+  input::RenderWidgetHostViewComposite* GetRootRenderWidgetHostView() override;
   void RenderProcessGone() override;
   void FirstSurfaceActivation(const viz::SurfaceInfo& surface_info) override;
   void SendIntrinsicSizingInfoToParent(
@@ -109,6 +115,8 @@ class COMPONENT_EXPORT(SECURE_EMBED) SecureEmbedHost
 
   // Count of all alive instances for testing.
   static size_t instance_count_for_testing_;
+
+  raw_ptr<content::RenderFrameHost> render_frame_host_;
 
   mojo::AssociatedRemote<mojom::SecureEmbed> secure_embed_;
 };

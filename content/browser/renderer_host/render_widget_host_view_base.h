@@ -23,7 +23,7 @@
 #include "build/build_config.h"
 #include "components/input/event_with_latency_info.h"
 #include "components/input/render_input_router.h"
-#include "components/input/render_widget_host_view_input.h"
+#include "components/input/render_widget_host_view_composite.h"
 #include "components/viz/common/hit_test/hit_test_query.h"
 #include "components/viz/common/surfaces/scoped_surface_id_allocator.h"
 #include "components/viz/common/surfaces/surface_id.h"
@@ -31,7 +31,6 @@
 #include "content/common/content_export.h"
 #include "content/public/browser/render_frame_metadata_provider.h"
 #include "content/public/browser/render_widget_host.h"
-#include "content/public/browser/render_widget_host_view.h"
 #include "content/public/common/page_visibility_state.h"
 #include "content/public/common/widget_type.h"
 #include "services/device/public/mojom/screen_orientation_lock_types.mojom.h"
@@ -82,8 +81,7 @@ class SyntheticGestureTarget;
 
 // Basic implementation shared by concrete RenderWidgetHostView subclasses.
 class CONTENT_EXPORT RenderWidgetHostViewBase
-    : public RenderWidgetHostView,
-      public input::RenderWidgetHostViewInput {
+    : public input::RenderWidgetHostViewComposite {
  public:
   // The TooltipObserver is used in browser tests only.
   class CONTENT_EXPORT TooltipObserver {
@@ -381,17 +379,6 @@ class CONTENT_EXPORT RenderWidgetHostViewBase
   // Tells the View to destroy itself.
   virtual void Destroy();
 
-  // Updates the tooltip text and its position and displays the requested
-  // tooltip on the screen. The |bounds| parameter corresponds to the bounds of
-  // the renderer-side element (in widget-relative DIPS) on which the tooltip
-  // should appear to be anchored.
-  virtual void UpdateTooltipFromKeyboard(const std::u16string& tooltip_text,
-                                         const gfx::Rect& bounds) {}
-
-  // Hides tooltips that are still visible and were triggered from a keypress.
-  // Doesn't impact tooltips that were triggered from the cursor.
-  virtual void ClearKeyboardTriggeredTooltip() {}
-
   // Gets the bounds of the top-level window, in screen coordinates.
   virtual gfx::Rect GetBoundsInRootWindow() = 0;
 
@@ -455,9 +442,6 @@ class CONTENT_EXPORT RenderWidgetHostViewBase
   // This only returns non-null on root view on Android.
   virtual TouchSelectionControllerInputObserver*
   GetTouchSelectionControllerInputObserver();
-
-  virtual RenderWidgetHost::InputEventObserver*
-  GetInputTransferHandlerObserver();
 
   // Disable the DisplayFeature emulation (if used) and restore the
   // DisplayFeature of the device (if there is).

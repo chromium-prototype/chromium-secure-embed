@@ -116,6 +116,10 @@ void CrossProcessFrameConnector::SetView(RenderWidgetHostViewChildFrame* view,
   }
 }
 
+RenderFrameHost* CrossProcessFrameConnector::GetChildRenderFrameHost() const {
+  return current_child_frame_host();
+}
+
 void CrossProcessFrameConnector::RenderProcessGone() {
   OPTIONAL_TRACE_EVENT1("content",
                         "CrossProcessFrameConnector::RenderProcessGone",

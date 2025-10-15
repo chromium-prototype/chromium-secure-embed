@@ -8,6 +8,7 @@
 #include "base/memory/ptr_util.h"
 #include "base/no_destructor.h"
 #include "components/guest_contents/browser/guest_contents_handle.h"
+#include "components/input/render_widget_host_view_composite.h"
 #include "content/public/browser/cross_process_frame_connector_base.h"
 #include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/web_contents.h"
@@ -20,7 +21,8 @@ namespace secure_embed {
 // static
 size_t SecureEmbedHost::instance_count_for_testing_ = 0;
 
-SecureEmbedHost::SecureEmbedHost(content::RenderFrameHost* render_frame_host) {
+SecureEmbedHost::SecureEmbedHost(content::RenderFrameHost* render_frame_host)
+    : render_frame_host_(render_frame_host) {
   ++instance_count_for_testing_;
 }
 
@@ -92,13 +94,17 @@ void SecureEmbedHost::SetView(content::RenderWidgetHostViewChildFrame* view,
   NOTIMPLEMENTED();
 }
 
-content::RenderWidgetHostViewBase*
+content::RenderFrameHost* SecureEmbedHost::GetChildRenderFrameHost() const {
+  return render_frame_host_;
+}
+
+input::RenderWidgetHostViewComposite*
 SecureEmbedHost::GetParentRenderWidgetHostView() {
   NOTIMPLEMENTED();
   return nullptr;
 }
 
-content::RenderWidgetHostViewBase*
+input::RenderWidgetHostViewComposite*
 SecureEmbedHost::GetRootRenderWidgetHostView() {
   NOTIMPLEMENTED();
   return nullptr;

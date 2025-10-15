@@ -22,15 +22,19 @@
 
 namespace cc {
 class RenderFrameMetadata;
-}
+}  // namespace cc
 
 namespace blink {
 struct FrameVisualProperties;
 }  // namespace blink
 
+namespace input {
+class RenderWidgetHostViewComposite;
+}  // namespace input
+
 namespace ui {
 class Cursor;
-}
+}  // namespace ui
 
 namespace viz {
 class SurfaceInfo;
@@ -38,7 +42,7 @@ class SurfaceInfo;
 
 namespace content {
 
-class RenderWidgetHostViewBase;
+class RenderFrameHost;
 class RenderWidgetHostViewChildFrame;
 
 // CrossProcessFrameConnectorBase allows CrossProcessFrameConnector and
@@ -101,11 +105,18 @@ class CONTENT_EXPORT CrossProcessFrameConnectorBase
   virtual void SetView(RenderWidgetHostViewChildFrame* view,
                        bool allow_paint_holding) = 0;
 
+  // Gets the current RenderFrameHost for the child frame's FrameTreeNode. This
+  // corresponds to B2 in the class-level comment above for
+  // CrossProcessFrameConnector.
+  virtual RenderFrameHost* GetChildRenderFrameHost() const = 0;
+
   // Returns the parent RenderWidgetHostView or nullptr if it doesn't have one.
-  virtual RenderWidgetHostViewBase* GetParentRenderWidgetHostView() = 0;
+  virtual input::RenderWidgetHostViewComposite*
+  GetParentRenderWidgetHostView() = 0;
 
   // Returns the view for the top-level frame under the same WebContents.
-  virtual RenderWidgetHostViewBase* GetRootRenderWidgetHostView() = 0;
+  virtual input::RenderWidgetHostViewComposite*
+  GetRootRenderWidgetHostView() = 0;
 
   // Notify the frame connector that the renderer process has terminated.
   virtual void RenderProcessGone() = 0;
@@ -139,7 +150,7 @@ class CONTENT_EXPORT CrossProcessFrameConnectorBase
   // Cause the root RenderWidgetHostView to become focused.
   virtual void FocusRootView() = 0;
 
-  // Locks the mouse pointer, if |request_unadjusted_movement_| is true, try
+  // Locks the mouse pointer, if `request_unadjusted_movement` is true, try
   // setting the unadjusted movement mode. Returns true if mouse pointer is
   // locked.
   virtual blink::mojom::PointerLockResult LockPointer(
@@ -165,7 +176,7 @@ class CONTENT_EXPORT CrossProcessFrameConnectorBase
   virtual double GetCssZoomFactor() const = 0;
 
   // Informs the parent the child will enter auto-resize mode, automatically
-  // resizing itself to the provided |min_size| and |max_size| constraints.
+  // resizing itself to the provided `min_size` and `max_size` constraints.
   virtual void EnableAutoResize(const gfx::Size& min_size,
                                 const gfx::Size& max_size) = 0;
 
@@ -211,18 +222,17 @@ class CONTENT_EXPORT CrossProcessFrameConnectorBase
   virtual void SetVisibilityForChildViews(bool visible) const = 0;
 
   // Called to resize the child renderer's CompositorFrame.
-  // |local_frame_size| is in pixels if zoom-for-dsf is enabled, and in DIP
+  // `local_frame_size` is in pixels if zoom-for-dsf is enabled, and in DIP
   // if not.
   virtual void SetLocalFrameSize(const gfx::Size& local_frame_size) = 0;
 
-  // Called to resize the child renderer. |rect_in_parent_view| is in physical
+  // Called to resize the child renderer. `rect_in_parent_view` is in physical
   // pixels.
   virtual void SetRectInParentView(const gfx::Rect& rect_in_parent_view) = 0;
 
   virtual void SetIsInert(bool inert) = 0;
 
-  // Handlers for messages received from the parent frame called
-  // from RenderFrameProxyHost to be sent to |view_|.
+  // Handlers for messages received from the parent frame to be sent to `view_`.
   virtual void OnSetInheritedEffectiveTouchAction(cc::TouchAction) = 0;
   virtual void OnVisibilityChanged(
       blink::mojom::FrameVisibility visibility) = 0;
@@ -234,7 +244,7 @@ class CONTENT_EXPORT CrossProcessFrameConnectorBase
       const blink::mojom::ViewportIntersectionState& intersection_state,
       const std::optional<blink::FrameVisualProperties>& visual_properties) = 0;
 
-  // Returns whether the child widget is actually visible to the user.  This is
+  // Returns whether the child widget is actually visible to the user. This is
   // different from the IsHidden override, and takes into account viewport
   // intersection as well as the visibility of the RenderFrameHostDelegate.
   virtual bool IsVisible() = 0;

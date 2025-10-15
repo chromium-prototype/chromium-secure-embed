@@ -11,6 +11,8 @@
 #include "base/memory/raw_ptr.h"
 #include "cc/input/touch_action.h"
 #include "components/input/child_frame_input_helper.h"
+#include "components/input/render_widget_host_view_composite.h"
+#include "content/browser/renderer_host/render_widget_host_view_base.h"
 #include "content/common/content_export.h"
 #include "content/public/browser/cross_process_frame_connector_base.h"
 #include "content/public/browser/visibility.h"
@@ -46,7 +48,6 @@ class SurfaceInfo;
 namespace content {
 class RenderFrameHostImpl;
 class RenderFrameProxyHost;
-class RenderWidgetHostViewBase;
 class RenderWidgetHostViewChildFrame;
 
 // CrossProcessFrameConnector provides the platform view abstraction for
@@ -104,6 +105,7 @@ class CONTENT_EXPORT CrossProcessFrameConnector
 
   void SetView(RenderWidgetHostViewChildFrame* view,
                bool allow_paint_holding) override;
+  RenderFrameHost* GetChildRenderFrameHost() const override;
 
   // Returns the parent RenderWidgetHostView or nullptr if it doesn't have one.
   RenderWidgetHostViewBase* GetParentRenderWidgetHostView() override;

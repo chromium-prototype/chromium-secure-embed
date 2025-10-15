@@ -144,7 +144,8 @@ void RenderWidgetHostViewChildFrame::SetFrameConnector(
     return;
 
   RenderWidgetHostViewBase* parent_view =
-      frame_connector_->GetParentRenderWidgetHostView();
+      static_cast<RenderWidgetHostViewBase*>(
+          frame_connector_->GetParentRenderWidgetHostView());
 
   if (parent_view) {
     DCHECK(parent_view->GetFrameSinkId().is_valid());
@@ -438,7 +439,8 @@ void RenderWidgetHostViewChildFrame::RequestInputBackForDragAndDrop(
 #endif
 
 RenderWidgetHostViewBase* RenderWidgetHostViewChildFrame::GetRootView() {
-  return frame_connector_ ? frame_connector_->GetRootRenderWidgetHostView()
+  return frame_connector_ ? static_cast<RenderWidgetHostViewBase*>(
+                                frame_connector_->GetRootRenderWidgetHostView())
                           : nullptr;
 }
 
@@ -555,7 +557,8 @@ void RenderWidgetHostViewChildFrame::ClearKeyboardTriggeredTooltip() {
 RenderWidgetHostViewBase* RenderWidgetHostViewChildFrame::GetParentViewInput() {
   if (!frame_connector_)
     return nullptr;
-  return frame_connector_->GetParentRenderWidgetHostView();
+  return static_cast<RenderWidgetHostViewBase*>(
+      frame_connector_->GetParentRenderWidgetHostView());
 }
 
 void RenderWidgetHostViewChildFrame::RegisterFrameSinkId() {
@@ -674,7 +677,8 @@ gfx::Rect RenderWidgetHostViewChildFrame::GetBoundsInRootWindow() {
   gfx::Rect rect;
   if (frame_connector_) {
     RenderWidgetHostViewBase* root_view =
-        frame_connector_->GetRootRenderWidgetHostView();
+        static_cast<RenderWidgetHostViewBase*>(
+            frame_connector_->GetRootRenderWidgetHostView());
 
     // The root_view can be null in tests when using a TestWebContents.
     if (root_view)
@@ -776,7 +780,8 @@ void RenderWidgetHostViewChildFrame::PreProcessTouchEvent(
 viz::FrameSinkId RenderWidgetHostViewChildFrame::GetRootFrameSinkId() {
   if (frame_connector_) {
     RenderWidgetHostViewBase* root_view =
-        frame_connector_->GetRootRenderWidgetHostView();
+        static_cast<RenderWidgetHostViewBase*>(
+            frame_connector_->GetRootRenderWidgetHostView());
 
     // The root_view can be null in tests when using a TestWebContents.
     if (root_view)
@@ -1006,7 +1011,8 @@ bool RenderWidgetHostViewChildFrame::GetTextRange(gfx::Range* range) const {
 
 RenderWidgetHostViewBase*
 RenderWidgetHostViewChildFrame::GetRootRenderWidgetHostView() const {
-  return frame_connector_ ? frame_connector_->GetRootRenderWidgetHostView()
+  return frame_connector_ ? static_cast<RenderWidgetHostViewBase*>(
+                                frame_connector_->GetRootRenderWidgetHostView())
                           : nullptr;
 }
 
