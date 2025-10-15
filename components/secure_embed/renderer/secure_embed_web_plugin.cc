@@ -51,11 +51,7 @@ SecureEmbedWebPlugin::~SecureEmbedWebPlugin() = default;
 bool SecureEmbedWebPlugin::Initialize(blink::WebPluginContainer* container) {
   container_ = container;
 
-  // Create a solid color layer for compositing
-  layer_ = cc::SolidColorLayer::Create();
-  layer_->SetBackgroundColor(SkColors::kRed);
-  layer_->SetIsDrawable(true);
-  container_->SetCcLayer(layer_.get());
+  EnsurePlaceholderLayer();
 
   if (host_) {
     mojo::PendingAssociatedRemote<mojom::SecureEmbed> pending_remote =
@@ -77,10 +73,11 @@ bool SecureEmbedWebPlugin::Initialize(blink::WebPluginContainer* container) {
 }
 
 void SecureEmbedWebPlugin::Destroy() {
-  if (container_ && layer_) {
+  if (container_) {
     container_->SetCcLayer(nullptr);
   }
-  layer_ = nullptr;
+  placeholder_layer_ = nullptr;
+  surface_layer_ = nullptr;
 
   receiver_.reset();
   host_.reset();
@@ -158,6 +155,44 @@ void SecureEmbedWebPlugin::OnAttached() {
   // TODO(secure-embed): Here for testing only. Remove when there's a real
   // SecureEmbed method to implement.
   LOG(INFO) << "SecureEmbedWebPlugin::OnAttached() called";
+}
+
+void SecureEmbedWebPlugin::SetSurfaceId(const viz::SurfaceId& surface_id) {
+  if (surface_id_ == surface_id) {
+    return;
+  }
+
+  if (placeholder_layer_) {
+    placeholder_layer_ = nullptr;
+  }
+  EnsureSurfaceLayer();
+  surface_id_ = surface_id;
+  surface_layer_->SetSurfaceId(surface_id_,
+                               cc::DeadlinePolicy::UseDefaultDeadline());
+  container_->ScheduleAnimation();
+}
+
+void SecureEmbedWebPlugin::EnsurePlaceholderLayer() {
+  CHECK(surface_layer_ == nullptr);
+  if (!placeholder_layer_) {
+    placeholder_layer_ = cc::SolidColorLayer::Create();
+    placeholder_layer_->SetBackgroundColor(SkColors::kRed);
+    // TODO(secure-embed): Set proper properties on the layer instead of
+    // assuming it's drawable.
+    placeholder_layer_->SetIsDrawable(true);
+    container_->SetCcLayer(placeholder_layer_.get());
+  }
+}
+
+void SecureEmbedWebPlugin::EnsureSurfaceLayer() {
+  CHECK(placeholder_layer_ == nullptr);
+  if (!surface_layer_) {
+    surface_layer_ = cc::SurfaceLayer::Create();
+    // TODO(secure-embed): Set proper properties on the layer instead of
+    // assuming it's drawable.
+    surface_layer_->SetIsDrawable(true);
+    container_->SetCcLayer(surface_layer_.get());
+  }
 }
 
 }  // namespace secure_embed

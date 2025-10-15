@@ -4,22 +4,43 @@
 
 #include <set>
 
+#include "base/command_line.h"
+#include "base/containers/flat_map.h"
 #include "base/memory/raw_ptr.h"
 #include "base/run_loop.h"
 #include "base/strings/stringprintf.h"
 #include "base/strings/utf_string_conversions.h"
 #include "base/test/bind.h"
+#include "base/test/run_until.h"
 #include "components/secure_embed/browser/secure_embed_host.h"
 #include "components/secure_embed/common/secure_embed.mojom.h"
+#include "components/viz/common/quads/compositor_frame.h"
+#include "components/viz/common/quads/compositor_render_pass.h"
+#include "components/viz/common/quads/shared_quad_state.h"
+#include "components/viz/common/quads/solid_color_draw_quad.h"
+#include "components/viz/common/surfaces/local_surface_id.h"
+#include "components/viz/common/surfaces/parent_local_surface_id_allocator.h"
+#include "components/viz/common/surfaces/surface_id.h"
+#include "components/viz/host/host_frame_sink_manager.h"
+#include "components/viz/test/mock_compositor_frame_sink_client.h"
 #include "content/public/browser/render_frame_host.h"
+#include "content/public/browser/render_widget_host_view.h"
+#include "content/public/browser/web_contents.h"
 #include "content/public/test/browser_test.h"
 #include "content/public/test/browser_test_utils.h"
 #include "content/public/test/content_browser_test.h"
 #include "content/public/test/content_browser_test_content_browser_client.h"
+#include "content/public/test/test_surface_utils.h"
 #include "content/shell/browser/shell.h"
 #include "mojo/public/cpp/bindings/self_owned_associated_receiver.h"
+#include "services/viz/public/mojom/compositing/compositor_frame_sink.mojom.h"
 #include "testing/gtest/include/gtest/gtest.h"
 #include "third_party/blink/public/common/associated_interfaces/associated_interface_registry.h"
+#include "third_party/skia/include/core/SkBitmap.h"
+#include "third_party/skia/include/core/SkColor.h"
+#include "ui/gfx/geometry/rect.h"
+#include "ui/gfx/geometry/size.h"
+#include "ui/gfx/geometry/transform.h"
 
 namespace secure_embed {
 
@@ -124,6 +145,10 @@ class MockSecureEmbedHost : public mojom::SecureEmbedHost {
 
   void SetDisconnectCallback(base::OnceClosure callback) {
     disconnect_callback_ = std::move(callback);
+  }
+
+  mojo::AssociatedRemote<mojom::SecureEmbed>& secure_embed() {
+    return secure_embed_;
   }
 
   int attach_call_count() const { return attach_call_count_; }
@@ -458,6 +483,248 @@ IN_PROC_BROWSER_TEST_F(SecureEmbedRendererTest,
   EXPECT_EQ(host, GetMockHost(0));
   EXPECT_EQ(1, host->attach_call_count());
   EXPECT_EQ(1, host->last_content_id());
+}
+
+class StubHostFrameSinkClient : public viz::HostFrameSinkClient {
+ public:
+  StubHostFrameSinkClient() = default;
+  ~StubHostFrameSinkClient() override = default;
+
+  // viz::HostFrameSinkClient implementation:
+  void OnFirstSurfaceActivation(const viz::SurfaceInfo& surface_info) override {
+  }
+  void OnFrameTokenChanged(uint32_t frame_token,
+                           base::TimeTicks activation_time) override {}
+};
+
+// Helper class that creates a FrameSink and submits CompositorFrames with
+// colored rectangles. Provides the resulting SurfaceId that can be embedded in
+// SecureEmbed.
+class TestSurfaceProvider {
+ public:
+  TestSurfaceProvider() {
+    frame_sink_id_ = content::AllocateFrameSinkIdForTesting();
+
+    viz::HostFrameSinkManager* host_manager =
+        content::GetHostFrameSinkManagerForTesting();
+    CHECK(host_manager);
+    host_manager->RegisterFrameSinkId(frame_sink_id_, &host_client_,
+                                      viz::ReportFirstSurfaceActivation::kYes);
+
+    mojo::PendingReceiver<viz::mojom::CompositorFrameSink> sink_receiver;
+    sink_remote_ =
+        std::make_unique<mojo::Remote<viz::mojom::CompositorFrameSink>>(
+            sink_receiver.InitWithNewPipeAndPassRemote());
+
+    host_manager->CreateCompositorFrameSink(frame_sink_id_,
+                                            std::move(sink_receiver),
+                                            client_.BindInterfaceRemote());
+  }
+
+  ~TestSurfaceProvider() {
+    viz::HostFrameSinkManager* host_manager =
+        content::GetHostFrameSinkManagerForTesting();
+    if (host_manager) {
+      host_manager->InvalidateFrameSinkId(frame_sink_id_, &host_client_,
+                                          base::OnceClosure());
+    }
+  }
+
+  // Submits a compositor frame with the specified color and returns the
+  // SurfaceId for that frame. Waits for the surface to be activated before
+  // returning to ensure it's ready for embedding.
+  viz::SurfaceId SubmitFrame(SkColor color) {
+    allocator_.GenerateId();
+    viz::LocalSurfaceId local_surface_id =
+        allocator_.GetCurrentLocalSurfaceId();
+
+    viz::SurfaceId surface_id(frame_sink_id_, local_surface_id);
+    viz::CompositorFrame frame = CreateColoredRectangleFrame(color);
+    (*sink_remote_)
+        ->SubmitCompositorFrame(local_surface_id, std::move(frame),
+                                std::nullopt, 0);
+    return surface_id;
+  }
+
+ private:
+  viz::CompositorFrame CreateColoredRectangleFrame(SkColor color) {
+    constexpr gfx::Size kFrameSize(100, 100);
+    constexpr gfx::Rect kFrameRect(kFrameSize);
+
+    // To create a simple colored rectangle, we need a single render pass, quad
+    // state, and solid color quad.
+    auto render_pass = viz::CompositorRenderPass::Create();
+    render_pass->SetNew(viz::CompositorRenderPassId{1}, kFrameRect, kFrameRect,
+                        gfx::Transform());
+
+    viz::SharedQuadState* sqs = render_pass->CreateAndAppendSharedQuadState();
+    sqs->SetAll(gfx::Transform(), kFrameRect, kFrameRect, gfx::MaskFilterInfo(),
+                std::nullopt, false, 1.0f, SkBlendMode::kSrcOver, 0,
+                /*layer_id=*/0u, /*fast_rounded_corner=*/false);
+
+    viz::SolidColorDrawQuad* quad =
+        render_pass->CreateAndAppendDrawQuad<viz::SolidColorDrawQuad>();
+    quad->SetNew(sqs, kFrameRect, kFrameRect, SkColor4f::FromColor(color),
+                 false);
+
+    viz::CompositorFrame frame;
+    frame.metadata.begin_frame_ack.frame_id = viz::BeginFrameId(
+        viz::BeginFrameArgs::kManualSourceId, ++frame_counter_);
+    frame.metadata.begin_frame_ack.has_damage = true;
+    frame.metadata.device_scale_factor = 1.0f;
+    frame.metadata.frame_token = frame_counter_;
+    frame.render_pass_list.push_back(std::move(render_pass));
+
+    return frame;
+  }
+
+  viz::FrameSinkId frame_sink_id_;
+  viz::ParentLocalSurfaceIdAllocator allocator_;
+  viz::MockCompositorFrameSinkClient client_;
+  StubHostFrameSinkClient host_client_;
+  std::unique_ptr<mojo::Remote<viz::mojom::CompositorFrameSink>> sink_remote_;
+  uint64_t frame_counter_ = 0;
+};
+
+// TODO(secure-embed): These tests verify pixel output. They're split into a
+// separate test fixture to avoid slowing down other tests that don't need pixel
+// verification. Once we have tests that embed attached WebContents, these tests
+// can likely be deleted.
+class SecureEmbedRendererTestWithPixelOutput
+    : public content::ContentBrowserTest {
+ public:
+  SecureEmbedRendererTestWithPixelOutput() = default;
+
+  void SetUpCommandLine(base::CommandLine* command_line) override {
+    content::ContentBrowserTest::SetUpCommandLine(command_line);
+    // Enable pixel output in tests to allow CopyFromSurface to capture
+    // actual rendered content instead of returning empty/black bitmaps.
+    command_line->AppendSwitch("--enable-pixel-output-in-tests");
+  }
+
+  void SetUpOnMainThread() override {
+    content::ContentBrowserTest::SetUpOnMainThread();
+
+    embedded_test_server()->ServeFilesFromSourceDirectory(
+        "components/test/data");
+    ASSERT_TRUE(embedded_test_server()->Start());
+  }
+
+  void CreatedBrowserMainParts(
+      content::BrowserMainParts* browser_main_parts) override {
+    content::ContentBrowserTest::CreatedBrowserMainParts(browser_main_parts);
+    test_browser_client_ =
+        std::make_unique<SecureEmbedTestContentBrowserClient>(&tracker_);
+  }
+
+  content::WebContents* web_contents() { return shell()->web_contents(); }
+
+  void NavigateToTestUrl(const char* url) {
+    const GURL test_url = embedded_test_server()->GetURL(url);
+    ASSERT_TRUE(NavigateToURL(web_contents(), test_url));
+  }
+
+  bool WaitForAttachCall(MockSecureEmbedHost* host) {
+    if (host->attach_call_count() > 0) {
+      return true;
+    }
+
+    base::RunLoop run_loop;
+    host->SetAttachCallback(base::BindLambdaForTesting(
+        [&](int64_t content_id) { run_loop.Quit(); }));
+    run_loop.Run();
+    return true;
+  }
+
+  MockSecureEmbedHost* GetMockHost(size_t index) {
+    return tracker_.GetMockHost(index);
+  }
+
+  // Helper function to wait for a specific color to be rendered at the
+  // specified location. Returns true if the expected color is found.
+  bool WaitForPixelColor(SkColor expected_color,
+                         const gfx::Rect& capture_rect) {
+    auto* rwhv = web_contents()->GetRenderWidgetHostView();
+    if (!rwhv) {
+      return false;
+    }
+
+    bool pixel_matches = false;
+    return base::test::RunUntil([&]() {
+      base::RunLoop run_loop;
+
+      rwhv->CopyFromSurface(
+          capture_rect, capture_rect.size(),
+          base::BindOnce(
+              [](base::OnceClosure quit_closure, bool* result,
+                 SkColor expected_color, const SkBitmap& bitmap) {
+                *result = false;
+
+                if (bitmap.drawsNothing()) {
+                  std::move(quit_closure).Run();
+                  return;
+                }
+
+                SkColor color = bitmap.getColor(0, 0);
+                if (color == expected_color) {
+                  *result = true;
+                }
+
+                std::move(quit_closure).Run();
+              },
+              run_loop.QuitClosure(), &pixel_matches, expected_color));
+
+      run_loop.Run();
+      return pixel_matches;
+    });
+  }
+
+ protected:
+  SecureEmbedHostTracker tracker_;
+  std::unique_ptr<SecureEmbedTestContentBrowserClient> test_browser_client_;
+};
+
+IN_PROC_BROWSER_TEST_F(SecureEmbedRendererTestWithPixelOutput,
+                       SetSurfaceIdRendersCorrectContent) {
+  // Verifies that we can create test surfaces with different colored
+  // rectangles and switch between them by changing the SurfaceId, with
+  // pixel verification that the correct color is rendered on screen.
+  NavigateToTestUrl(kTestUrl);
+
+  MockSecureEmbedHost* host = GetMockHost(0);
+  ASSERT_NE(nullptr, host);
+
+  ASSERT_TRUE(WaitForAttachCall(host));
+  EXPECT_EQ(1, host->attach_call_count());
+
+  ASSERT_TRUE(host->secure_embed().is_bound());
+
+  // Create a test surface provider
+  TestSurfaceProvider surface_provider;
+
+  // Verify that the red placeholder is rendered. The test HTML has an embed
+  // with the default intrinsic size of 300x150, but we only submit 100x100
+  // surfaces so be sure to check inside of that.
+  gfx::Rect capture_rect(50, 50, 5, 5);
+  EXPECT_TRUE(WaitForPixelColor(SK_ColorRED, capture_rect));
+
+  // Submit a frame with a green rectangle
+  viz::SurfaceId green_surface_id = surface_provider.SubmitFrame(SK_ColorGREEN);
+  ASSERT_TRUE(green_surface_id.is_valid());
+
+  host->secure_embed()->SetSurfaceId(green_surface_id);
+  host->secure_embed().FlushForTesting();
+
+  EXPECT_TRUE(WaitForPixelColor(SK_ColorGREEN, capture_rect));
+
+  // Now switch to a blue rectangle.
+  viz::SurfaceId blue_surface_id = surface_provider.SubmitFrame(SK_ColorBLUE);
+  ASSERT_TRUE(blue_surface_id.is_valid());
+
+  host->secure_embed()->SetSurfaceId(blue_surface_id);
+  host->secure_embed().FlushForTesting();
+
+  EXPECT_TRUE(WaitForPixelColor(SK_ColorBLUE, capture_rect));
 }
 
 }  // namespace secure_embed

@@ -383,6 +383,8 @@ static_library("test_support") {
     "../public/test/test_shared_storage_header_observer.h",
     "../public/test/test_storage_partition.cc",
     "../public/test/test_storage_partition.h",
+    "../public/test/test_surface_utils.cc",
+    "../public/test/test_surface_utils.h",
     "../public/test/test_utils.cc",
     "../public/test/test_utils.h",
     "../public/test/test_web_contents_factory.h",

@@ -7,7 +7,10 @@
 
 #include "base/memory/raw_ptr.h"
 #include "base/memory/scoped_refptr.h"
+#include "cc/layers/solid_color_layer.h"
+#include "cc/layers/surface_layer.h"
 #include "components/secure_embed/common/secure_embed.mojom.h"
+#include "components/viz/common/surfaces/surface_id.h"
 #include "mojo/public/cpp/bindings/associated_receiver.h"
 #include "mojo/public/cpp/bindings/associated_remote.h"
 #include "third_party/blink/public/web/web_plugin.h"
@@ -60,6 +63,7 @@ class SecureEmbedWebPlugin : public blink::WebPlugin,
 
   // mojom::SecureEmbed:
   void OnAttached() override;
+  void SetSurfaceId(const viz::SurfaceId& surface_id) override;
 
  private:
   explicit SecureEmbedWebPlugin(
@@ -68,13 +72,23 @@ class SecureEmbedWebPlugin : public blink::WebPlugin,
 
   void OnSecureEmbedHostDisconnected();
 
+  void EnsurePlaceholderLayer();
+  void EnsureSurfaceLayer();
+
   // The guest contents ID parsed from the `data-content-id` attribute.
   int contents_id_ = -1;
 
   raw_ptr<blink::WebPluginContainer> container_ = nullptr;
-  // TODO(secure-embed): This will be converted to be a SurfaceLayer or may be
-  // kept as part of placeholder rendering if supported.
-  scoped_refptr<cc::SolidColorLayer> layer_;
+
+  // Placeholder layer shown when there is no valid SurfaceId.
+  scoped_refptr<cc::SolidColorLayer> placeholder_layer_;
+
+  // The SurfaceId to embed, if set. Provided via SetSurfaceId.
+  viz::SurfaceId surface_id_;
+
+  // Surface layer for embedding the attached compositor content. If there is no
+  // valid `surface_id_` then this layer must not exist.
+  scoped_refptr<cc::SurfaceLayer> surface_layer_;
 
   mojo::AssociatedRemote<mojom::SecureEmbedHost> host_;
   mojo::AssociatedReceiver<mojom::SecureEmbed> receiver_{this};

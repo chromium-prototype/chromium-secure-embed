@@ -4,12 +4,20 @@
 
 module secure_embed.mojom;
 
+import "services/viz/public/mojom/compositing/surface_id.mojom";
+
 // Implemented in Renderer by SecureEmbedWebPlugin.
 interface SecureEmbed {
   // TODO(secure-embed): Temporary - remove when there's a real SecureEmbed
   // method to call. This is here to verify that the mojo connection is set up
   // correctly and that the browser can call back into the renderer.
   OnAttached();
+
+  // Sets the viz SurfaceId to be embedded in the plugin. This allows external
+  // clients to provide compositor content that will be displayed in the plugin.
+  // If surface_id is invalid, the plugin will fall back to its default
+  // placeholder rendering.
+  SetSurfaceId(viz.mojom.SurfaceId surface_id);
 };
 
 // Implemented by Browser. Available on RenderFrameHost.

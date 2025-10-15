@@ -20,8 +20,10 @@ component("renderer") {
 
   deps = [
     "//base",
+    "//cc",
     "//cc/paint",
     "//components/secure_embed/common:constants",
+    "//components/viz/common",
     "//content/public/renderer",
     "//mojo/public/cpp/bindings",
     "//skia",
