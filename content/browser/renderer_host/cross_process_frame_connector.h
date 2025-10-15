@@ -11,7 +11,7 @@
 #include "base/memory/raw_ptr.h"
 #include "cc/input/touch_action.h"
 #include "components/input/child_frame_input_helper.h"
-#include "components/input/render_widget_host_view_composite.h"
+#include "components/input/render_widget_host_view_core.h"
 #include "content/browser/renderer_host/render_widget_host_view_base.h"
 #include "content/common/content_export.h"
 #include "content/public/browser/cross_process_frame_connector_base.h"

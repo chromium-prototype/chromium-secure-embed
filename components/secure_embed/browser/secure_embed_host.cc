@@ -8,7 +8,7 @@
 #include "base/memory/ptr_util.h"
 #include "base/no_destructor.h"
 #include "components/guest_contents/browser/guest_contents_handle.h"
-#include "components/input/render_widget_host_view_composite.h"
+#include "components/input/render_widget_host_view_core.h"
 #include "content/public/browser/cross_process_frame_connector_base.h"
 #include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/web_contents.h"
@@ -98,13 +98,13 @@ content::RenderFrameHost* SecureEmbedHost::GetChildRenderFrameHost() const {
   return render_frame_host_;
 }
 
-input::RenderWidgetHostViewComposite*
+input::RenderWidgetHostViewCore*
 SecureEmbedHost::GetParentRenderWidgetHostView() {
   NOTIMPLEMENTED();
   return nullptr;
 }
 
-input::RenderWidgetHostViewComposite*
+input::RenderWidgetHostViewCore*
 SecureEmbedHost::GetRootRenderWidgetHostView() {
   NOTIMPLEMENTED();
   return nullptr;

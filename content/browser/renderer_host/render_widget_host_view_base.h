@@ -23,7 +23,7 @@
 #include "build/build_config.h"
 #include "components/input/event_with_latency_info.h"
 #include "components/input/render_input_router.h"
-#include "components/input/render_widget_host_view_composite.h"
+#include "components/input/render_widget_host_view_core.h"
 #include "components/viz/common/hit_test/hit_test_query.h"
 #include "components/viz/common/surfaces/scoped_surface_id_allocator.h"
 #include "components/viz/common/surfaces/surface_id.h"
@@ -81,7 +81,7 @@ class SyntheticGestureTarget;
 
 // Basic implementation shared by concrete RenderWidgetHostView subclasses.
 class CONTENT_EXPORT RenderWidgetHostViewBase
-    : public input::RenderWidgetHostViewComposite {
+    : public input::RenderWidgetHostViewCore {
  public:
   // The TooltipObserver is used in browser tests only.
   class CONTENT_EXPORT TooltipObserver {

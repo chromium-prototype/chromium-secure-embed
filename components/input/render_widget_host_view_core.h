@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef COMPONENTS_INPUT_RENDER_WIDGET_HOST_VIEW_COMPOSITE_H_
-#define COMPONENTS_INPUT_RENDER_WIDGET_HOST_VIEW_COMPOSITE_H_
+#ifndef COMPONENTS_INPUT_RENDER_WIDGET_HOST_VIEW_CORE_H_
+#define COMPONENTS_INPUT_RENDER_WIDGET_HOST_VIEW_CORE_H_
 
 #include <string>
 
@@ -15,11 +15,11 @@
 
 namespace input {
 
-class COMPONENT_EXPORT(INPUT) RenderWidgetHostViewComposite
+class COMPONENT_EXPORT(INPUT) RenderWidgetHostViewCore
     : public RenderWidgetHostViewInput,
       public content::RenderWidgetHostView {
  public:
-  ~RenderWidgetHostViewComposite() override = default;
+  ~RenderWidgetHostViewCore() override = default;
 
   virtual content::RenderWidgetHost::InputEventObserver*
   GetInputTransferHandlerObserver();
@@ -38,4 +38,4 @@ class COMPONENT_EXPORT(INPUT) RenderWidgetHostViewComposite
 
 }  // namespace input
 
-#endif  // COMPONENTS_INPUT_RENDER_WIDGET_HOST_VIEW_COMPOSITE_H_
+#endif  // COMPONENTS_INPUT_RENDER_WIDGET_HOST_VIEW_CORE_H_

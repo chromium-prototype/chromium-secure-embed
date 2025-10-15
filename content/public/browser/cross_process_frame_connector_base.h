@@ -29,7 +29,7 @@ struct FrameVisualProperties;
 }  // namespace blink
 
 namespace input {
-class RenderWidgetHostViewComposite;
+class RenderWidgetHostViewCore;
 }  // namespace input
 
 namespace ui {
@@ -111,12 +111,10 @@ class CONTENT_EXPORT CrossProcessFrameConnectorBase
   virtual RenderFrameHost* GetChildRenderFrameHost() const = 0;
 
   // Returns the parent RenderWidgetHostView or nullptr if it doesn't have one.
-  virtual input::RenderWidgetHostViewComposite*
-  GetParentRenderWidgetHostView() = 0;
+  virtual input::RenderWidgetHostViewCore* GetParentRenderWidgetHostView() = 0;
 
   // Returns the view for the top-level frame under the same WebContents.
-  virtual input::RenderWidgetHostViewComposite*
-  GetRootRenderWidgetHostView() = 0;
+  virtual input::RenderWidgetHostViewCore* GetRootRenderWidgetHostView() = 0;
 
   // Notify the frame connector that the renderer process has terminated.
   virtual void RenderProcessGone() = 0;

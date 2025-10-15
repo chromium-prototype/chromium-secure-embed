@@ -7,14 +7,11 @@
 
 #include "base/component_export.h"
 #include "base/notimplemented.h"
+#include "components/input/render_widget_host_view_core.h"
 #include "components/secure_embed/common/secure_embed.mojom.h"
 #include "content/public/browser/cross_process_frame_connector_base.h"
 #include "mojo/public/cpp/bindings/pending_associated_receiver.h"
 #include "mojo/public/cpp/bindings/self_owned_associated_receiver.h"
-
-namespace input {
-class RenderWidgetHostViewComposite;
-}  // namespace input
 
 namespace content {
 class RenderFrameHost;
@@ -46,9 +43,8 @@ class COMPONENT_EXPORT(SECURE_EMBED) SecureEmbedHost
   void SetView(content::RenderWidgetHostViewChildFrame* view,
                bool allow_paint_holding) override;
   content::RenderFrameHost* GetChildRenderFrameHost() const override;
-  input::RenderWidgetHostViewComposite* GetParentRenderWidgetHostView()
-      override;
-  input::RenderWidgetHostViewComposite* GetRootRenderWidgetHostView() override;
+  input::RenderWidgetHostViewCore* GetParentRenderWidgetHostView() override;
+  input::RenderWidgetHostViewCore* GetRootRenderWidgetHostView() override;
   void RenderProcessGone() override;
   void FirstSurfaceActivation(const viz::SurfaceInfo& surface_info) override;
   void SendIntrinsicSizingInfoToParent(
