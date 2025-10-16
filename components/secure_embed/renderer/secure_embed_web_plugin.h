@@ -7,6 +7,7 @@
 
 #include "base/memory/raw_ptr.h"
 #include "components/secure_embed/common/secure_embed.mojom.h"
+#include "components/viz/common/surfaces/frame_sink_id.h"
 #include "mojo/public/cpp/bindings/associated_receiver.h"
 #include "mojo/public/cpp/bindings/associated_remote.h"
 #include "third_party/blink/public/web/web_plugin.h"
@@ -54,6 +55,8 @@ class SecureEmbedWebPlugin : public blink::WebPlugin,
   void DidFailLoading(const blink::WebURLError& error) override;
 
   // mojom::SecureEmbed:
+  void SetFrameSinkId(const viz::FrameSinkId& frame_sink_id,
+                      bool allow_paint_holding) override;
   void OnAttached() override;
 
  private:
@@ -65,6 +68,8 @@ class SecureEmbedWebPlugin : public blink::WebPlugin,
 
   // The guest contents ID parsed from the `data-content-id` attribute.
   int contents_id_ = -1;
+
+  viz::FrameSinkId frame_sink_id_;
 
   raw_ptr<blink::WebPluginContainer> container_ = nullptr;
 

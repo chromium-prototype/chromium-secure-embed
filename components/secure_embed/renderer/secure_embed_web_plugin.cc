@@ -139,6 +139,22 @@ void SecureEmbedWebPlugin::DidFailLoading(const blink::WebURLError& error) {
   NOTIMPLEMENTED();
 }
 
+void SecureEmbedWebPlugin::SetFrameSinkId(const viz::FrameSinkId& frame_sink_id,
+                                          bool allow_paint_holding) {
+  // TODO(webium): This should only be called when the remote process is alive;
+  // should we keep track of this with a boolean, e.g. ` remote_process_gone_`,
+  // like RemoteFrame does?
+
+  frame_sink_id_ = frame_sink_id;
+
+  // TODO(webium): Synchronize visual properties.
+  // SynchronizeVisualProperties(
+  //     /*propagate=*/true,
+  //     allow_paint_holding
+  //         ? ChildFrameCompositingHelper::AllowPaintHolding::kYes
+  //         : ChildFrameCompositingHelper::AllowPaintHolding::kNo);
+}
+
 void SecureEmbedWebPlugin::OnAttached() {
   // TODO(secure-embed): Here for testing only. Remove when there's a real
   // SecureEmbed method to implement.

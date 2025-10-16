@@ -93,7 +93,7 @@ void SecureEmbedHost::OnSecureEmbedDisconnected() {
 
 void SecureEmbedHost::SetView(input::RenderWidgetHostViewCore* view,
                               bool allow_paint_holding) {
-  // Detach ourselves from the previous |view_|.
+  // Detach ourselves from the previous `view_`.
   if (view_) {
     input::RenderWidgetHostViewCore* root_view = GetRootRenderWidgetHostView();
     if (root_view && root_view->GetCursorManager()) {
@@ -130,12 +130,10 @@ void SecureEmbedHost::SetView(input::RenderWidgetHostViewCore* view,
     // if (visibility_ != blink::mojom::FrameVisibility::kRenderedInViewport)
     //   OnVisibilityChanged(visibility_);
 
-    // TODO(webium): Set FrameSinkId via mojom.
-    // if (frame_proxy_in_parent_renderer_ &&
-    //     frame_proxy_in_parent_renderer_->is_render_frame_proxy_live()) {
-    //   frame_proxy_in_parent_renderer_->GetAssociatedRemoteFrame()
-    //       ->SetFrameSinkId(view_->GetFrameSinkId(), allow_paint_holding);
-    // }
+    if (secure_embed_) {
+      secure_embed_->SetFrameSinkId(view_->GetFrameSinkId(),
+                                    allow_paint_holding);
+    }
   }
 }
 

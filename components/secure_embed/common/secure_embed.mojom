@@ -4,8 +4,18 @@
 
 module secure_embed.mojom;
 
+import "services/viz/public/mojom/compositing/frame_sink_id.mojom";
+
 // Implemented in Renderer by SecureEmbedWebPlugin.
 interface SecureEmbed {
+  // Notifies the renderer process that its associated compositing
+  // destination (RenderWidgetHostView) has changed.
+  //
+  // The embedder can keep using the painted content from the previous frame
+  // sink until the new frame sink produces a new frame, i.e., paint holding.
+  // `allow_paint_holding` is used to limit this to same-origin navigations.
+  SetFrameSinkId(viz.mojom.FrameSinkId frame_sink_id, bool allow_paint_holding);
+
   // TODO(secure-embed): Temporary - remove when there's a real SecureEmbed
   // method to call. This is here to verify that the mojo connection is set up
   // correctly and that the browser can call back into the renderer.
