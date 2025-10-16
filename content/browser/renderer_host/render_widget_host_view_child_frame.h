@@ -174,6 +174,7 @@ class CONTENT_EXPORT RenderWidgetHostViewChildFrame
       override;
   bool IsRenderWidgetHostViewChildFrame() const override;
   void InvalidateLocalSurfaceIdAndAllocationGroup() override;
+  bool IsChildView() const override;
 
 #if BUILDFLAG(IS_MAC)
   // RenderWidgetHostView implementation.

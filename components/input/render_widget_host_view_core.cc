@@ -11,4 +11,8 @@ RenderWidgetHostViewCore::GetInputTransferHandlerObserver() {
   return nullptr;
 }
 
+bool RenderWidgetHostViewCore::IsChildView() const {
+  return false;
+}
+
 }  // namespace input

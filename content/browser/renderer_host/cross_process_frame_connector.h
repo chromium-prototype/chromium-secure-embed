@@ -103,7 +103,7 @@ class CONTENT_EXPORT CrossProcessFrameConnector
   // above.
   RenderWidgetHostViewChildFrame* get_view_for_testing() { return view_; }
 
-  void SetView(RenderWidgetHostViewChildFrame* view,
+  void SetView(input::RenderWidgetHostViewCore* view,
                bool allow_paint_holding) override;
   RenderFrameHost* GetChildRenderFrameHost() const override;
 

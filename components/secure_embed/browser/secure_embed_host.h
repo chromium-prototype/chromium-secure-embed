@@ -40,7 +40,7 @@ class COMPONENT_EXPORT(SECURE_EMBED) SecureEmbedHost
   void Attach(int64_t content_id) override;
 
   // content::CrossProcessFrameConnectorBase:
-  void SetView(content::RenderWidgetHostViewChildFrame* view,
+  void SetView(input::RenderWidgetHostViewCore* view,
                bool allow_paint_holding) override;
   content::RenderFrameHost* GetChildRenderFrameHost() const override;
   input::RenderWidgetHostViewCore* GetParentRenderWidgetHostView() override;

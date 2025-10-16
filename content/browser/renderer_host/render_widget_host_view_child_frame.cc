@@ -824,6 +824,10 @@ bool RenderWidgetHostViewChildFrame::IsRenderWidgetHostViewChildFrame() const {
   return true;
 }
 
+bool RenderWidgetHostViewChildFrame::IsChildView() const {
+  return true;
+}
+
 void RenderWidgetHostViewChildFrame::
     InvalidateLocalSurfaceIdAndAllocationGroup() {
   // This should only be handled by the top frame.

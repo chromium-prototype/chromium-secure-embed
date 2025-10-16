@@ -89,7 +89,7 @@ void SecureEmbedHost::OnSecureEmbedDisconnected() {
   secure_embed_.reset();
 }
 
-void SecureEmbedHost::SetView(content::RenderWidgetHostViewChildFrame* view,
+void SecureEmbedHost::SetView(input::RenderWidgetHostViewCore* view,
                               bool allow_paint_holding) {
   NOTIMPLEMENTED();
 }

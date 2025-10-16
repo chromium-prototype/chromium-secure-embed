@@ -63,7 +63,7 @@ CrossProcessFrameConnector::~CrossProcessFrameConnector() {
   SetView(nullptr, /*allow_paint_holding=*/false);
 }
 
-void CrossProcessFrameConnector::SetView(RenderWidgetHostViewChildFrame* view,
+void CrossProcessFrameConnector::SetView(input::RenderWidgetHostViewCore* view,
                                          bool allow_paint_holding) {
   // Detach ourselves from the previous |view_|.
   if (view_) {
@@ -90,7 +90,10 @@ void CrossProcessFrameConnector::SetView(RenderWidgetHostViewChildFrame* view,
   }
 
   ResetRectInParentView();
-  view_ = view;
+  if (view) {
+    CHECK(view->IsChildView());
+    view_ = static_cast<RenderWidgetHostViewChildFrame*>(view);
+  }
 
   // Attach ourselves to the new view and size it appropriately. Also update
   // visibility in case the frame owner is hidden in parent process. We should

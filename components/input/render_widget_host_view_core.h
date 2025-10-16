@@ -34,6 +34,8 @@ class COMPONENT_EXPORT(INPUT) RenderWidgetHostViewCore
   // Hides tooltips that are still visible and were triggered from a keypress.
   // Doesn't impact tooltips that were triggered from the cursor.
   virtual void ClearKeyboardTriggeredTooltip() {}
+
+  virtual bool IsChildView() const;
 };
 
 }  // namespace input

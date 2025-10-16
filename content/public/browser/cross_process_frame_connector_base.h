@@ -43,7 +43,6 @@ class SurfaceInfo;
 namespace content {
 
 class RenderFrameHost;
-class RenderWidgetHostViewChildFrame;
 
 // CrossProcessFrameConnectorBase allows CrossProcessFrameConnector and
 // SecureEmbedHost to share a common interface.
@@ -102,7 +101,7 @@ class CONTENT_EXPORT CrossProcessFrameConnectorBase
     kMaxValue = kNotFocused
   };
 
-  virtual void SetView(RenderWidgetHostViewChildFrame* view,
+  virtual void SetView(input::RenderWidgetHostViewCore* view,
                        bool allow_paint_holding) = 0;
 
   // Gets the current RenderFrameHost for the child frame's FrameTreeNode. This
