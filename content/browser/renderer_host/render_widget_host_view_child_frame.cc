@@ -439,9 +439,14 @@ void RenderWidgetHostViewChildFrame::RequestInputBackForDragAndDrop(
 #endif
 
 RenderWidgetHostViewBase* RenderWidgetHostViewChildFrame::GetRootView() {
-  return frame_connector_ ? static_cast<RenderWidgetHostViewBase*>(
-                                frame_connector_->GetRootRenderWidgetHostView())
-                          : nullptr;
+  if (!frame_connector_ || !frame_connector_->GetChildRenderFrameHost()) {
+    return nullptr;
+  }
+  return static_cast<RenderWidgetHostViewBase*>(
+      static_cast<RenderFrameHostImpl*>(
+          frame_connector_->GetChildRenderFrameHost())
+          ->GetOutermostMainFrameOrEmbedderExcludingProspectiveOwners()
+          ->GetView());
 }
 
 void RenderWidgetHostViewChildFrame::InitAsPopup(
@@ -555,10 +560,14 @@ void RenderWidgetHostViewChildFrame::ClearKeyboardTriggeredTooltip() {
 }
 
 RenderWidgetHostViewBase* RenderWidgetHostViewChildFrame::GetParentViewInput() {
-  if (!frame_connector_)
+  if (!frame_connector_ || !frame_connector_->GetChildRenderFrameHost()) {
     return nullptr;
+  }
   return static_cast<RenderWidgetHostViewBase*>(
-      frame_connector_->GetParentRenderWidgetHostView());
+      static_cast<RenderFrameHostImpl*>(
+          frame_connector_->GetChildRenderFrameHost())
+          ->GetParentOrOuterDocumentOrEmbedderExcludingProspectiveOwners()
+          ->GetView());
 }
 
 void RenderWidgetHostViewChildFrame::RegisterFrameSinkId() {

@@ -71,8 +71,6 @@ class CONTENT_EXPORT RenderWidgetHostViewChildFrame
   RenderWidgetHostViewChildFrame& operator=(
       const RenderWidgetHostViewChildFrame&) = delete;
 
-  void SetFrameConnector(CrossProcessFrameConnectorBase* frame_connector);
-
   // TouchSelectionControllerClientManager::Observer implementation.
   void OnManagerWillDestroy(
       TouchSelectionControllerClientManager* manager) override;
@@ -102,6 +100,13 @@ class CONTENT_EXPORT RenderWidgetHostViewChildFrame
   bool IsPointerLocked() override;
   void TakeFallbackContentFrom(RenderWidgetHostView* view) override;
 
+  // input::RenderWidgetHostViewCore implementation.
+  void SetFrameConnector(
+      CrossProcessFrameConnectorBase* frame_connector) override;
+  void UpdateTooltipFromKeyboard(const std::u16string& tooltip_text,
+                                 const gfx::Rect& bounds) override;
+  void ClearKeyboardTriggeredTooltip() override;
+
   // RenderWidgetHostViewBase implementation.
 #if BUILDFLAG(IS_ANDROID)
   bool IsTouchSequencePotentiallyActiveOnViz() override;
@@ -128,9 +133,6 @@ class CONTENT_EXPORT RenderWidgetHostViewChildFrame
   void ShowWithVisibility(PageVisibilityState page_visibility) override;
   void Destroy() override;
   void UpdateTooltipUnderCursor(const std::u16string& tooltip_text) override;
-  void UpdateTooltipFromKeyboard(const std::u16string& tooltip_text,
-                                 const gfx::Rect& bounds) override;
-  void ClearKeyboardTriggeredTooltip() override;
   void GestureEventAck(const blink::WebGestureEvent& event,
                        blink::mojom::InputEventResultSource ack_source,
                        blink::mojom::InputEventResultState ack_result) override;

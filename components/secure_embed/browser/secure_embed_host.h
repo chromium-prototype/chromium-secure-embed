@@ -114,6 +114,8 @@ class COMPONENT_EXPORT(SECURE_EMBED) SecureEmbedHost
 
   raw_ptr<content::RenderFrameHost> render_frame_host_;
 
+  raw_ptr<input::RenderWidgetHostViewCore> view_;
+
   mojo::AssociatedRemote<mojom::SecureEmbed> secure_embed_;
 };
 

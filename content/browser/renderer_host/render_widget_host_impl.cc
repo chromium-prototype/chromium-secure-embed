@@ -639,6 +639,11 @@ RenderWidgetHostImpl::GetVisibleTimeRequestTrigger() {
   return delegate()->GetVisibleTimeRequestTrigger();
 }
 
+input::RenderWidgetHostInputEventRouter*
+RenderWidgetHostImpl::GetRenderWidgetHostInputEventRouter() {
+  return delegate() ? delegate()->GetInputEventRouter() : nullptr;
+}
+
 const viz::FrameSinkId& RenderWidgetHostImpl::GetFrameSinkId() {
   return frame_sink_id_;
 }

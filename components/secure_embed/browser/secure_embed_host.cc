@@ -8,6 +8,8 @@
 #include "base/memory/ptr_util.h"
 #include "base/no_destructor.h"
 #include "components/guest_contents/browser/guest_contents_handle.h"
+#include "components/input/cursor_manager.h"
+#include "components/input/render_widget_host_input_event_router.h"
 #include "components/input/render_widget_host_view_core.h"
 #include "content/public/browser/cross_process_frame_connector_base.h"
 #include "content/public/browser/render_frame_host.h"
@@ -91,7 +93,50 @@ void SecureEmbedHost::OnSecureEmbedDisconnected() {
 
 void SecureEmbedHost::SetView(input::RenderWidgetHostViewCore* view,
                               bool allow_paint_holding) {
-  NOTIMPLEMENTED();
+  // Detach ourselves from the previous |view_|.
+  if (view_) {
+    input::RenderWidgetHostViewCore* root_view = GetRootRenderWidgetHostView();
+    if (root_view && root_view->GetCursorManager()) {
+      root_view->GetCursorManager()->ViewBeingDestroyed(view_);
+    }
+
+    // The RenderWidgetHostDelegate needs to be checked because SetView() can
+    // be called during nested WebContents destruction. See
+    // https://crbug.com/644306.
+    if (GetParentRenderWidgetHostView() &&
+        GetParentRenderWidgetHostView()
+            ->GetRenderWidgetHost()
+            ->GetRenderWidgetHostInputEventRouter()) {
+      GetParentRenderWidgetHostView()
+          ->GetRenderWidgetHost()
+          ->GetRenderWidgetHostInputEventRouter()
+          ->WillDetachChildView(view_);
+    }
+    view_->SetFrameConnector(nullptr);
+  }
+
+  // TODO(webium): Reset geometric info, as in
+  // CrossProcessFrameConnector::ResetRectInParentView();
+
+  view_ = view;
+
+  // Attach ourselves to the new view and size it appropriately.
+  if (view_) {
+    // TODO(webium): Consider adding crash logging.
+
+    view_->SetFrameConnector(this);
+
+    // TODO(webium): Update visibility, e.g.
+    // if (visibility_ != blink::mojom::FrameVisibility::kRenderedInViewport)
+    //   OnVisibilityChanged(visibility_);
+
+    // TODO(webium): Set FrameSinkId via mojom.
+    // if (frame_proxy_in_parent_renderer_ &&
+    //     frame_proxy_in_parent_renderer_->is_render_frame_proxy_live()) {
+    //   frame_proxy_in_parent_renderer_->GetAssociatedRemoteFrame()
+    //       ->SetFrameSinkId(view_->GetFrameSinkId(), allow_paint_holding);
+    // }
+  }
 }
 
 content::RenderFrameHost* SecureEmbedHost::GetChildRenderFrameHost() const {
@@ -100,14 +145,24 @@ content::RenderFrameHost* SecureEmbedHost::GetChildRenderFrameHost() const {
 
 input::RenderWidgetHostViewCore*
 SecureEmbedHost::GetParentRenderWidgetHostView() {
-  NOTIMPLEMENTED();
-  return nullptr;
+  if (!render_frame_host_) {
+    return nullptr;
+  }
+  return static_cast<input::RenderWidgetHostViewCore*>(
+      static_cast<input::RenderWidgetHostViewCore*>(
+          render_frame_host_->GetView())
+          ->GetParentViewInput());
 }
 
 input::RenderWidgetHostViewCore*
 SecureEmbedHost::GetRootRenderWidgetHostView() {
-  NOTIMPLEMENTED();
-  return nullptr;
+  if (!render_frame_host_) {
+    return nullptr;
+  }
+  return static_cast<input::RenderWidgetHostViewCore*>(
+      static_cast<input::RenderWidgetHostViewCore*>(
+          render_frame_host_->GetView())
+          ->GetRootView());
 }
 
 void SecureEmbedHost::RenderProcessGone() {
@@ -315,13 +370,11 @@ content::Visibility SecureEmbedHost::EmbedderVisibility() {
 }
 
 input::RenderWidgetHostViewInput* SecureEmbedHost::GetParentViewInput() {
-  NOTIMPLEMENTED();
-  return nullptr;
+  return GetParentRenderWidgetHostView();
 }
 
 input::RenderWidgetHostViewInput* SecureEmbedHost::GetRootViewInput() {
-  NOTIMPLEMENTED();
-  return nullptr;
+  return GetRootRenderWidgetHostView();
 }
 
 }  // namespace secure_embed

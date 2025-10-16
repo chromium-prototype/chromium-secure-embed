@@ -53,6 +53,10 @@ namespace viz {
 class FrameSinkId;
 }
 
+namespace input {
+class RenderWidgetHostInputEventRouter;
+}
+
 namespace content {
 class RenderProcessHost;
 class RenderWidgetHostIterator;
@@ -108,6 +112,9 @@ class CONTENT_EXPORT RenderWidgetHost {
   static std::unique_ptr<RenderWidgetHostIterator> GetRenderWidgetHosts();
 
   virtual ~RenderWidgetHost() {}
+
+  virtual input::RenderWidgetHostInputEventRouter*
+  GetRenderWidgetHostInputEventRouter() = 0;
 
   // Returns the viz::FrameSinkId that this object uses to put things on screen.
   // This value is constant throughout the lifetime of this object. Note that

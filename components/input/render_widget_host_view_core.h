@@ -13,6 +13,10 @@
 #include "content/public/browser/render_widget_host_view.h"
 #include "ui/gfx/geometry/rect.h"
 
+namespace content {
+class CrossProcessFrameConnectorBase;
+}  // namespace content
+
 namespace input {
 
 class COMPONENT_EXPORT(INPUT) RenderWidgetHostViewCore
@@ -20,6 +24,9 @@ class COMPONENT_EXPORT(INPUT) RenderWidgetHostViewCore
       public content::RenderWidgetHostView {
  public:
   ~RenderWidgetHostViewCore() override = default;
+
+  virtual void SetFrameConnector(
+      content::CrossProcessFrameConnectorBase* frame_connector);
 
   virtual content::RenderWidgetHost::InputEventObserver*
   GetInputTransferHandlerObserver();

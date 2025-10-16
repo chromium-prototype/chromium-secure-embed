@@ -233,6 +233,8 @@ class CONTENT_EXPORT RenderWidgetHostImpl
   VisibleTimeRequestTrigger& GetVisibleTimeRequestTrigger();
 
   // RenderWidgetHost implementation.
+  input::RenderWidgetHostInputEventRouter* GetRenderWidgetHostInputEventRouter()
+      override;
   const viz::FrameSinkId& GetFrameSinkId() override;
   void UpdateTextDirection(base::i18n::TextDirection direction) override;
   void NotifyTextDirection() override;
