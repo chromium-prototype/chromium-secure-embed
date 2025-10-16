@@ -106,6 +106,7 @@ class CONTENT_EXPORT RenderWidgetHostViewChildFrame
   void UpdateTooltipFromKeyboard(const std::u16string& tooltip_text,
                                  const gfx::Rect& bounds) override;
   void ClearKeyboardTriggeredTooltip() override;
+  bool IsChildView() const override;
 
   // RenderWidgetHostViewBase implementation.
 #if BUILDFLAG(IS_ANDROID)
@@ -176,7 +177,6 @@ class CONTENT_EXPORT RenderWidgetHostViewChildFrame
       override;
   bool IsRenderWidgetHostViewChildFrame() const override;
   void InvalidateLocalSurfaceIdAndAllocationGroup() override;
-  bool IsChildView() const override;
 
 #if BUILDFLAG(IS_MAC)
   // RenderWidgetHostView implementation.
