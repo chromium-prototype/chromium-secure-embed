@@ -85,7 +85,9 @@ void SecureEmbedHost::Attach(int64_t content_id) {
 
   attached_web_contents_ = web_contents_to_attach;
 
-  CHECK(static_cast<content::RenderWidgetHostViewBase*>(web_contents_to_attach->GetRenderWidgetHostView())->IsRenderWidgetHostViewChildFrame());
+  CHECK(static_cast<content::RenderWidgetHostViewBase*>(
+            web_contents_to_attach->GetRenderWidgetHostView())
+            ->IsRenderWidgetHostViewChildFrame());
   SetView(static_cast<content::RenderWidgetHostViewChildFrame*>(
               web_contents_to_attach->GetRenderWidgetHostView()),
           /*allow_paint_holding=*/false);
@@ -95,7 +97,7 @@ void SecureEmbedHost::SetLocalSurfaceId(
     const ::viz::LocalSurfaceId& local_surface_id) {
   local_surface_id_ = local_surface_id;
   LOG(INFO) << "SecureEmbedHost::SetLocalSurfaceId:"
-             << local_surface_id_.ToString();
+            << local_surface_id_.ToString();
   content::RenderWidgetHostImpl* render_widget_host = view_->host();
   render_widget_host->SendScreenRects();
   render_widget_host->SetVisualPropertiesFromParentFrame(
