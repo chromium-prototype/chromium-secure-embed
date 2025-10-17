@@ -62,14 +62,7 @@ WebContentsImpl* WebContentsViewChildFrame::GetHostingWebContents() {
 
 const WebContentsImpl* WebContentsViewChildFrame::GetHostingWebContents()
     const {
-  if (auto* outer_web_contents = web_contents_->GetOuterWebContents()) {
-    return outer_web_contents;
-  }
-  if (auto* secure_embed_delegate = web_contents_->GetSecureEmbedDelegate()) {
-    return static_cast<WebContentsImpl*>(
-        secure_embed_delegate->GetEmbedderWebContents());
-  }
-  return nullptr;
+  return const_cast<WebContentsViewChildFrame*>(this)->GetHostingWebContents();
 }
 
 WebContentsView* WebContentsViewChildFrame::GetOuterView() {
@@ -81,11 +74,7 @@ WebContentsView* WebContentsViewChildFrame::GetOuterView() {
 }
 
 const WebContentsView* WebContentsViewChildFrame::GetOuterView() const {
-  if (auto* hosting_web_contents = GetHostingWebContents()) {
-    return hosting_web_contents->GetView();
-  }
-
-  return nullptr;
+  return const_cast<WebContentsViewChildFrame*>(this)->GetOuterView();
 }
 
 RenderViewHostDelegateView* WebContentsViewChildFrame::GetOuterDelegateView() {
