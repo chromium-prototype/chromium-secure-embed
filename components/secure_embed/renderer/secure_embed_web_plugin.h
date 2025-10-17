@@ -13,7 +13,7 @@
 #include "third_party/blink/public/web/web_plugin.h"
 
 namespace cc {
-class SolidColorLayer;
+class SurfaceLayer;
 }
 
 namespace blink {
@@ -60,6 +60,7 @@ class SecureEmbedWebPlugin : public blink::WebPlugin,
 
   // mojom::SecureEmbed:
   void OnAttached() override;
+  void SetFrameSinkId(const ::viz::FrameSinkId& frame_sink_id) override;
 
  private:
   explicit SecureEmbedWebPlugin(
@@ -72,10 +73,13 @@ class SecureEmbedWebPlugin : public blink::WebPlugin,
   int contents_id_ = -1;
 
   raw_ptr<blink::WebPluginContainer> container_ = nullptr;
-  scoped_refptr<cc::SolidColorLayer> layer_;
+  scoped_refptr<cc::SurfaceLayer> layer_;
 
   mojo::AssociatedRemote<mojom::SecureEmbedHost> host_;
   mojo::AssociatedReceiver<mojom::SecureEmbed> receiver_{this};
+  viz::FrameSinkId frame_sink_id_;
+  std::unique_ptr<viz::ParentLocalSurfaceIdAllocator>
+      parent_local_surface_id_allocator_;
 };
 
 }  // namespace secure_embed
