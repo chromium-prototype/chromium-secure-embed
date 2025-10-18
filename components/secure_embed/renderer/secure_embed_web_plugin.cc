@@ -55,8 +55,6 @@ bool SecureEmbedWebPlugin::Initialize(blink::WebPluginContainer* container) {
   layer_ = cc::SolidColorLayer::Create();
   layer_->SetBackgroundColor(SkColors::kRed);
   layer_->SetIsDrawable(true);
-
-  // Provide the layer to the container
   container_->SetCcLayer(layer_.get());
 
   if (host_) {
@@ -114,7 +112,7 @@ void SecureEmbedWebPlugin::UpdateAllLifecyclePhases(
 void SecureEmbedWebPlugin::Paint(cc::PaintCanvas* canvas,
                                  const gfx::Rect& rect) {
   // No-op: rendering is now handled by the compositor layer
-  DCHECK(false);
+  NOTREACHED();
 }
 
 void SecureEmbedWebPlugin::UpdateGeometry(const gfx::Rect& window_rect,
@@ -123,6 +121,9 @@ void SecureEmbedWebPlugin::UpdateGeometry(const gfx::Rect& window_rect,
                                           bool is_visible) {
   // Note: Layer bounds are set by WebPluginContainerImpl::Paint()
   // so we don't need to set them here for the time being.
+
+  // TODO(secure-embed): This will need updated to propagate the geometry to the
+  // embedded content.
 }
 
 void SecureEmbedWebPlugin::UpdateFocus(bool focused,

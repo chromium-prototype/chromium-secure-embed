@@ -72,7 +72,8 @@ class SecureEmbedWebPlugin : public blink::WebPlugin,
   int contents_id_ = -1;
 
   raw_ptr<blink::WebPluginContainer> container_ = nullptr;
-
+  // TODO(secure-embed): This will be converted to be a SurfaceLayer or may be
+  // kept as part of placeholder rendering if supported.
   scoped_refptr<cc::SolidColorLayer> layer_;
 
   mojo::AssociatedRemote<mojom::SecureEmbedHost> host_;
