@@ -88,8 +88,10 @@ void SecureEmbedWebPlugin::Destroy() {
     container_->SetCcLayer(nullptr);
   }
   layer_ = nullptr;
+
   receiver_.reset();
   host_.reset();
+
   delete this;
 }
 
@@ -117,7 +119,7 @@ void SecureEmbedWebPlugin::UpdateAllLifecyclePhases(
 void SecureEmbedWebPlugin::Paint(cc::PaintCanvas* canvas,
                                  const gfx::Rect& rect) {
   // No-op: rendering is now handled by the compositor layer
-  DCHECK(false);
+  NOTREACHED();
 }
 
 void SecureEmbedWebPlugin::UpdateGeometry(const gfx::Rect& window_rect,
@@ -126,6 +128,9 @@ void SecureEmbedWebPlugin::UpdateGeometry(const gfx::Rect& window_rect,
                                           bool is_visible) {
   // Note: Layer bounds are set by WebPluginContainerImpl::Paint()
   // so we don't need to set them here for the time being.
+
+  // TODO(secure-embed): This will need updated to propagate the geometry to the
+  // embedded content.
 }
 
 void SecureEmbedWebPlugin::UpdateFocus(bool focused,
