@@ -9,6 +9,7 @@
 #include "base/notimplemented.h"
 #include "components/secure_embed/common/secure_embed.mojom.h"
 #include "content/public/browser/cross_process_frame_connector_base.h"
+#include "content/public/browser/web_contents_observer.h"
 #include "mojo/public/cpp/bindings/pending_associated_receiver.h"
 #include "mojo/public/cpp/bindings/self_owned_associated_receiver.h"
 
@@ -21,7 +22,8 @@ namespace secure_embed {
 
 class COMPONENT_EXPORT(SECURE_EMBED) SecureEmbedHost
     : public mojom::SecureEmbedHost,
-      public content::CrossProcessFrameConnectorBase {
+      public content::CrossProcessFrameConnectorBase,
+      public content::WebContentsObserver {
  public:
   ~SecureEmbedHost() override;
 
@@ -104,6 +106,12 @@ class COMPONENT_EXPORT(SECURE_EMBED) SecureEmbedHost
   // input::ChildFrameInputHelper::Delegate:
   input::RenderWidgetHostViewInput* GetParentViewInput() override;
   input::RenderWidgetHostViewInput* GetRootViewInput() override;
+
+  // content::WebContentsObserver:
+  void RenderViewHostChanged(content::RenderViewHost* old_host,
+                             content::RenderViewHost* new_host) override;
+  // Same name as method in connector.
+  void OnVisibilityChanged(content::Visibility visibility) override {}
 
  private:
   explicit SecureEmbedHost(content::RenderFrameHost* render_frame_host);

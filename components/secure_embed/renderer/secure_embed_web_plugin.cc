@@ -170,6 +170,9 @@ void SecureEmbedWebPlugin::OnAttached() {
 void SecureEmbedWebPlugin::SetFrameSinkId(
     const ::viz::FrameSinkId& frame_sink_id) {
   frame_sink_id_ = frame_sink_id;
+  // viz seems to want us to change the embed token when the embedded frame
+  // (sink id) changes.
+  parent_local_surface_id_allocator_->Invalidate(true);
   parent_local_surface_id_allocator_->GenerateId();
 
   auto local_surface_id =

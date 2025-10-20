@@ -12,6 +12,8 @@
 #include "content/browser/renderer_host/render_widget_host_view_child_frame.h"
 #include "content/public/browser/cross_process_frame_connector_base.h"
 #include "content/public/browser/render_frame_host.h"
+#include "content/public/browser/render_view_host.h"
+#include "content/public/browser/render_widget_host.h"
 #include "content/public/browser/secure_embed_delegate.h"
 #include "content/public/browser/web_contents.h"
 #include "mojo/public/cpp/bindings/self_owned_associated_receiver.h"
@@ -84,6 +86,7 @@ void SecureEmbedHost::Attach(int64_t content_id) {
             << content_id;
 
   attached_web_contents_ = web_contents_to_attach;
+  Observe(attached_web_contents_);
 
   CHECK(static_cast<content::RenderWidgetHostViewBase*>(
             web_contents_to_attach->GetRenderWidgetHostView())
@@ -120,10 +123,20 @@ void SecureEmbedHost::OnSecureEmbedDisconnected() {
 
 void SecureEmbedHost::SetView(content::RenderWidgetHostViewChildFrame* view,
                               bool allow_paint_holding) {
-  // TODO(secure-embed): This doesn't handle clearing the view.
+  if (!view) {
+    // ### HACK: We get SetView(null) from old view destroying -after-
+    // the View swap event. Urk.
+    return;
+  }
+  LOG(ERROR) << "SetView:" << view;
+  if (!view) {
+    view_->SetFrameConnector(nullptr);
+  }
   view_ = view;
-  view_->SetFrameConnector(this);
-  secure_embed_->SetFrameSinkId(view_->GetFrameSinkId());
+  if (view_) {
+    view_->SetFrameConnector(this);
+    secure_embed_->SetFrameSinkId(view_->GetFrameSinkId());
+  }
 }
 
 content::RenderWidgetHostViewBase*
@@ -354,6 +367,16 @@ input::RenderWidgetHostViewInput* SecureEmbedHost::GetParentViewInput() {
 input::RenderWidgetHostViewInput* SecureEmbedHost::GetRootViewInput() {
   NOTIMPLEMENTED();
   return nullptr;
+}
+
+void SecureEmbedHost::RenderViewHostChanged(content::RenderViewHost* old_host,
+                                            content::RenderViewHost* new_host) {
+  auto* new_widget_view = static_cast<content::RenderWidgetHostViewBase*>(
+      new_host->GetWidget()->GetView());
+  CHECK(new_widget_view->IsRenderWidgetHostViewChildFrame());
+  SetView(
+      static_cast<content::RenderWidgetHostViewChildFrame*>(new_widget_view),
+      /*allow_paint_holding=*/false);
 }
 
 }  // namespace secure_embed
