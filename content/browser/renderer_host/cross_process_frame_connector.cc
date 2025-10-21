@@ -48,7 +48,17 @@ CrossProcessFrameConnector::CrossProcessFrameConnector(
   }
 }
 
-CrossProcessFrameConnector::~CrossProcessFrameConnector() = default;
+CrossProcessFrameConnector::~CrossProcessFrameConnector() {
+  if (!IsVisible()) {
+    // MaybeLogCrash will check 1) if there was a crash or not and 2) if the
+    // crash might have been already logged earlier as kCrashedWhileVisible or
+    // kShownAfterCrashing.
+    MaybeLogCrash(CrashVisibility::kNeverVisibleAfterCrash);
+  }
+
+  // Notify the view of this object being destroyed, if the view still exists.
+  SetView(nullptr, /*allow_paint_holding=*/false);
+}
 
 void CrossProcessFrameConnector::ReportFrameSinkId(
     const viz::FrameSinkId& frame_sink_id,

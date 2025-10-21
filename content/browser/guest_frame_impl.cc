@@ -37,7 +37,10 @@ GuestFrameImpl::GuestFrameImpl(WebContents* guest_web_contents,
   SetView(view_, /*allow_paint_holding=*/false);
 }
 
-GuestFrameImpl::~GuestFrameImpl() = default;
+GuestFrameImpl::~GuestFrameImpl() {
+  // Notify the view of this object being destroyed, if the view still exists.
+  SetView(nullptr, /*allow_paint_holding=*/false);
+}
 
 void GuestFrameImpl::SetLocalSurfaceId(
     const viz::LocalSurfaceId& local_surface_id) {

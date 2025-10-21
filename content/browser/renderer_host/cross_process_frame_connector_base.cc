@@ -33,17 +33,7 @@ CrossProcessFrameConnectorBase::CrossProcessFrameConnectorBase() {
   screen_infos_ = display::ScreenInfos(display::ScreenInfo());
 }
 
-CrossProcessFrameConnectorBase::~CrossProcessFrameConnectorBase() {
-  if (!IsVisible()) {
-    // MaybeLogCrash will check 1) if there was a crash or not and 2) if the
-    // crash might have been already logged earlier as kCrashedWhileVisible or
-    // kShownAfterCrashing.
-    MaybeLogCrash(CrashVisibility::kNeverVisibleAfterCrash);
-  }
-
-  // Notify the view of this object being destroyed, if the view still exists.
-  SetView(nullptr, /*allow_paint_holding=*/false);
-}
+CrossProcessFrameConnectorBase::~CrossProcessFrameConnectorBase() = default;
 
 void CrossProcessFrameConnectorBase::SetView(
     RenderWidgetHostViewChildFrame* view,
