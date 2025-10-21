@@ -83,7 +83,7 @@ void SecureEmbedHost::Attach(int64_t content_id) {
             << content_id;
 
   guest_frame_ =
-      content::GuestFrame::Create(web_contents_to_attach, render_frame_host_);
+      content::GuestFrame::Create(web_contents_to_attach);
   secure_embed_->SetFrameSinkId(guest_frame_->GetFrameSinkId());
 }
 

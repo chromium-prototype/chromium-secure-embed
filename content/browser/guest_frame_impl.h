@@ -5,16 +5,17 @@
 #ifndef CONTENT_BROWSER_GUEST_FRAME_IMPL_H_
 #define CONTENT_BROWSER_GUEST_FRAME_IMPL_H_
 
-#include "content/public/browser/guest_frame.h"
 #include "content/public/browser/cross_process_frame_connector_base.h"
+#include "content/public/browser/guest_frame.h"
 
 namespace content {
 
-// TODO(secure-embed): CrossProcessFrameConnectorBase can be moved to //content private.
-class GuestFrameImpl : public GuestFrame, public CrossProcessFrameConnectorBase {
+// TODO(secure-embed): CrossProcessFrameConnectorBase can be moved to //content
+// private.
+class GuestFrameImpl : public GuestFrame,
+                       public CrossProcessFrameConnectorBase {
  public:
-  GuestFrameImpl(WebContents* guest_web_contents,
-                 RenderFrameHost* embedder_rfh);
+  GuestFrameImpl(WebContents* guest_web_contents);
   ~GuestFrameImpl() override;
 
   // GuestFrame:
@@ -95,4 +96,4 @@ class GuestFrameImpl : public GuestFrame, public CrossProcessFrameConnectorBase 
 
 }  // namespace content
 
-#endif // CONTENT_BROWSER_GUEST_FRAME_IMPL_H_
+#endif  // CONTENT_BROWSER_GUEST_FRAME_IMPL_H_

@@ -20,18 +20,14 @@
 namespace content {
 
 // static
-std::unique_ptr<GuestFrame> GuestFrame::Create(WebContents* guest_web_contents,
-                                               RenderFrameHost* embedder_rfh) {
-  return std::make_unique<GuestFrameImpl>(guest_web_contents, embedder_rfh);
+std::unique_ptr<GuestFrame> GuestFrame::Create(WebContents* guest_web_contents) {
+  return std::make_unique<GuestFrameImpl>(guest_web_contents);
 }
 
-GuestFrameImpl::GuestFrameImpl(WebContents* guest_web_contents,
-                               RenderFrameHost* embedder_rfh)
-    : guest_web_contents_(guest_web_contents),
-      view_(static_cast<RenderWidgetHostViewChildFrame*>(
-          guest_web_contents->GetRenderWidgetHostView())) {
+GuestFrameImpl::GuestFrameImpl(WebContents* guest_web_contents)
+    : guest_web_contents_(guest_web_contents) {
   auto* base_view = static_cast<RenderWidgetHostViewBase*>(
-    guest_web_contents->GetRenderWidgetHostView());
+      guest_web_contents->GetRenderWidgetHostView());
   CHECK(base_view->IsRenderWidgetHostViewChildFrame());
   view_ = static_cast<RenderWidgetHostViewChildFrame*>(base_view);
   view_->SetFrameConnector(this);
@@ -59,22 +55,20 @@ const viz::FrameSinkId& GuestFrameImpl::GetFrameSinkId() const {
 }
 
 void GuestFrameImpl::SetView(RenderWidgetHostViewChildFrame* view,
-                              bool allow_paint_holding) {
+                             bool allow_paint_holding) {
   // TODO(secure-embed): This doesn't handle clearing the view.
   view_ = view;
   view_->SetFrameConnector(this);
 }
 
-RenderWidgetHostViewBase*
-GuestFrameImpl::GetParentRenderWidgetHostView() {
+RenderWidgetHostViewBase* GuestFrameImpl::GetParentRenderWidgetHostView() {
   return static_cast<RenderWidgetHostViewBase*>(
       guest_web_contents_->GetSecureEmbedDelegate()
           ->GetEmbedderWebContents()
           ->GetRenderWidgetHostView());
 }
 
-RenderWidgetHostViewBase*
-GuestFrameImpl::GetRootRenderWidgetHostView() {
+RenderWidgetHostViewBase* GuestFrameImpl::GetRootRenderWidgetHostView() {
   // TODO(secure-embed): Do we support multiple levels of embedding?
   // Mixed kinds?
   return GetParentRenderWidgetHostView();
@@ -104,8 +98,7 @@ void GuestFrameImpl::UpdateCursor(const ui::Cursor& cursor) {
   NOTIMPLEMENTED();
 }
 
-CrossProcessFrameConnectorBase::RootViewFocusState
-GuestFrameImpl::HasFocus() {
+CrossProcessFrameConnectorBase::RootViewFocusState GuestFrameImpl::HasFocus() {
   NOTIMPLEMENTED();
   return CrossProcessFrameConnectorBase::RootViewFocusState::kNullView;
 }
@@ -185,7 +178,7 @@ double GuestFrameImpl::GetCssZoomFactor() const {
 }
 
 void GuestFrameImpl::EnableAutoResize(const gfx::Size& min_size,
-                                       const gfx::Size& max_size) {
+                                      const gfx::Size& max_size) {
   NOTIMPLEMENTED();
 }
 
@@ -236,8 +229,7 @@ void GuestFrameImpl::SetLocalFrameSize(const gfx::Size& local_frame_size) {
   NOTIMPLEMENTED();
 }
 
-void GuestFrameImpl::SetRectInParentView(
-    const gfx::Rect& rect_in_parent_view) {
+void GuestFrameImpl::SetRectInParentView(const gfx::Rect& rect_in_parent_view) {
   NOTIMPLEMENTED();
 }
 
@@ -255,8 +247,8 @@ void GuestFrameImpl::OnVisibilityChanged(
 }
 
 void GuestFrameImpl::UpdateRenderThrottlingStatus(bool is_throttled,
-                                                   bool subtree_throttled,
-                                                   bool display_locked) {
+                                                  bool subtree_throttled,
+                                                  bool display_locked) {
   NOTIMPLEMENTED();
 }
 
