@@ -20,15 +20,15 @@
 namespace content {
 
 // static
-std::unique_ptr<GuestFrame> GuestFrame::Create(WebContents* guest_web_contents) {
+std::unique_ptr<GuestFrame> GuestFrame::Create(
+    WebContents* guest_web_contents) {
   return std::make_unique<GuestFrameImpl>(guest_web_contents);
 }
 
-GuestFrameImpl::GuestFrameImpl(WebContents* guest_web_contents,
-                               RenderFrameHost* embedder_rfh)
-    : guest_web_contents_(guest_web_contents) {}
+GuestFrameImpl::GuestFrameImpl(WebContents* guest_web_contents)
+    : guest_web_contents_(guest_web_contents) {
   auto* base_view = static_cast<RenderWidgetHostViewBase*>(
-    guest_web_contents->GetRenderWidgetHostView());
+      guest_web_contents->GetRenderWidgetHostView());
   CHECK(base_view->IsRenderWidgetHostViewChildFrame());
   view_ = static_cast<RenderWidgetHostViewChildFrame*>(base_view);
   SetView(view_, /*allow_paint_holding=*/false);
@@ -78,15 +78,6 @@ RenderWidgetHostViewBase* GuestFrameImpl::GetRootRenderWidgetHostView() {
   // TODO(secure-embed): Do we support multiple levels of embedding?
   // Mixed kinds?
   return GetParentRenderWidgetHostView();
-}
-
-void GuestFrameImpl::RenderProcessGone() {
-  NOTIMPLEMENTED();
-}
-
-void GuestFrameImpl::FirstSurfaceActivation(
-    const viz::SurfaceInfo& surface_info) {
-  NOTIMPLEMENTED();
 }
 
 void GuestFrameImpl::SendIntrinsicSizingInfoToParent(

@@ -52,4 +52,3 @@ class GuestFrameImpl : public GuestFrame,
 }  // namespace content
 
 #endif  // CONTENT_BROWSER_GUEST_FRAME_IMPL_H_
-
