@@ -20,16 +20,13 @@
 namespace content {
 
 // static
-std::unique_ptr<GuestFrame> GuestFrame::Create(WebContents* guest_web_contents,
-                                               RenderFrameHost* embedder_rfh) {
-  return std::make_unique<GuestFrameImpl>(guest_web_contents, embedder_rfh);
+std::unique_ptr<GuestFrame> GuestFrame::Create(WebContents* guest_web_contents) {
+  return std::make_unique<GuestFrameImpl>(guest_web_contents);
 }
 
 GuestFrameImpl::GuestFrameImpl(WebContents* guest_web_contents,
                                RenderFrameHost* embedder_rfh)
-    : guest_web_contents_(guest_web_contents),
-      view_(static_cast<RenderWidgetHostViewChildFrame*>(
-          guest_web_contents->GetRenderWidgetHostView())) {
+    : guest_web_contents_(guest_web_contents) {}
   auto* base_view = static_cast<RenderWidgetHostViewBase*>(
     guest_web_contents->GetRenderWidgetHostView());
   CHECK(base_view->IsRenderWidgetHostViewChildFrame());
@@ -77,23 +74,35 @@ RenderWidgetHostViewBase* GuestFrameImpl::GetParentRenderWidgetHostView() {
           ->GetRenderWidgetHostView());
 }
 
-RenderWidgetHostViewBase*
-GuestFrameImpl::GetRootRenderWidgetHostView() {
+RenderWidgetHostViewBase* GuestFrameImpl::GetRootRenderWidgetHostView() {
   // TODO(secure-embed): Do we support multiple levels of embedding?
   // Mixed kinds?
   return GetParentRenderWidgetHostView();
 }
+
+void GuestFrameImpl::RenderProcessGone() {
+  NOTIMPLEMENTED();
+}
+
+void GuestFrameImpl::FirstSurfaceActivation(
+    const viz::SurfaceInfo& surface_info) {
+  NOTIMPLEMENTED();
+}
+
 void GuestFrameImpl::SendIntrinsicSizingInfoToParent(
     blink::mojom::IntrinsicSizingInfoPtr) {
   NOTIMPLEMENTED();
 }
+
 void GuestFrameImpl::EnableAutoResize(const gfx::Size& min_size,
                                       const gfx::Size& max_size) {
   NOTIMPLEMENTED();
 }
+
 void GuestFrameImpl::DisableAutoResize() {
   NOTIMPLEMENTED();
 }
+
 void GuestFrameImpl::DidUpdateVisualProperties(
     const cc::RenderFrameMetadata& metadata) {
   NOTIMPLEMENTED();
@@ -104,16 +113,20 @@ void GuestFrameImpl::ReportFrameSinkId(const viz::FrameSinkId& frame_sink_id,
   // TODO(secure-embed): This should actively push.
   frame_sink_id_ = frame_sink_id;
 }
+
 void GuestFrameImpl::ReportChildProcessGone() {
   NOTIMPLEMENTED();
 }
+
 void GuestFrameImpl::ReportBadVisualProperties() {
   NOTIMPLEMENTED();
 }
+
 bool GuestFrameImpl::NotifyInnerWebContentsVisibilityChanged() {
   NOTIMPLEMENTED();
   return false;
 }
+
 void GuestFrameImpl::RequestTabReload() {
   NOTIMPLEMENTED();
 }

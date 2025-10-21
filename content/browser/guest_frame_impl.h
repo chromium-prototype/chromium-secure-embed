@@ -10,10 +10,10 @@
 
 namespace content {
 
-class GuestFrameImpl : public GuestFrame, public CrossProcessFrameConnectorBase {
+class GuestFrameImpl : public GuestFrame,
+                       public CrossProcessFrameConnectorBase {
  public:
-  GuestFrameImpl(WebContents* guest_web_contents,
-                 RenderFrameHost* embedder_rfh);
+  explicit GuestFrameImpl(WebContents* guest_web_contents);
   ~GuestFrameImpl() override;
 
   // GuestFrame:
@@ -44,10 +44,12 @@ class GuestFrameImpl : public GuestFrame, public CrossProcessFrameConnectorBase 
 
   viz::FrameSinkId frame_sink_id_;
   viz::LocalSurfaceId local_surface_id_;
+
   raw_ptr<WebContents> guest_web_contents_ = nullptr;
   raw_ptr<RenderWidgetHostViewChildFrame> view_ = nullptr;
 };
 
 }  // namespace content
 
-#endif // CONTENT_BROWSER_GUEST_FRAME_IMPL_H_
+#endif  // CONTENT_BROWSER_GUEST_FRAME_IMPL_H_
+
