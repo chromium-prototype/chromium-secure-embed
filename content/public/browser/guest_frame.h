@@ -9,6 +9,7 @@
 #include "components/viz/common/surfaces/local_surface_id.h"
 #include "content/common/content_export.h"
 #include "third_party/blink/public/common/input/web_keyboard_event.h"
+#include "third_party/blink/public/mojom/input/focus_type.mojom.h"
 #include "ui/gfx/geometry/size.h"
 
 namespace content {
@@ -36,6 +37,8 @@ class CONTENT_EXPORT GuestFrame {
   // ###
   virtual void ForwardKeyboardEvent(
       const blink::WebKeyboardEvent& keyboard_event) = 0;
+
+  virtual void SetFocus(bool focused, blink::mojom::FocusType focus_type) = 0;
 
   // Gets the FrameSinkId of the guest's view.
   virtual const viz::FrameSinkId& GetFrameSinkId() const = 0;

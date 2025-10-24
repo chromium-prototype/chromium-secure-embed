@@ -69,7 +69,13 @@ void GuestFrameImpl::ForwardKeyboardEvent(
     return;
   }
 
-  view_->host()->ForwardKeyboardEvent(native_event);
+  target_host->ForwardKeyboardEvent(native_event);
+}
+
+void GuestFrameImpl::SetFocus(bool focused,
+                              blink::mojom::FocusType focus_type) {
+  // TODO(secure-embed): Pay attention to traversal `focus_type` values.
+  view_->host()->SetPageFocus(focused);
 }
 
 const viz::FrameSinkId& GuestFrameImpl::GetFrameSinkId() const {

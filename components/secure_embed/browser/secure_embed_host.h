@@ -40,6 +40,7 @@ class COMPONENT_EXPORT(SECURE_EMBED) SecureEmbedHost
       const ::viz::LocalSurfaceId& local_surface_id) override;
   void DispatchKeyboardEvent(
       std::unique_ptr<blink::WebCoalescedInputEvent> key_event) override;
+  void SetFocus(bool focused, blink::mojom::FocusType focus_type) override;
 
  private:
   explicit SecureEmbedHost(content::RenderFrameHost* render_frame_host);

@@ -21,6 +21,7 @@ class GuestFrameImpl : public GuestFrame,
   const viz::FrameSinkId& GetFrameSinkId() const override;
   void ForwardKeyboardEvent(
       const blink::WebKeyboardEvent& keyboard_event) override;
+  void SetFocus(bool focused, blink::mojom::FocusType focus_type) override;
 
   // CrossProcessFrameConnectorBase:
   void SetView(RenderWidgetHostViewChildFrame* view,

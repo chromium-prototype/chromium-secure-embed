@@ -108,6 +108,13 @@ void SecureEmbedHost::DispatchKeyboardEvent(
   }
 }
 
+void SecureEmbedHost::SetFocus(bool focused,
+                               blink::mojom::FocusType focus_type) {
+  if (guest_frame_) {
+    guest_frame_->SetFocus(focused, focus_type);
+  }
+}
+
 // static
 size_t SecureEmbedHost::GetInstanceCountForTesting() {
   return instance_count_for_testing_;

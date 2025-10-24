@@ -135,7 +135,9 @@ void SecureEmbedWebPlugin::UpdateGeometry(const gfx::Rect& window_rect,
 }
 
 void SecureEmbedWebPlugin::UpdateFocus(bool focused,
-                                       blink::mojom::FocusType focus_type) {}
+                                       blink::mojom::FocusType focus_type) {
+  host_->SetFocus(focused, focus_type);
+}
 
 void SecureEmbedWebPlugin::UpdateVisibility(bool is_visible) {}
 
