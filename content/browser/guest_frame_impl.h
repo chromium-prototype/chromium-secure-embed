@@ -19,6 +19,8 @@ class GuestFrameImpl : public GuestFrame,
   // GuestFrame:
   void SetLocalSurfaceId(const viz::LocalSurfaceId& local_surface_id) override;
   const viz::FrameSinkId& GetFrameSinkId() const override;
+  void ForwardKeyboardEvent(
+      const blink::WebKeyboardEvent& keyboard_event) override;
 
   // CrossProcessFrameConnectorBase:
   void SetView(RenderWidgetHostViewChildFrame* view,

@@ -7,6 +7,7 @@
 #include "base/no_destructor.h"
 #include "base/notimplemented.h"
 #include "components/input/cursor_manager.h"
+#include "components/input/native_web_keyboard_event.h"
 #include "components/viz/common/surfaces/surface_info.h"
 #include "content/browser/renderer_host/render_widget_host_impl.h"
 #include "content/browser/renderer_host/render_widget_host_view_child_frame.h"
@@ -49,6 +50,26 @@ void GuestFrameImpl::SetLocalSurfaceId(
       1.0, 1.0, false, gfx::Size(1000, 1000), gfx::Rect(10, 10, 1000, 1000),
       {});
   render_widget_host->UpdateVisualProperties(true);
+}
+
+void GuestFrameImpl::ForwardKeyboardEvent(
+    const blink::WebKeyboardEvent& keyboard_event) {
+  input::NativeWebKeyboardEvent native_event(
+      keyboard_event, GetParentRenderWidgetHostView()->GetNativeView());
+
+  RenderWidgetHostImpl* target_host = view_->host();
+
+  // If there are multiple widgets on the page (such as when there are
+  // out-of-process iframes), pick the one that should process this event.
+  if (target_host->delegate()) {
+    target_host =
+        target_host->delegate()->GetFocusedRenderWidgetHost(target_host);
+  }
+  if (!target_host) {
+    return;
+  }
+
+  view_->host()->ForwardKeyboardEvent(native_event);
 }
 
 const viz::FrameSinkId& GuestFrameImpl::GetFrameSinkId() const {

@@ -16,5 +16,8 @@ mojom("mojom") {
 
   sources = [ "secure_embed.mojom" ]
 
-  deps = [ "//services/viz/public/mojom" ]
+  deps = [
+    "//content/public/common:interfaces",
+    "//services/viz/public/mojom",
+  ]
 }

@@ -94,6 +94,20 @@ void SecureEmbedHost::SetLocalSurfaceId(
   }
 }
 
+void SecureEmbedHost::DispatchKeyboardEvent(
+    std::unique_ptr<blink::WebCoalescedInputEvent> key_event) {
+  if (!key_event || key_event->CoalescedEventSize() != 1 ||
+      !blink::WebInputEvent::IsKeyboardEventType(
+          key_event->Event().GetType())) {
+    LOG(ERROR) << "Wrong key event";
+    return;
+  }
+  if (guest_frame_) {
+    guest_frame_->ForwardKeyboardEvent(
+        static_cast<const blink::WebKeyboardEvent&>(key_event->Event()));
+  }
+}
+
 // static
 size_t SecureEmbedHost::GetInstanceCountForTesting() {
   return instance_count_for_testing_;

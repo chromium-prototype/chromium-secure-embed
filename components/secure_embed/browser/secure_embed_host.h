@@ -38,6 +38,8 @@ class COMPONENT_EXPORT(SECURE_EMBED) SecureEmbedHost
   void Attach(int64_t content_id) override;
   void SetLocalSurfaceId(
       const ::viz::LocalSurfaceId& local_surface_id) override;
+  void DispatchKeyboardEvent(
+      std::unique_ptr<blink::WebCoalescedInputEvent> key_event) override;
 
  private:
   explicit SecureEmbedHost(content::RenderFrameHost* render_frame_host);

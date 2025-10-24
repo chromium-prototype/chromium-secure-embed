@@ -8,6 +8,7 @@
 #include "components/viz/common/surfaces/frame_sink_id.h"
 #include "components/viz/common/surfaces/local_surface_id.h"
 #include "content/common/content_export.h"
+#include "third_party/blink/public/common/input/web_keyboard_event.h"
 #include "ui/gfx/geometry/size.h"
 
 namespace content {
@@ -31,6 +32,10 @@ class CONTENT_EXPORT GuestFrame {
   // Called by the embedder to provide the surface ID for the guest content.
   virtual void SetLocalSurfaceId(
       const viz::LocalSurfaceId& local_surface_id) = 0;
+
+  // ###
+  virtual void ForwardKeyboardEvent(
+      const blink::WebKeyboardEvent& keyboard_event) = 0;
 
   // Gets the FrameSinkId of the guest's view.
   virtual const viz::FrameSinkId& GetFrameSinkId() const = 0;
