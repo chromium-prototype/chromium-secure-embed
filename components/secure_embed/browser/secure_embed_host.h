@@ -22,7 +22,7 @@ namespace secure_embed {
 
 class COMPONENT_EXPORT(SECURE_EMBED) SecureEmbedHost
     : public mojom::SecureEmbedHost,
-      public content::GuestFrame::GuestFrameObserver {
+      public content::GuestFrame::Delegate {
  public:
   ~SecureEmbedHost() override;
 
@@ -42,8 +42,8 @@ class COMPONENT_EXPORT(SECURE_EMBED) SecureEmbedHost
   void SynchronizeVisualProperties(
       const blink::FrameVisualProperties& visual_properties) override;
 
-  // content::GuestFrame::GuestFrameObserver implementation:
-  void OnFrameSinkIdChanged(const viz::FrameSinkId& frame_sink_id) override;
+  // content::GuestFrame::Delegate implementation:
+  void SetFrameSinkId(const viz::FrameSinkId& frame_sink_id) override;
 
  private:
   explicit SecureEmbedHost(content::RenderFrameHost*);

@@ -5,7 +5,6 @@
 #ifndef CONTENT_PUBLIC_BROWSER_GUEST_FRAME_H_
 #define CONTENT_PUBLIC_BROWSER_GUEST_FRAME_H_
 
-#include "base/observer_list_types.h"
 #include "components/viz/common/surfaces/frame_sink_id.h"
 #include "components/viz/common/surfaces/local_surface_id.h"
 #include "content/common/content_export.h"
@@ -27,22 +26,17 @@ class WebContents;
 // to align with SecureEmbedDelegate's naming pattern.
 class CONTENT_EXPORT GuestFrame {
  public:
-  // Observer interface for GuestFrameImpl events that are forwarded to the
-  // embedder.
-  class GuestFrameObserver : public base::CheckedObserver {
+  class Delegate {
    public:
-    virtual void OnFrameSinkIdChanged(
-        const viz::FrameSinkId& frame_sink_id) = 0;
+    virtual void SetFrameSinkId(const viz::FrameSinkId& frame_sink_id) = 0;
   };
 
   // Creates a GuestFrame for the given guest WebContents.
   // This will attach the guest to the embedder's frame.
-  static std::unique_ptr<GuestFrame> Create(WebContents* guest_web_contents);
+  static std::unique_ptr<GuestFrame> Create(WebContents* guest_web_contents,
+                                            GuestFrame::Delegate* delegate);
 
   virtual ~GuestFrame() = default;
-
-  virtual void AddObserver(GuestFrameObserver* observer) = 0;
-  virtual void RemoveObserver(GuestFrameObserver* observer) = 0;
 
   // Called by the embedder to synchronize visual properties with the guest.
   virtual void OnSynchronizeVisualProperties(

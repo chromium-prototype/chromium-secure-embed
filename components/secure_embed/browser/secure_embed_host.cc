@@ -26,9 +26,6 @@ SecureEmbedHost::SecureEmbedHost(content::RenderFrameHost*) : secure_embed_() {
 }
 
 SecureEmbedHost::~SecureEmbedHost() {
-  if (guest_frame_) {
-    guest_frame_->RemoveObserver(this);
-  }
   --instance_count_for_testing_;
 }
 
@@ -79,8 +76,7 @@ void SecureEmbedHost::Attach(int64_t content_id) {
   LOG(INFO) << "Successfully retrieved WebContents for content_id: "
             << content_id;
 
-  guest_frame_ = content::GuestFrame::Create(web_contents_to_attach);
-  guest_frame_->AddObserver(this);
+  guest_frame_ = content::GuestFrame::Create(web_contents_to_attach, this);
   secure_embed_->SetFrameSinkId(guest_frame_->GetFrameSinkId());
 }
 
@@ -103,8 +99,7 @@ void SecureEmbedHost::OnSecureEmbedDisconnected() {
   secure_embed_.reset();
 }
 
-void SecureEmbedHost::OnFrameSinkIdChanged(
-    const viz::FrameSinkId& frame_sink_id) {
+void SecureEmbedHost::SetFrameSinkId(const viz::FrameSinkId& frame_sink_id) {
   if (secure_embed_) {
     secure_embed_->SetFrameSinkId(frame_sink_id);
   }

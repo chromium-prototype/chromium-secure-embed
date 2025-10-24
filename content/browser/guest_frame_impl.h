@@ -7,11 +7,8 @@
 
 #include <memory>
 
-#include "base/gtest_prod_util.h"
 #include "base/memory/raw_ptr.h"
-#include "base/observer_list.h"
 #include "cc/input/touch_action.h"
-#include "components/input/child_frame_input_helper.h"
 #include "content/browser/renderer_host/cross_process_frame_connector_base.h"
 #include "content/public/browser/guest_frame.h"
 #include "content/public/browser/visibility.h"
@@ -31,15 +28,17 @@ class RenderFrameHostImpl;
 class GuestFrameImpl : public GuestFrame,
                        public CrossProcessFrameConnectorBase {
  public:
-  GuestFrameImpl(WebContents* guest_web_contents);
+  GuestFrameImpl(WebContents* guest_web_contents,
+                 GuestFrame::Delegate* delegate);
   ~GuestFrameImpl() override;
 
   // GuestFrame:
+  // TODO(secure-embed): Some of the methods that we override here don't need to
+  // be on CrossProcessFrameConnectorBase class at all. Go through them and
+  // remove anything that isn't directly used by the view from the base class.
   void OnSynchronizeVisualProperties(
       const blink::FrameVisualProperties& visual_properties) override;
   const viz::FrameSinkId& GetFrameSinkId() const override;
-  void AddObserver(GuestFrameObserver* observer) override;
-  void RemoveObserver(GuestFrameObserver* observer) override;
 
   // CrossProcessFrameConnectorBase:
   void SetView(RenderWidgetHostViewChildFrame* view,
@@ -130,7 +129,7 @@ class GuestFrameImpl : public GuestFrame,
   RenderFrameHostImpl* current_child_frame_host() const;
 
   std::unique_ptr<Observer> observer_;
-  base::ObserverList<GuestFrameObserver> guest_frame_observers_;
+  raw_ptr<GuestFrame::Delegate> delegate_ = nullptr;
 
   raw_ptr<WebContents> guest_web_contents_ = nullptr;
   raw_ptr<RenderWidgetHostViewChildFrame> view_ = nullptr;

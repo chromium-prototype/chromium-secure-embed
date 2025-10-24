@@ -56,13 +56,14 @@ class GuestFrameImpl::Observer : public WebContentsObserver {
 };
 
 // static
-std::unique_ptr<GuestFrame> GuestFrame::Create(
-    WebContents* guest_web_contents) {
-  return std::make_unique<GuestFrameImpl>(guest_web_contents);
+std::unique_ptr<GuestFrame> GuestFrame::Create(WebContents* guest_web_contents,
+                                               GuestFrame::Delegate* delegate) {
+  return std::make_unique<GuestFrameImpl>(guest_web_contents, delegate);
 }
 
-GuestFrameImpl::GuestFrameImpl(WebContents* guest_web_contents)
-    : guest_web_contents_(guest_web_contents) {
+GuestFrameImpl::GuestFrameImpl(WebContents* guest_web_contents,
+                               GuestFrame::Delegate* delegate)
+    : delegate_(delegate), guest_web_contents_(guest_web_contents) {
   observer_ = std::make_unique<Observer>(this, guest_web_contents);
 
   // TODO(secure-embed): There may not be a view yet, depending on if the
@@ -88,14 +89,6 @@ GuestFrameImpl::~GuestFrameImpl() {
 
 const viz::FrameSinkId& GuestFrameImpl::GetFrameSinkId() const {
   return frame_sink_id_;
-}
-
-void GuestFrameImpl::AddObserver(GuestFrameObserver* observer) {
-  guest_frame_observers_.AddObserver(observer);
-}
-
-void GuestFrameImpl::RemoveObserver(GuestFrameObserver* observer) {
-  guest_frame_observers_.RemoveObserver(observer);
 }
 
 void GuestFrameImpl::SetView(RenderWidgetHostViewChildFrame* view,
@@ -138,9 +131,7 @@ void GuestFrameImpl::SetView(RenderWidgetHostViewChildFrame* view,
     }
 
     frame_sink_id_ = view_->GetFrameSinkId();
-    for (GuestFrameObserver& observer : guest_frame_observers_) {
-      observer.OnFrameSinkIdChanged(frame_sink_id_);
-    }
+    delegate_->SetFrameSinkId(frame_sink_id_);
   }
 }
 
@@ -471,10 +462,6 @@ bool GuestFrameImpl::IsVisible() {
   if (visibility_ == blink::mojom::FrameVisibility::kNotRendered ||
       GetIntersectionState().viewport_intersection.IsEmpty()) {
     return false;
-  }
-
-  if (!current_child_frame_host()) {
-    return true;
   }
 
   if (EmbedderVisibility() != Visibility::VISIBLE) {
