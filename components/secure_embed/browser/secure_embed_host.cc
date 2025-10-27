@@ -7,6 +7,7 @@
 #include "base/logging.h"
 #include "base/memory/ptr_util.h"
 #include "base/no_destructor.h"
+#include "base/supports_user_data.h"
 #include "components/guest_contents/browser/guest_contents_handle.h"
 #include "content/public/browser/guest_frame.h"
 #include "content/public/browser/render_frame_host.h"
@@ -19,6 +20,14 @@
 
 namespace secure_embed {
 
+struct SecureEmbedHostUserData : public base::SupportsUserData::Data {
+  constexpr static char kKey[] = "secure-embed-host-user-data";
+  explicit SecureEmbedHostUserData(SecureEmbedHost* secure_embed_host)
+      : secure_embed_host(secure_embed_host) {}
+
+  raw_ptr<SecureEmbedHost> secure_embed_host;
+};
+
 // static
 size_t SecureEmbedHost::instance_count_for_testing_ = 0;
 
@@ -27,6 +36,9 @@ SecureEmbedHost::SecureEmbedHost(content::RenderFrameHost*) : secure_embed_() {
 }
 
 SecureEmbedHost::~SecureEmbedHost() {
+  if (guest_contents_) {
+    guest_contents_->RemoveUserData(SecureEmbedHostUserData::kKey);
+  }
   --instance_count_for_testing_;
 }
 
@@ -37,6 +49,13 @@ void SecureEmbedHost::Create(
   mojo::MakeSelfOwnedAssociatedReceiver(
       base::WrapUnique(new SecureEmbedHost(render_frame_host)),
       std::move(receiver));
+}
+
+// static
+SecureEmbedHost* SecureEmbedHost::GetFrom(content::WebContents* web_contents) {
+  auto* user_data = static_cast<SecureEmbedHostUserData*>(
+      web_contents->GetUserData(SecureEmbedHostUserData::kKey));
+  return user_data ? user_data->secure_embed_host : nullptr;
 }
 
 void SecureEmbedHost::SetSecureEmbed(
@@ -77,6 +96,13 @@ void SecureEmbedHost::Attach(int64_t content_id) {
   LOG(INFO) << "Successfully retrieved WebContents for content_id: "
             << content_id;
 
+  if (guest_contents_) {
+    guest_contents_->RemoveUserData(SecureEmbedHostUserData::kKey);
+  }
+  know_have_focus_ = false;
+  guest_contents_ = web_contents_to_attach;
+  guest_contents_->SetUserData(SecureEmbedHostUserData::kKey,
+                               std::make_unique<SecureEmbedHostUserData>(this));
   guest_frame_ = content::GuestFrame::Create(web_contents_to_attach, this);
   secure_embed_->SetFrameSinkId(guest_frame_->GetFrameSinkId());
 }
@@ -105,8 +131,12 @@ void SecureEmbedHost::DispatchKeyboardEvent(
 
 void SecureEmbedHost::SetFocus(bool focused,
                                blink::mojom::FocusType focus_type) {
+  know_have_focus_ = false;
   if (guest_frame_) {
     guest_frame_->SetFocus(focused, focus_type);
+    if (focused) {
+      know_have_focus_ = true;
+    }
   }
 }
 
@@ -125,6 +155,12 @@ void SecureEmbedHost::OnSecureEmbedDisconnected() {
 void SecureEmbedHost::SetFrameSinkId(const viz::FrameSinkId& frame_sink_id) {
   if (secure_embed_) {
     secure_embed_->SetFrameSinkId(frame_sink_id);
+  }
+}
+
+void SecureEmbedHost::RequestFocus() {
+  if (secure_embed_ && !know_have_focus_) {
+    secure_embed_->RequestFocus();
   }
 }
 

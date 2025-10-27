@@ -14,6 +14,8 @@ import "third_party/blink/public/mojom/frame/frame_visual_properties.mojom";
 interface SecureEmbed {
   // TODO(secure-embed): Implement allow_paint_holding.
   SetFrameSinkId(viz.mojom.FrameSinkId frame_sink_id);
+
+  RequestFocus();
 };
 
 // Implemented by Browser. Available on RenderFrameHost.

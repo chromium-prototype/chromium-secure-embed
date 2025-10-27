@@ -18,6 +18,7 @@
 #include "third_party/blink/public/common/page/page_zoom.h"
 #include "third_party/blink/public/platform/web_input_event_result.h"
 #include "third_party/blink/public/platform/web_url_error.h"
+#include "third_party/blink/public/web/web_element.h"
 #include "third_party/blink/public/web/web_frame_widget.h"
 #include "third_party/blink/public/web/web_local_frame.h"
 #include "third_party/blink/public/web/web_plugin_container.h"
@@ -271,6 +272,12 @@ void SecureEmbedWebPlugin::SetFrameSinkId(
   frame_sink_id_changed_ = true;
 
   SendVisualProperties();
+}
+
+void SecureEmbedWebPlugin::RequestFocus() {
+  if (container_) {
+    container_->GetElement().Focus();
+  }
 }
 
 }  // namespace secure_embed

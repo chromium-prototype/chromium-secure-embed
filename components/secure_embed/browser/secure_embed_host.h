@@ -16,6 +16,7 @@
 
 namespace content {
 class RenderFrameHost;
+class WebContents;
 }  // namespace content
 
 namespace secure_embed {
@@ -33,6 +34,10 @@ class COMPONENT_EXPORT(SECURE_EMBED) SecureEmbedHost
       content::RenderFrameHost* render_frame_host,
       mojo::PendingAssociatedReceiver<mojom::SecureEmbedHost> receiver);
 
+  // Returns an instance of SecureEmbedHost if it's embedding `web_contents`,
+  // null otherwise.
+  static SecureEmbedHost* GetFrom(content::WebContents* web_contents);
+
   static size_t GetInstanceCountForTesting();
 
   // mojom::SecureEmbedHost implementation:
@@ -48,6 +53,8 @@ class COMPONENT_EXPORT(SECURE_EMBED) SecureEmbedHost
   // content::GuestFrame::Delegate implementation:
   void SetFrameSinkId(const viz::FrameSinkId& frame_sink_id) override;
 
+  void RequestFocus();
+
  private:
   explicit SecureEmbedHost(content::RenderFrameHost*);
 
@@ -56,7 +63,9 @@ class COMPONENT_EXPORT(SECURE_EMBED) SecureEmbedHost
   // Count of all alive instances for testing.
   static size_t instance_count_for_testing_;
 
+  raw_ptr<content::WebContents> guest_contents_ = nullptr;
   std::unique_ptr<content::GuestFrame> guest_frame_;
+  bool know_have_focus_ = false;
 
   mojo::AssociatedRemote<mojom::SecureEmbed> secure_embed_;
 };

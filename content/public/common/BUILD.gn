@@ -368,7 +368,6 @@ mojom("interfaces") {
     "//chrome/browser/ash/policy/dlp/dialogs",
     "//chrome/common:mojo_bindings",
     "//chrome/common:mojo_bindings_blink",
-    "//components/secure_embed/common:mojom",
     "//content/common/*",
     "//extensions/common:mojom",
     "//extensions/common:mojom_blink",
