@@ -12,6 +12,7 @@
 #include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/secure_embed_delegate.h"
 #include "content/public/browser/web_contents.h"
+#include "mojo/public/cpp/bindings/message.h"
 #include "mojo/public/cpp/bindings/self_owned_associated_receiver.h"
 #include "third_party/blink/public/mojom/frame/intrinsic_sizing_info.mojom.h"
 #include "third_party/blink/public/mojom/frame/viewport_intersection_state.mojom.h"
@@ -92,7 +93,8 @@ void SecureEmbedHost::DispatchKeyboardEvent(
   if (!key_event || key_event->CoalescedEventSize() != 1 ||
       !blink::WebInputEvent::IsKeyboardEventType(
           key_event->Event().GetType())) {
-    LOG(ERROR) << "Wrong key event";
+    mojo::ReportBadMessage(
+        "Unexpected message type in SecureEmbedHost::DispatchKeyboardEvent");
     return;
   }
   if (guest_frame_) {

@@ -44,10 +44,11 @@ class CONTENT_EXPORT GuestFrame {
   virtual void OnSynchronizeVisualProperties(
       const blink::FrameVisualProperties& visual_properties) = 0;
 
-  // ###
+  // Forwards a single keyboard event to the embedded frame.
   virtual void ForwardKeyboardEvent(
       const blink::WebKeyboardEvent& keyboard_event) = 0;
 
+  // Either sets or clears focus on the embedded frame.
   virtual void SetFocus(bool focused, blink::mojom::FocusType focus_type) = 0;
 
   // Gets the FrameSinkId of the guest's view.

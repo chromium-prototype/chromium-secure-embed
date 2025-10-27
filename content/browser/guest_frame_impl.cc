@@ -4,14 +4,14 @@
 
 #include "content/browser/guest_frame_impl.h"
 
-#include "base/functional/bind.h"
-#include "base/metrics/histogram_macros.h"
-#include "base/no_destructor.h"
 #include "base/notimplemented.h"
-#include "base/synchronization/lock.h"
-#include "base/threading/thread_local.h"
 #include "components/input/cursor_manager.h"
 #include "components/input/native_web_keyboard_event.h"
+#include "components/input/render_widget_host_input_event_router.h"
+#include "content/browser/renderer_host/render_frame_host_delegate.h"
+#include "content/browser/renderer_host/render_frame_host_manager.h"
+#include "content/browser/renderer_host/render_view_host_impl.h"
+#include "content/browser/renderer_host/render_widget_host_delegate.h"
 #include "content/browser/renderer_host/render_widget_host_impl.h"
 #include "content/browser/renderer_host/render_widget_host_view_base.h"
 #include "content/browser/renderer_host/render_widget_host_view_child_frame.h"
@@ -105,7 +105,8 @@ void GuestFrameImpl::ForwardKeyboardEvent(
 
 void GuestFrameImpl::SetFocus(bool focused,
                               blink::mojom::FocusType focus_type) {
-  // TODO(secure-embed): Pay attention to traversal `focus_type` values.
+  // TODO(secure-embed): Pay attention to traversal `focus_type` values once
+  // we enable tab-focus; we may need to focus either first or last element.
   view_->host()->SetPageFocus(focused);
 }
 
@@ -528,13 +529,11 @@ void GuestFrameImpl::OnSynchronizeVisualProperties(
 }
 
 input::RenderWidgetHostViewInput* GuestFrameImpl::GetParentViewInput() {
-  NOTIMPLEMENTED();
-  return nullptr;
+  return GetParentRenderWidgetHostView();
 }
 
 input::RenderWidgetHostViewInput* GuestFrameImpl::GetRootViewInput() {
-  NOTIMPLEMENTED();
-  return nullptr;
+  return GetRootRenderWidgetHostView();
 }
 
 void GuestFrameImpl::OnRenderViewReady() {
