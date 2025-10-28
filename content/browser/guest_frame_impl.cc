@@ -106,8 +106,8 @@ void GuestFrameImpl::ForwardKeyboardEvent(
 void GuestFrameImpl::SetFocus(bool focused,
                               blink::mojom::FocusType focus_type) {
   view_->host()->SetPageFocus(focused);
-  if (focus_type == blink::mojom::FocusType::kForward ||
-      focus_type == blink::mojom::FocusType::kBackward) {
+  if (focused && (focus_type == blink::mojom::FocusType::kForward ||
+                  focus_type == blink::mojom::FocusType::kBackward)) {
     static_cast<RenderViewHostImpl*>(guest_web_contents_->GetRenderViewHost())
         ->SetInitialFocus(
             /*reverse=*/focus_type == blink::mojom::FocusType::kBackward);
