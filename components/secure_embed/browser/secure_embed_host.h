@@ -58,7 +58,8 @@ class COMPONENT_EXPORT(SECURE_EMBED) SecureEmbedHost
   // unless it's already known to have focus.
   //
   // This should be called by implementations of
-  // `SecureEmbedDelegate::FocusInEmbedder()`.
+  // `SecureEmbedDelegate::FocusInEmbedder()`, in order to help give
+  // focus to embedded page in response to mouse clicks.
   void RequestFocus();
 
  private:
