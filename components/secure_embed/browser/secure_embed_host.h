@@ -53,6 +53,12 @@ class COMPONENT_EXPORT(SECURE_EMBED) SecureEmbedHost
   // content::GuestFrame::Delegate implementation:
   void SetFrameSinkId(const viz::FrameSinkId& frame_sink_id) override;
 
+  // Requests that the <embed> element hosting the plugin be focused
+  // (which will in turn cause the embedded page to receive page focus),
+  // unless it's already known to have focus.
+  //
+  // This should be called by implementations of
+  // `SecureEmbedDelegate::FocusInEmbedder()`.
   void RequestFocus();
 
  private:
