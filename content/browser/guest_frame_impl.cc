@@ -59,7 +59,7 @@ std::unique_ptr<GuestFrame> GuestFrame::Create(WebContents* guest_web_contents,
 
 GuestFrameImpl::GuestFrameImpl(WebContents* guest_web_contents,
                                GuestFrame::Delegate* delegate)
-    : delegate_(delegate), guest_web_contents_(guest_web_contents) {
+    : delegate_(delegate), guest_web_contents_(guest_web_contents->GetWeakPtr()) {
   observer_ = std::make_unique<Observer>(this, guest_web_contents);
 
   // TODO(secure-embed): There may not be a view yet, depending on if the
@@ -105,6 +105,10 @@ void GuestFrameImpl::ForwardKeyboardEvent(
 
 void GuestFrameImpl::SetFocus(bool focused,
                               blink::mojom::FocusType focus_type) {
+  if (!guest_web_contents_) {
+    return;
+  }
+
   view_->host()->SetPageFocus(focused);
   if (focused && (focus_type == blink::mojom::FocusType::kForward ||
                   focus_type == blink::mojom::FocusType::kBackward)) {
@@ -163,6 +167,9 @@ void GuestFrameImpl::SetView(RenderWidgetHostViewChildFrame* view,
 }
 
 RenderWidgetHostViewBase* GuestFrameImpl::GetParentRenderWidgetHostView() {
+  if (!guest_web_contents_) {
+    return nullptr;
+  }
   return static_cast<RenderWidgetHostViewBase*>(
       guest_web_contents_->GetSecureEmbedDelegate()
           ->GetEmbedderWebContents()
@@ -606,7 +613,10 @@ void GuestFrameImpl::UpdateViewportIntersectionInternal(
 }
 
 RenderFrameHostImpl* GuestFrameImpl::current_child_frame_host() const {
-  return static_cast<WebContentsImpl*>(guest_web_contents_)
+  if (!guest_web_contents_) {
+    return nullptr;
+  }
+  return static_cast<WebContentsImpl*>(guest_web_contents_.get())
       ->GetPrimaryMainFrame();
 }
 
