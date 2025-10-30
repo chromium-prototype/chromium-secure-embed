@@ -26,6 +26,7 @@
 #include "content/browser/renderer_host/batched_proxy_ipc_sender.h"
 #include "content/browser/renderer_host/cross_process_frame_connector.h"
 #include "content/browser/renderer_host/frame_tree.h"
+#include "content/browser/renderer_host/frame_tree_aware_frame_connector_delegate.h"
 #include "content/browser/renderer_host/frame_tree_node.h"
 #include "content/browser/renderer_host/ipc_utils.h"
 #include "content/browser/renderer_host/navigation_metrics_utils.h"
@@ -168,8 +169,10 @@ RenderFrameProxyHost::RenderFrameProxyHost(
     // parent. The same CrossProcessFrameConnector is used for subsequent cross-
     // process navigations, but it will be destroyed if the frame is
     // navigated back to the same SiteInstance as its parent.
+    auto delegate =
+        std::make_unique<FrameTreeAwareFrameConnectorDelegate>(this);
     cross_process_frame_connector_ =
-        std::make_unique<CrossProcessFrameConnector>(this);
+        std::make_unique<CrossProcessFrameConnector>(std::move(delegate));
   }
 
   if (g_observer_for_testing)
