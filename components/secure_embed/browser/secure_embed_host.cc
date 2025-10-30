@@ -29,7 +29,7 @@ SecureEmbedHost::SecureEmbedHost(content::RenderFrameHost*) : secure_embed_() {
 SecureEmbedHost::~SecureEmbedHost() {
   --instance_count_for_testing_;
   if (content::SecureEmbedConnector* connector = GetConnector(); connector) {
-    connector->SetDelegate(this);
+    connector->SetDelegate(nullptr);
   }
 }
 
