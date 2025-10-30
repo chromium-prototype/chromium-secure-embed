@@ -9,23 +9,20 @@
 
 #include "base/memory/raw_ptr.h"
 #include "base/memory/weak_ptr.h"
-#include "cc/input/touch_action.h"
+#include "components/viz/common/surfaces/frame_sink_id.h"
+#include "content/browser/renderer_host/cross_process_frame_connector.h"
 #include "content/public/browser/guest_frame.h"
-#include "content/public/browser/secure_embed_connector.h"
-#include "content/public/browser/visibility.h"
-#include "third_party/blink/public/common/frame/frame_visual_properties.h"
-#include "third_party/blink/public/mojom/frame/intrinsic_sizing_info.mojom-forward.h"
-#include "third_party/blink/public/mojom/frame/lifecycle.mojom.h"
-#include "third_party/blink/public/mojom/frame/viewport_intersection_state.mojom.h"
-#include "third_party/blink/public/mojom/input/input_event_result.mojom-shared.h"
-#include "third_party/blink/public/mojom/input/pointer_lock_result.mojom-shared.h"
-#include "ui/display/screen_infos.h"
-#include "ui/gfx/geometry/rect.h"
+#include "content/public/browser/web_contents.h"
+#include "third_party/blink/public/mojom/input/focus_type.mojom.h"
+
+namespace blink {
+struct FrameVisualProperties;
+class WebKeyboardEvent;
+}  // namespace blink
 
 namespace content {
 
-class RenderFrameHostImpl;
-class WebContentsImpl;
+class RenderFrameHost;
 
 class SecureEmbedConnectorImpl : public SecureEmbedConnector {
  public:

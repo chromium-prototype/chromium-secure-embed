@@ -6,14 +6,20 @@
 #define CONTENT_BROWSER_GUEST_FRAME_CONNECTOR_DELEGATE_H_
 
 #include "base/memory/raw_ptr.h"
+#include "base/memory/weak_ptr.h"
 #include "content/browser/renderer_host/cross_process_frame_connector.h"
 #include "content/public/browser/guest_frame.h"
 #include "content/public/browser/visibility.h"
+#include "third_party/blink/public/mojom/frame/intrinsic_sizing_info.mojom.h"
+#include "third_party/blink/public/mojom/frame/lifecycle.mojom-forward.h"
 
-namespace blink::mojom {
-class IntrinsicSizingInfo;
-using IntrinsicSizingInfoPtr = mojo::StructPtr<IntrinsicSizingInfo>;
-}  // namespace blink::mojom
+namespace cc {
+class RenderFrameMetadata;
+}
+
+namespace gfx {
+class Size;
+}
 
 namespace viz {
 class FrameSinkId;
@@ -22,6 +28,7 @@ class FrameSinkId;
 namespace content {
 
 class RenderFrameHostImpl;
+class RenderProcessHost;
 class RenderWidgetHostViewBase;
 class RenderWidgetHostViewChildFrame;
 class WebContents;
@@ -52,10 +59,10 @@ class GuestFrameConnectorDelegate final
   RenderWidgetHostViewBase* GetRootView() override;
   RenderProcessHost* GetParentProcess() const override;
   Visibility GetEmbedderVisibility() override;
-  void OnChildProcessGone() override;
-  void OnNeedsReload() override;
-  bool OnVisibilityChanged(RenderWidgetHostViewChildFrame* view,
-                           blink::mojom::FrameVisibility visibility) override;
+  void ChildProcessGone() override;
+  void NeedsReload() override;
+  bool VisibilityChanged(RenderWidgetHostViewChildFrame* view,
+                         blink::mojom::FrameVisibility visibility) override;
   void SendIntrinsicSizingInfoToParent(
       blink::mojom::IntrinsicSizingInfoPtr info) override;
   void SendScreenRects() override;
@@ -64,7 +71,7 @@ class GuestFrameConnectorDelegate final
 
  private:
   // The guest WebContents being embedded.
-  raw_ptr<WebContents> guest_web_contents_;
+  base::WeakPtr<WebContents> guest_web_contents_ = nullptr;
 
   // Delegate for communicating with the embedder.
   raw_ptr<GuestFrame::Delegate> guest_delegate_;

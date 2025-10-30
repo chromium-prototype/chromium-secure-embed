@@ -11,14 +11,13 @@
 #include "content/public/browser/render_process_host.h"
 #include "content/public/browser/secure_embed_delegate.h"
 #include "content/public/browser/web_contents.h"
-#include "third_party/blink/public/mojom/frame/intrinsic_sizing_info.mojom.h"
 
 namespace content {
 
 GuestFrameConnectorDelegate::GuestFrameConnectorDelegate(
     WebContents* guest_web_contents,
     GuestFrame::Delegate* guest_delegate)
-    : guest_web_contents_(guest_web_contents),
+    : guest_web_contents_(guest_web_contents->GetWeakPtr()),
       guest_delegate_(guest_delegate) {}
 
 GuestFrameConnectorDelegate::~GuestFrameConnectorDelegate() = default;
@@ -39,11 +38,17 @@ void GuestFrameConnectorDelegate::EnableAutoResize(const gfx::Size& min_size,
 
 RenderFrameHostImpl* GuestFrameConnectorDelegate::GetChildRenderFrameHost()
     const {
-  return static_cast<WebContentsImpl*>(guest_web_contents_)
+  return static_cast<WebContentsImpl*>(guest_web_contents_.get())
       ->GetPrimaryMainFrame();
 }
 
 RenderWidgetHostViewBase* GuestFrameConnectorDelegate::GetParentView() {
+  // The guest WebContents may have already been destroyed during shutdown when
+  // clearing the view on CPFC.
+  if (!guest_web_contents_) {
+    return nullptr;
+  }
+
   // TODO(secure-embed): Unclear if we should support parent/root view access.
   return static_cast<RenderWidgetHostViewBase*>(
       guest_web_contents_->GetSecureEmbedDelegate()
@@ -81,15 +86,15 @@ Visibility GuestFrameConnectorDelegate::GetEmbedderVisibility() {
   return embedder_web_contents->GetVisibility();
 }
 
-void GuestFrameConnectorDelegate::OnChildProcessGone() {
+void GuestFrameConnectorDelegate::ChildProcessGone() {
   NOTIMPLEMENTED();
 }
 
-void GuestFrameConnectorDelegate::OnNeedsReload() {
+void GuestFrameConnectorDelegate::NeedsReload() {
   NOTIMPLEMENTED();
 }
 
-bool GuestFrameConnectorDelegate::OnVisibilityChanged(
+bool GuestFrameConnectorDelegate::VisibilityChanged(
     RenderWidgetHostViewChildFrame* view,
     blink::mojom::FrameVisibility visibility) {
   NOTIMPLEMENTED();
@@ -98,7 +103,7 @@ bool GuestFrameConnectorDelegate::OnVisibilityChanged(
 
 void GuestFrameConnectorDelegate::SendIntrinsicSizingInfoToParent(
     blink::mojom::IntrinsicSizingInfoPtr info) {
-  NOTIMPLEMENTED();
+  NOTREACHED();
 }
 
 void GuestFrameConnectorDelegate::SendScreenRects() {

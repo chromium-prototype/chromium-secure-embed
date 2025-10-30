@@ -108,13 +108,6 @@ class CONTENT_EXPORT CrossProcessFrameConnector
    public:
     virtual ~Delegate() = default;
 
-    // TODO(secure-embed): There's two naming inconsistencies here:
-    // - "Did" vs "On" vs "Set" isn't consistent. In some cases it's read as
-    //   an event notification, in others as a command.
-    // - "Embedder" vs "Parent" isn't consistent.
-    // - "Child" vs "Guest" isn't consistent.
-    // Consider standardizing these in this header file.
-
     // Called when the child frame has updated its visual properties and needs
     // to notify the embedder.
     virtual void DidUpdateVisualProperties(
@@ -144,16 +137,18 @@ class CONTENT_EXPORT CrossProcessFrameConnector
     virtual Visibility GetEmbedderVisibility() = 0;
 
     // Notifies the embedder that the child process has terminated.
-    virtual void OnChildProcessGone() = 0;
+    virtual void ChildProcessGone() = 0;
 
     // Notifies the embedder that the child frame needs to be reloaded.
-    virtual void OnNeedsReload() = 0;
+    virtual void NeedsReload() = 0;
 
     // Notifies the embedder when the child's visibility changes.
-    virtual bool OnVisibilityChanged(
+    virtual bool VisibilityChanged(
         RenderWidgetHostViewChildFrame* view,
         blink::mojom::FrameVisibility visibility) = 0;
 
+    // TODO(secure-embed): Ideally this wouldn't be a method on the delegate
+    // interface at all as it's only applicable to RemoteFrameOwners in blink.
     // Sends the intrinsic sizing information from the child to the embedder.
     virtual void SendIntrinsicSizingInfoToParent(
         blink::mojom::IntrinsicSizingInfoPtr info) = 0;

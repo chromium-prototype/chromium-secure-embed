@@ -4,30 +4,16 @@
 
 #include "content/browser/secure_embed_connector_impl.h"
 
-#include "base/notimplemented.h"
-#include "components/input/cursor_manager.h"
 #include "components/input/native_web_keyboard_event.h"
-#include "components/input/render_widget_host_input_event_router.h"
 #include "content/browser/guest_frame_connector_delegate.h"
-#include "content/browser/renderer_host/cross_process_frame_connector.h"
-#include "content/browser/renderer_host/render_frame_host_delegate.h"
-#include "content/browser/renderer_host/render_frame_host_manager.h"
 #include "content/browser/renderer_host/render_view_host_impl.h"
 #include "content/browser/renderer_host/render_widget_host_delegate.h"
 #include "content/browser/renderer_host/render_widget_host_impl.h"
 #include "content/browser/renderer_host/render_widget_host_view_base.h"
 #include "content/browser/renderer_host/render_widget_host_view_child_frame.h"
-#include "content/browser/web_contents/web_contents_impl.h"
-#include "third_party/blink/public/common/frame/frame_visual_properties.h"
-#include "third_party/blink/public/mojom/frame/intrinsic_sizing_info.mojom.h"
-#include "ui/base/cursor/cursor.h"
-#include "ui/gfx/geometry/dip_util.h"
-
-// TODO(secure-embed) I believe non-public code in /content is not supposed to
-// use the public APIs if there are /content implementations. It should just use
-// the implementation directly. Review all such includes below.
-#include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/web_contents_observer.h"
+#include "third_party/blink/public/common/frame/frame_visual_properties.h"
+#include "third_party/blink/public/common/input/web_keyboard_event.h"
 
 namespace content {
 
@@ -63,7 +49,7 @@ SecureEmbedConnectorImpl::SecureEmbedConnectorImpl(
 
   // Create the connector with the GuestFrameConnectorDelegate.
   auto connector_delegate = std::make_unique<GuestFrameConnectorDelegate>(
-      guest_web_contents_, delegate_);
+      guest_web_contents, delegate_);
   connector_ = std::make_unique<CrossProcessFrameConnector>(
       std::move(connector_delegate));
 
@@ -94,21 +80,26 @@ SecureEmbedConnector::Delegate* SecureEmbedConnectorImpl::GetDelegate() {
 
 void SecureEmbedConnectorImpl::ForwardKeyboardEvent(
     const blink::WebKeyboardEvent& keyboard_event) {
+  if (!guest_web_contents_) {
+    return;
+  }
+
   RenderWidgetHostViewBase* parent_view =
       connector_->GetParentRenderWidgetHostView();
   if (!parent_view) {
     return;
   }
 
-  input::NativeWebKeyboardEvent native_event(keyboard_event,
-                                             parent_view->GetNativeView());
-
-  RenderWidgetHostViewChildFrame* view = connector_->get_view_for_testing();
-  if (!view) {
+  auto* child_view = static_cast<RenderWidgetHostViewBase*>(
+      guest_web_contents_->GetRenderWidgetHostView());
+  if (!child_view) {
     return;
   }
 
-  RenderWidgetHostImpl* target_host = view->host();
+  input::NativeWebKeyboardEvent native_event(keyboard_event,
+                                             parent_view->GetNativeView());
+
+  RenderWidgetHostImpl* target_host = child_view->host();
 
   // If there are multiple widgets on the page (such as when there are
   // out-of-process iframes), pick the one that should process this event.
@@ -129,7 +120,13 @@ void SecureEmbedConnectorImpl::SetFocus(bool focused,
     return;
   }
 
-  view_->host()->SetPageFocus(focused);
+  auto* child_view = static_cast<RenderWidgetHostViewBase*>(
+      guest_web_contents_->GetRenderWidgetHostView());
+  if (!child_view) {
+    return;
+  }
+
+  child_view->host()->SetPageFocus(focused);
   if (focused && (focus_type == blink::mojom::FocusType::kForward ||
                   focus_type == blink::mojom::FocusType::kBackward)) {
     static_cast<RenderViewHostImpl*>(guest_web_contents_->GetRenderViewHost())
@@ -169,9 +166,7 @@ void SecureEmbedConnectorImpl::UpdateViewForCurrentRenderFrameHost() {
 
   auto* child_view = static_cast<RenderWidgetHostViewChildFrame*>(base_view);
 
-  if (view_ != child_view) {
-    SetView(child_view, /*allow_paint_holding=*/false);
-  }
+  connector_->SetView(child_view, /*allow_paint_holding=*/false);
 }
 
 RenderFrameHostImpl* SecureEmbedConnectorImpl::current_child_frame_host()

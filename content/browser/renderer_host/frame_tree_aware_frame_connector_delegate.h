@@ -8,11 +8,16 @@
 #include "base/memory/raw_ptr.h"
 #include "content/browser/renderer_host/cross_process_frame_connector.h"
 #include "content/public/browser/visibility.h"
+#include "third_party/blink/public/mojom/frame/intrinsic_sizing_info.mojom.h"
+#include "third_party/blink/public/mojom/frame/lifecycle.mojom.h"
 
-namespace blink::mojom {
-class IntrinsicSizingInfo;
-using IntrinsicSizingInfoPtr = mojo::StructPtr<IntrinsicSizingInfo>;
-}  // namespace blink::mojom
+namespace cc {
+class RenderFrameMetadata;
+}
+
+namespace gfx {
+class Size;
+}
 
 namespace viz {
 class FrameSinkId;
@@ -22,6 +27,7 @@ namespace content {
 
 class RenderFrameHostImpl;
 class RenderFrameProxyHost;
+class RenderProcessHost;
 class RenderWidgetHostViewBase;
 class RenderWidgetHostViewChildFrame;
 
@@ -54,10 +60,10 @@ class FrameTreeAwareFrameConnectorDelegate final
   RenderWidgetHostViewBase* GetRootView() override;
   RenderProcessHost* GetParentProcess() const override;
   Visibility GetEmbedderVisibility() override;
-  void OnChildProcessGone() override;
-  void OnNeedsReload() override;
-  bool OnVisibilityChanged(RenderWidgetHostViewChildFrame* view,
-                           blink::mojom::FrameVisibility visibility) override;
+  void ChildProcessGone() override;
+  void NeedsReload() override;
+  bool VisibilityChanged(RenderWidgetHostViewChildFrame* view,
+                         blink::mojom::FrameVisibility visibility) override;
   void SendIntrinsicSizingInfoToParent(
       blink::mojom::IntrinsicSizingInfoPtr info) override;
   void SendScreenRects() override;

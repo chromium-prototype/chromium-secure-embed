@@ -135,7 +135,7 @@ void CrossProcessFrameConnector::RenderProcessGone() {
   if (IsVisible())
     MaybeLogCrash(CrashVisibility::kCrashedWhileVisible);
 
-  delegate_->OnChildProcessGone();
+  delegate_->ChildProcessGone();
 
   // The following call might discard the WebContents by
   // DiscardPageWithCrashedSubframePolicy, which in turn calls
@@ -164,7 +164,7 @@ void CrossProcessFrameConnector::RenderProcessGone() {
                   features::kReloadHiddenTabsWithActiveCrashedSubframes) ||
               current_child_rfh->IsActive()
             )) {
-      delegate_->OnNeedsReload();
+      delegate_->NeedsReload();
       did_mark_for_reload = true;
       UMA_HISTOGRAM_ENUMERATION(
           "Stability.ChildFrameCrash.TabMarkedForReload.Visibility",
@@ -378,7 +378,7 @@ void CrossProcessFrameConnector::OnVisibilityChanged(
   CHECK(current_child_frame_host());
   current_child_frame_host()->VisibilityChanged(visibility_);
 
-  if (delegate_->OnVisibilityChanged(view_, visibility)) {
+  if (delegate_->VisibilityChanged(view_, visibility)) {
     return;
   }
 

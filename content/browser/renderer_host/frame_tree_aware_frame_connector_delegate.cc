@@ -4,16 +4,18 @@
 
 #include "content/browser/renderer_host/frame_tree_aware_frame_connector_delegate.h"
 
+#include "cc/trees/render_frame_metadata.h"
+#include "components/viz/common/surfaces/frame_sink_id.h"
 #include "content/browser/renderer_host/frame_tree.h"
 #include "content/browser/renderer_host/frame_tree_node.h"
+#include "content/browser/renderer_host/navigation_controller_impl.h"
 #include "content/browser/renderer_host/render_frame_host_delegate.h"
 #include "content/browser/renderer_host/render_frame_host_impl.h"
 #include "content/browser/renderer_host/render_frame_proxy_host.h"
-#include "content/browser/renderer_host/render_view_host_impl.h"
 #include "content/browser/renderer_host/render_widget_host_view_base.h"
 #include "content/browser/renderer_host/render_widget_host_view_child_frame.h"
 #include "content/public/browser/render_process_host.h"
-#include "third_party/blink/public/mojom/frame/intrinsic_sizing_info.mojom.h"
+#include "ui/gfx/geometry/size.h"
 
 namespace content {
 
@@ -89,11 +91,11 @@ Visibility FrameTreeAwareFrameConnectorDelegate::GetEmbedderVisibility() {
   return child->delegate()->GetVisibility();
 }
 
-void FrameTreeAwareFrameConnectorDelegate::OnChildProcessGone() {
+void FrameTreeAwareFrameConnectorDelegate::ChildProcessGone() {
   frame_proxy_in_parent_renderer_->ChildProcessGone();
 }
 
-void FrameTreeAwareFrameConnectorDelegate::OnNeedsReload() {
+void FrameTreeAwareFrameConnectorDelegate::NeedsReload() {
   frame_proxy_in_parent_renderer_->frame_tree_node()
       ->frame_tree()
       .controller()
@@ -101,7 +103,7 @@ void FrameTreeAwareFrameConnectorDelegate::OnNeedsReload() {
           NavigationControllerImpl::NeedsReloadType::kCrashedSubframe);
 }
 
-bool FrameTreeAwareFrameConnectorDelegate::OnVisibilityChanged(
+bool FrameTreeAwareFrameConnectorDelegate::VisibilityChanged(
     RenderWidgetHostViewChildFrame* view,
     blink::mojom::FrameVisibility visibility) {
   // If there is an inner WebContents, it should be notified of the change in
