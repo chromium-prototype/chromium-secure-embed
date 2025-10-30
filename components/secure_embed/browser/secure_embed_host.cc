@@ -9,6 +9,9 @@
 #include "base/no_destructor.h"
 #include "base/supports_user_data.h"
 #include "components/guest_contents/browser/guest_contents_handle.h"
+#include "content/browser/renderer_host/cross_process_frame_connector.h"
+#include "content/browser/renderer_host/cross_process_frame_connector_base.h"
+#include "content/public/browser/guest_frame.h"
 #include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/secure_embed_connector.h"
 #include "content/public/browser/web_contents.h"
@@ -177,6 +180,15 @@ void SecureEmbedHost::FocusInEmbedder(
   }
 
   secure_embed_->RequestFocus(mojo_focus_op);
+}
+
+void SecureEmbedHost::NotifySwappedRWHVChildFrameFromRenderManager(
+    content::RenderWidgetHostViewChildFrame* new_view,
+    bool allow_paint_holding) {
+  if (guest_frame_) {
+    auto* connector = guest_frame_->GetCrossProcessFrameConnector();
+    connector->SetView(new_view, allow_paint_holding);
+  }
 }
 
 content::SecureEmbedConnector* SecureEmbedHost::GetConnector() {

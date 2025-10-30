@@ -29,36 +29,11 @@
 
 namespace content {
 
-// Nested observer class that forwards relevant events to
-// SecureEmbedConnectorImpl. This avoids function name collisions with
-// CrossProcessFrameConnectorBase.
-class SecureEmbedConnectorImpl::Observer : public WebContentsObserver {
- public:
-  explicit Observer(SecureEmbedConnectorImpl* guest_frame,
-                    WebContents* web_contents)
-      : WebContentsObserver(web_contents), guest_frame_(guest_frame) {}
-
-  ~Observer() override = default;
-
-  // WebContentsObserver:
-  void RenderViewReady() override { guest_frame_->OnRenderViewReady(); }
-
-  void RenderFrameHostChanged(RenderFrameHost* old_host,
-                              RenderFrameHost* new_host) override {
-    guest_frame_->OnRenderFrameHostChanged(old_host, new_host);
-  }
-
- private:
-  raw_ptr<SecureEmbedConnectorImpl> guest_frame_;
-};
-
 SecureEmbedConnectorImpl::SecureEmbedConnectorImpl(
     WebContentsImpl* embedder_web_contents,
     WebContentsImpl* embedded_web_contents)
     : embedder_web_contents_(embedder_web_contents->GetWeakPtr()),
       guest_web_contents_(embedded_web_contents) {
-  observer_ = std::make_unique<Observer>(this, embedded_web_contents);
-
   // TODO(secure-embed): There may not be a view yet, depending on if the
   // WebContents has been shown or navigated. That means calling GetScreenInfos
   // on the RenderWidgetHost would default to the primary display, which may not
@@ -573,19 +548,6 @@ SecureEmbedConnectorImpl::GetParentViewInput() {
 
 input::RenderWidgetHostViewInput* SecureEmbedConnectorImpl::GetRootViewInput() {
   return GetRootRenderWidgetHostView();
-}
-
-void SecureEmbedConnectorImpl::OnRenderViewReady() {
-  // When the RenderView is ready, update the view in case it has changed.
-  UpdateViewForCurrentRenderFrameHost();
-}
-
-void SecureEmbedConnectorImpl::OnRenderFrameHostChanged(
-    RenderFrameHost* old_host,
-    RenderFrameHost* new_host) {
-  // When the RenderFrameHost changes, we need to update the view to track
-  // the new RenderWidgetHostView associated with the new RenderFrameHost.
-  UpdateViewForCurrentRenderFrameHost();
 }
 
 void SecureEmbedConnectorImpl::UpdateViewForCurrentRenderFrameHost() {

@@ -55,6 +55,9 @@ class COMPONENT_EXPORT(SECURE_EMBED) SecureEmbedHost
   void SetFrameSinkId(const viz::FrameSinkId& frame_sink_id) override;
   void FocusInEmbedder(
       content::SecureEmbedConnector::FocusOperation focus_op) override;
+  void NotifySwappedRWHVChildFrameFromRenderManager(
+      content::RenderWidgetHostViewChildFrame* new_view,
+      bool allow_paint_holding) override;
 
  private:
   explicit SecureEmbedHost(content::RenderFrameHost*);

@@ -1209,6 +1209,17 @@ void WebContentsImpl::WebContentsTreeNode::OnFrameTreeNodeDestroyed(
   }
 }
 
+void WebContentsImpl::NotifySwappedRWHVChildFrameFromRenderManager(
+    RenderWidgetHostViewChildFrame* new_view,
+    bool allow_paint_holding) {
+  if (secure_embed_delegate_) {
+    secure_embed_delegate_->NotifySwappedRWHVChildFrameFromRenderManager(
+        this,
+        new_view,
+        allow_paint_holding);
+  }
+}
+
 FrameTree* WebContentsImpl::WebContentsTreeNode::focused_frame_tree() {
   CHECK(focused_frame_tree_);
   return focused_frame_tree_;
