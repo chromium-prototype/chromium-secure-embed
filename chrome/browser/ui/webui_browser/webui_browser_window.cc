@@ -30,10 +30,10 @@
 #include "chrome/common/chrome_render_frame.mojom.h"
 #include "chrome/common/webui_url_constants.h"
 #include "components/input/native_web_keyboard_event.h"
-#include "components/secure_embed/browser/secure_embed_host.h"
 #include "components/sharing_message/sharing_dialog_data.h"
 #include "components/web_modal/web_contents_modal_dialog_manager.h"
 #include "content/public/browser/keyboard_event_processing_result.h"
+#include "content/public/browser/secure_embed_connector.h"
 #include "content/public/browser/web_contents.h"
 #include "content/public/browser/web_contents_observer.h"
 #include "third_party/blink/public/common/associated_interfaces/associated_interface_provider.h"
@@ -434,19 +434,6 @@ void WebUIBrowserWindow::OnWidgetBoundsChanged(views::Widget* widget,
   DCHECK_EQ(widget, widget_.get());
   if (modal_dialog_host_) {
     modal_dialog_host_->NotifyPositionRequiresUpdate();
-  }
-}
-
-content::WebContents* WebUIBrowserWindow::GetEmbedderWebContents() {
-  return GetUIWebContents();
-}
-
-void WebUIBrowserWindow::FocusInEmbedder(
-    content::WebContents* embedded,
-    SecureEmbedDelegate::FocusOperation focus_op) {
-  auto* secure_embed_host = secure_embed::SecureEmbedHost::GetFrom(embedded);
-  if (secure_embed_host) {
-    secure_embed_host->RequestFocus(focus_op);
   }
 }
 
@@ -1113,8 +1100,9 @@ BrowserView* WebUIBrowserWindow::AsBrowserView() {
   return nullptr;
 }
 
-content::SecureEmbedDelegate* WebUIBrowserWindow::GetSecureEmbedDelegate() {
-  return this;
+std::unique_ptr<content::SecureEmbedConnector>
+WebUIBrowserWindow::CreateSecureEmbedConnector() {
+  return content::SecureEmbedConnector::Create(GetUIWebContents());
 }
 
 gfx::Rect WebUIBrowserWindow::GetBounds() const {

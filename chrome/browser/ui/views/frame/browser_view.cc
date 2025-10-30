@@ -6040,7 +6040,8 @@ void BrowserView::SetIsTabModalPopupDeprecated(
   browser_->set_is_tab_modal_popup_deprecated(is_tab_modal_popup_deprecated);
 }
 
-content::SecureEmbedDelegate* BrowserView::GetSecureEmbedDelegate() {
+std::unique_ptr<content::SecureEmbedConnector>
+BrowserView::CreateSecureEmbedConnector() {
   return nullptr;
 }
 
