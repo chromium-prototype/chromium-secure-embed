@@ -68,6 +68,10 @@ RenderProcessHost* GuestFrameConnectorDelegate::GetParentProcess() const {
 }
 
 Visibility GuestFrameConnectorDelegate::GetEmbedderVisibility() {
+  if (!guest_web_contents_) {
+    return Visibility::HIDDEN;
+  }
+
   WebContents* embedder_web_contents =
       guest_web_contents_->GetSecureEmbedDelegate()->GetEmbedderWebContents();
   if (!embedder_web_contents) {
