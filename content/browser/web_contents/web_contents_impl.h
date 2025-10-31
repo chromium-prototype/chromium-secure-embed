@@ -157,6 +157,7 @@ class ScopedAccessibilityMode;
 class ScreenChangeMonitor;
 class ScreenOrientationProvider;
 class SecureEmbedConnector;
+class SecureEmbedConnectorImpl;
 class SiteInstanceGroup;
 // For web_contents_impl_browsertest.cc
 class TestWCDelegateForDialogsAndFullscreen;
@@ -2285,7 +2286,7 @@ class CONTENT_EXPORT WebContentsImpl
   std::unique_ptr<BrowserPluginGuest> browser_plugin_guest_;
 
   // Helps manage being embeded with SecureEmbed.
-  std::unique_ptr<SecureEmbedConnector> secure_embed_connector_;
+  std::unique_ptr<SecureEmbedConnectorImpl> secure_embed_connector_;
 
   // Helper classes ------------------------------------------------------------
 

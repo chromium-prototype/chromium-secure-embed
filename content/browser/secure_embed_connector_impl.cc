@@ -68,7 +68,7 @@ SecureEmbedConnectorImpl::~SecureEmbedConnectorImpl() {
 }
 
 void SecureEmbedConnectorImpl::SetEmbeddedWebContents(
-    WebContents* guest_web_contents) {
+    WebContentsImpl* guest_web_contents) {
   CHECK(!guest_web_contents_);
   guest_web_contents_ = guest_web_contents;
 
@@ -90,8 +90,8 @@ void SecureEmbedConnectorImpl::SetEmbeddedWebContents(
   UpdateViewForCurrentRenderFrameHost();
 }
 
-WebContents* SecureEmbedConnectorImpl::GetEmbedderWebContents() {
-  return embedder_web_contents_.get();
+WebContentsImpl* SecureEmbedConnectorImpl::GetEmbedderWebContents() {
+  return static_cast<WebContentsImpl*>(embedder_web_contents_.get());
 }
 
 void SecureEmbedConnectorImpl::FocusInEmbedder(FocusOperation focus_op) {

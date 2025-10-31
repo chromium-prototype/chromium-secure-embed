@@ -124,6 +124,7 @@
 #include "content/browser/renderer_host/visible_time_request_trigger.h"
 #include "content/browser/screen_details/screen_change_monitor.h"
 #include "content/browser/screen_orientation/screen_orientation_provider.h"
+#include "content/browser/secure_embed_connector_impl.h"
 #include "content/browser/shared_storage/shared_storage_budget_charger.h"
 #include "content/browser/site_instance_impl.h"
 #include "content/browser/tpcd_heuristics/opener_heuristic_tab_helper.h"
@@ -164,7 +165,6 @@
 #include "content/public/browser/render_widget_host_observer.h"
 #include "content/public/browser/restore_type.h"
 #include "content/public/browser/scoped_accessibility_mode.h"
-#include "content/public/browser/secure_embed_connector.h"
 #include "content/public/browser/site_isolation_policy.h"
 #include "content/public/browser/ssl_status.h"
 #include "content/public/browser/storage_partition.h"
@@ -4190,7 +4190,8 @@ void WebContentsImpl::Init(const WebContents::CreateParams& params,
       GetContentClient()->browser()->GetWebContentsViewDelegate(this);
 
   if (params.secure_embed_connector) {
-    secure_embed_connector_.reset(params.secure_embed_connector);
+    secure_embed_connector_.reset(static_cast<SecureEmbedConnectorImpl*>(
+        params.secure_embed_connector.get()));
     secure_embed_connector_->SetEmbeddedWebContents(this);
   }
 

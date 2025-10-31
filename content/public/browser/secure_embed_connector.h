@@ -45,22 +45,7 @@ class CONTENT_EXPORT SecureEmbedConnector {
 
   virtual ~SecureEmbedConnector() = default;
 
-  // Sets the WebContents this operates with. This can be called exactly once,
-  // and is normally called by WebContents this is set on.
-  virtual void SetEmbeddedWebContents(WebContents* owner) = 0;
-
-  // Returns the web contents that the WebContents owning this connector
-  // is supposed to be hosted in.
-  //
-  // TODO(secure-embed): There needs to be a way of updating this for when
-  // tabs are moved between windows (including potentially an in-between
-  // windows detached tab state).
-  virtual WebContents* GetEmbedderWebContents() = 0;
-
-  // Called by the embedded WebContents (or its view) when it needs to acquire
-  // or release its focus in the embedder.
-  virtual void FocusInEmbedder(FocusOperation focus_op) = 0;
-
+  // Set by the embedder side to help communicate back to it.
   // This can switch between a value and null, but not two delegates.
   virtual void SetDelegate(Delegate* delegate) = 0;
   virtual Delegate* GetDelegate() = 0;

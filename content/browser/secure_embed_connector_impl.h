@@ -25,6 +25,7 @@
 namespace content {
 
 class RenderFrameHostImpl;
+class WebContentsImpl;
 
 class SecureEmbedConnectorImpl : public SecureEmbedConnector,
                                  public CrossProcessFrameConnectorBase {
@@ -32,10 +33,23 @@ class SecureEmbedConnectorImpl : public SecureEmbedConnector,
   SecureEmbedConnectorImpl(WebContents* embedder_web_contents);
   ~SecureEmbedConnectorImpl() override;
 
+  // Sets the WebContents this operates with. This can be called exactly once,
+  // and is normally called by WebContents this is set on.
+  void SetEmbeddedWebContents(WebContentsImpl* owner);
+
+  // Returns the web contents that the WebContents owning this connector
+  // is supposed to be hosted in.
+  //
+  // TODO(secure-embed): There needs to be a way of updating this for when
+  // tabs are moved between windows (including potentially an in-between
+  // windows detached tab state).
+  WebContentsImpl* GetEmbedderWebContents();
+
+  // Convenience wrapper for GetDelegate()->FocusInEmbedder that null-checks
+  // the delegate.
+  void FocusInEmbedder(FocusOperation focus_op);
+
   // SecureEmbedConnector:
-  void SetEmbeddedWebContents(WebContents* owner) override;
-  WebContents* GetEmbedderWebContents() override;
-  void FocusInEmbedder(FocusOperation focus_op) override;
   void SetDelegate(SecureEmbedConnector::Delegate* delegate) override;
   SecureEmbedConnector::Delegate* GetDelegate() override;
 
@@ -141,7 +155,7 @@ class SecureEmbedConnectorImpl : public SecureEmbedConnector,
   raw_ptr<SecureEmbedConnector::Delegate> delegate_ = nullptr;
 
   base::WeakPtr<WebContents> embedder_web_contents_;
-  raw_ptr<WebContents> guest_web_contents_ = nullptr;  // Owns us.
+  raw_ptr<WebContentsImpl> guest_web_contents_ = nullptr;  // Owns us.
   raw_ptr<RenderWidgetHostViewChildFrame> view_ = nullptr;
 
   // This is here rather than in the implementation class so that
