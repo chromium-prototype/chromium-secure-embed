@@ -33,7 +33,6 @@
 #include "components/sharing_message/sharing_dialog_data.h"
 #include "components/web_modal/web_contents_modal_dialog_manager.h"
 #include "content/public/browser/keyboard_event_processing_result.h"
-#include "content/public/browser/secure_embed_connector.h"
 #include "content/public/browser/web_contents.h"
 #include "content/public/browser/web_contents_observer.h"
 #include "third_party/blink/public/common/associated_interfaces/associated_interface_provider.h"
@@ -1100,9 +1099,8 @@ BrowserView* WebUIBrowserWindow::AsBrowserView() {
   return nullptr;
 }
 
-std::unique_ptr<content::SecureEmbedConnector>
-WebUIBrowserWindow::CreateSecureEmbedConnector() {
-  return content::SecureEmbedConnector::Create(GetUIWebContents());
+content::WebContents* WebUIBrowserWindow::GetSecureEmbedEmbedder() {
+  return GetUIWebContents();
 }
 
 gfx::Rect WebUIBrowserWindow::GetBounds() const {

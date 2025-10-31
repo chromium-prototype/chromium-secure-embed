@@ -39,10 +39,6 @@ class CONTENT_EXPORT SecureEmbedConnector {
     virtual void FocusInEmbedder(FocusOperation focus_op) = 0;
   };
 
-  // Creates an instance with given embedder web contents.
-  static std::unique_ptr<SecureEmbedConnector> Create(
-      WebContents* embedder_web_contents);
-
   virtual ~SecureEmbedConnector() = default;
 
   // Set by the embedder side to help communicate back to it.

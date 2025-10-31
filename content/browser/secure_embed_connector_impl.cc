@@ -52,27 +52,12 @@ class SecureEmbedConnectorImpl::Observer : public WebContentsObserver {
   raw_ptr<SecureEmbedConnectorImpl> guest_frame_;
 };
 
-// static
-std::unique_ptr<SecureEmbedConnector> SecureEmbedConnector::Create(
-    WebContents* embedded_web_contents) {
-  return std::make_unique<SecureEmbedConnectorImpl>(embedded_web_contents);
-}
-
 SecureEmbedConnectorImpl::SecureEmbedConnectorImpl(
-    WebContents* embedder_web_contents)
-    : embedder_web_contents_(embedder_web_contents->GetWeakPtr()) {}
-
-SecureEmbedConnectorImpl::~SecureEmbedConnectorImpl() {
-  // Notify the view of this object being destroyed, if the view still exists.
-  SetView(nullptr, /*allow_paint_holding=*/false);
-}
-
-void SecureEmbedConnectorImpl::SetEmbeddedWebContents(
-    WebContentsImpl* guest_web_contents) {
-  CHECK(!guest_web_contents_);
-  guest_web_contents_ = guest_web_contents;
-
-  observer_ = std::make_unique<Observer>(this, guest_web_contents);
+    WebContentsImpl* embedder_web_contents,
+    WebContentsImpl* embedded_web_contents)
+    : embedder_web_contents_(embedder_web_contents->GetWeakPtr()),
+      guest_web_contents_(embedded_web_contents) {
+  observer_ = std::make_unique<Observer>(this, embedded_web_contents);
 
   // TODO(secure-embed): There may not be a view yet, depending on if the
   // WebContents has been shown or navigated. That means calling GetScreenInfos
@@ -88,6 +73,11 @@ void SecureEmbedConnectorImpl::SetEmbeddedWebContents(
                       ->GetScreenInfos();
 
   UpdateViewForCurrentRenderFrameHost();
+}
+
+SecureEmbedConnectorImpl::~SecureEmbedConnectorImpl() {
+  // Notify the view of this object being destroyed, if the view still exists.
+  SetView(nullptr, /*allow_paint_holding=*/false);
 }
 
 WebContentsImpl* SecureEmbedConnectorImpl::GetEmbedderWebContents() {

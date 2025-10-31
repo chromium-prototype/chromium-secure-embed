@@ -30,12 +30,10 @@ class WebContentsImpl;
 class SecureEmbedConnectorImpl : public SecureEmbedConnector,
                                  public CrossProcessFrameConnectorBase {
  public:
-  SecureEmbedConnectorImpl(WebContents* embedder_web_contents);
+  // `embedded_web_contents` will have ownership of this.
+  SecureEmbedConnectorImpl(WebContentsImpl* embedder_web_contents,
+                           WebContentsImpl* embedded_web_contents);
   ~SecureEmbedConnectorImpl() override;
-
-  // Sets the WebContents this operates with. This can be called exactly once,
-  // and is normally called by WebContents this is set on.
-  void SetEmbeddedWebContents(WebContentsImpl* owner);
 
   // Returns the web contents that the WebContents owning this connector
   // is supposed to be hosted in.

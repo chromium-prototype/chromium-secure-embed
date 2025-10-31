@@ -533,8 +533,8 @@ std::unique_ptr<content::WebContents> CreateTargetContents(
   }
 
 #if BUILDFLAG(ENABLE_SECURE_EMBED)
-  create_params.secure_embed_connector =
-      params.browser->window()->CreateSecureEmbedConnector().release();
+  create_params.secure_embed_embedder =
+      params.browser->window()->GetSecureEmbedEmbedder();
 #endif
 
 #if defined(USE_AURA)

@@ -9,7 +9,6 @@
 #include "components/secure_embed/buildflags/buildflags.h"
 #include "content/public/browser/browser_context.h"
 #include "content/public/browser/render_process_host.h"
-#include "content/public/browser/secure_embed_connector.h"
 #include "content/public/browser/web_contents.h"
 #include "content/public/browser/web_ui.h"
 #include "content/public/browser/web_ui_data_source.h"
@@ -49,8 +48,7 @@ Browser::Browser(content::WebUI* web_ui)
   html_source->SetDefaultResource(IDR_WEBUI_EXAMPLES_BROWSER_INDEX_HTML);
 
   content::WebContents::CreateParams params(browser_context);
-  params.secure_embed_connector =
-      content::SecureEmbedConnector::Create(web_ui->GetWebContents()).release();
+  params.secure_embed_embedder = web_ui->GetWebContents();
   guest_contents_ = content::WebContents::Create(params);
 
   guest_contents::GuestContentsHandle::CreateForWebContents(

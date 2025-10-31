@@ -4189,10 +4189,10 @@ void WebContentsImpl::Init(const WebContents::CreateParams& params,
   std::unique_ptr<WebContentsViewDelegate> delegate =
       GetContentClient()->browser()->GetWebContentsViewDelegate(this);
 
-  if (params.secure_embed_connector) {
-    secure_embed_connector_.reset(static_cast<SecureEmbedConnectorImpl*>(
-        params.secure_embed_connector.get()));
-    secure_embed_connector_->SetEmbeddedWebContents(this);
+  if (params.secure_embed_embedder) {
+    secure_embed_connector_ = std::make_unique<SecureEmbedConnectorImpl>(
+        static_cast<WebContentsImpl*>(params.secure_embed_embedder.get()),
+        this);
   }
 
   if (browser_plugin_guest_ || secure_embed_connector_) {

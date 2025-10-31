@@ -233,10 +233,9 @@ class WebContents : public PageNavigator, public base::SupportsUserData {
     // If non-null then this WebContents will be hosted by a BrowserPlugin.
     raw_ptr<BrowserPluginGuestDelegate> guest_delegate = nullptr;
 
-    // If non-null then this WebContents will be configured to be hosted
-    // by a different one via the Secure Embed mechanism. The WebContents
-    // will take ownership.
-    raw_ptr<SecureEmbedConnector> secure_embed_connector = nullptr;
+    // If non-null then this WebContents will be configured to be hosted inside
+    // `secure_embed_embedder` via the Secure Embed mechanism.
+    raw_ptr<WebContents> secure_embed_embedder = nullptr;
 
     // Used to specify the location context which display the new view should
     // belong. This can be unset if not needed.
