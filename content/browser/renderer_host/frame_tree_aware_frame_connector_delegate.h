@@ -35,7 +35,7 @@ class RenderWidgetHostViewChildFrame;
 // This delegate handles communication through the RenderFrameProxyHost in the
 // parent renderer process for out-of-process child frames.
 class FrameTreeAwareFrameConnectorDelegate final
-    : public CrossProcessFrameConnector::Delegate {
+    : public CrossProcessFrameConnector::ProxyInOuterFrame {
  public:
   // |frame_proxy_in_parent_renderer| corresponds to the RenderFrameProxyHost
   // that routes messages to the parent frame's renderer process.

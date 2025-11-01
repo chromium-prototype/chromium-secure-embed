@@ -37,7 +37,7 @@ class WebContents;
 // This delegate handles communication through the guest WebContents and
 // GuestFrame::Delegate for embedded guest content.
 class GuestFrameConnectorDelegate final
-    : public CrossProcessFrameConnector::Delegate {
+    : public CrossProcessFrameConnector::ProxyInOuterFrame {
  public:
   GuestFrameConnectorDelegate(WebContents* guest_web_contents,
                               GuestFrame::Delegate* guest_delegate);

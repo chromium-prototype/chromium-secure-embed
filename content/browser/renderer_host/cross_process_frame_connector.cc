@@ -30,10 +30,10 @@
 namespace content {
 
 CrossProcessFrameConnector::CrossProcessFrameConnector(
-    std::unique_ptr<Delegate> delegate)
-    : delegate_(std::move(delegate)) {
+    std::unique_ptr<ProxyInOuterFrame> proxy_in_outer_frame)
+    : proxy_in_outer_frame_(std::move(proxy_in_outer_frame)) {
   // Skip for tests.
-  if (!delegate_) {
+  if (!proxy_in_outer_frame_) {
     screen_infos_ = display::ScreenInfos(display::ScreenInfo());
     return;
   }
@@ -108,7 +108,8 @@ void CrossProcessFrameConnector::SetView(RenderWidgetHostViewChildFrame* view,
     view_->SetFrameConnector(this);
     if (visibility_ != blink::mojom::FrameVisibility::kRenderedInViewport)
       OnVisibilityChanged(visibility_);
-    delegate_->SetFrameSinkId(view_->GetFrameSinkId(), allow_paint_holding);
+    proxy_in_outer_frame_->SetFrameSinkId(view_->GetFrameSinkId(),
+                                          allow_paint_holding);
   }
 }
 
@@ -135,7 +136,7 @@ void CrossProcessFrameConnector::RenderProcessGone() {
   if (IsVisible())
     MaybeLogCrash(CrashVisibility::kCrashedWhileVisible);
 
-  delegate_->ChildProcessGone();
+  proxy_in_outer_frame_->ChildProcessGone();
 
   // The following call might discard the WebContents by
   // DiscardPageWithCrashedSubframePolicy, which in turn calls
@@ -164,7 +165,7 @@ void CrossProcessFrameConnector::RenderProcessGone() {
                   features::kReloadHiddenTabsWithActiveCrashedSubframes) ||
               current_child_rfh->IsActive()
             )) {
-      delegate_->NeedsReload();
+      proxy_in_outer_frame_->NeedsReload();
       did_mark_for_reload = true;
       UMA_HISTOGRAM_ENUMERATION(
           "Stability.ChildFrameCrash.TabMarkedForReload.Visibility",
@@ -184,7 +185,8 @@ void CrossProcessFrameConnector::SendIntrinsicSizingInfoToParent(
          (sizing_info->size.height() >= 0.f));
   DCHECK((sizing_info->aspect_ratio.width() >= 0.f) &&
          (sizing_info->aspect_ratio.height() >= 0.f));
-  delegate_->SendIntrinsicSizingInfoToParent(std::move(sizing_info));
+  proxy_in_outer_frame_->SendIntrinsicSizingInfoToParent(
+      std::move(sizing_info));
 }
 
 void CrossProcessFrameConnector::SynchronizeVisualProperties(
@@ -298,7 +300,7 @@ void CrossProcessFrameConnector::OnSynchronizeVisualProperties(
        last_received_css_zoom_factor_ != visual_properties.css_zoom_factor) &&
       local_surface_id_ == visual_properties.local_surface_id) {
     bad_message::ReceivedBadMessage(
-        delegate_->GetParentProcess(),
+        proxy_in_outer_frame_->GetParentProcess(),
         bad_message::CPFC_RESIZE_PARAMS_CHANGED_LOCAL_SURFACE_ID_UNCHANGED);
     return;
   }
@@ -378,7 +380,7 @@ void CrossProcessFrameConnector::OnVisibilityChanged(
   CHECK(current_child_frame_host());
   current_child_frame_host()->VisibilityChanged(visibility_);
 
-  if (delegate_->VisibilityChanged(view_, visibility)) {
+  if (proxy_in_outer_frame_->VisibilityChanged(view_, visibility)) {
     return;
   }
 
@@ -404,21 +406,21 @@ void CrossProcessFrameConnector::OnSetInheritedEffectiveTouchAction(
 
 RenderWidgetHostViewBase*
 CrossProcessFrameConnector::GetRootRenderWidgetHostView() {
-  return delegate_->GetRootView();
+  return proxy_in_outer_frame_->GetRootView();
 }
 
 RenderWidgetHostViewBase*
 CrossProcessFrameConnector::GetParentRenderWidgetHostView() {
-  return delegate_->GetParentView();
+  return proxy_in_outer_frame_->GetParentView();
 }
 
 void CrossProcessFrameConnector::EnableAutoResize(const gfx::Size& min_size,
                                                   const gfx::Size& max_size) {
-  delegate_->EnableAutoResize(min_size, max_size);
+  proxy_in_outer_frame_->EnableAutoResize(min_size, max_size);
 }
 
 void CrossProcessFrameConnector::DisableAutoResize() {
-  delegate_->DisableAutoResize();
+  proxy_in_outer_frame_->DisableAutoResize();
 }
 
 bool CrossProcessFrameConnector::IsInert() const {
@@ -436,7 +438,7 @@ bool CrossProcessFrameConnector::IsHidden() const {
 
 void CrossProcessFrameConnector::DidUpdateVisualProperties(
     const cc::RenderFrameMetadata& metadata) {
-  delegate_->DidUpdateVisualProperties(metadata);
+  proxy_in_outer_frame_->DidUpdateVisualProperties(metadata);
 }
 
 void CrossProcessFrameConnector::SetVisibilityForChildViews(
@@ -461,13 +463,12 @@ void CrossProcessFrameConnector::SetRectInParentView(
       gfx::ScaleToFlooredPoint(rect_in_parent_view.origin(), 1.f / dsf),
       gfx::ScaleToCeiledSize(rect_in_parent_view.size(), 1.f / dsf));
 
-  // TODO(secure-embed): Protect against crash here?
-  if (view_ /*&& frame_proxy_in_parent_renderer_*/) {
+  if (view_ && proxy_in_outer_frame_) {
     view_->SetBounds(rect_in_parent_view_in_dip_);
 
     if (old_rect.x() != rect_in_parent_view_in_dip_.x() ||
         old_rect.y() != rect_in_parent_view_in_dip_.y()) {
-      delegate_->SendScreenRects();
+      proxy_in_outer_frame_->SendScreenRects();
     }
   }
 }
@@ -598,7 +599,7 @@ Visibility CrossProcessFrameConnector::EmbedderVisibility() {
 
 RenderFrameHostImpl* CrossProcessFrameConnector::current_child_frame_host()
     const {
-  return delegate_->GetChildRenderFrameHost();
+  return proxy_in_outer_frame_->GetChildRenderFrameHost();
 }
 
 }  // namespace content

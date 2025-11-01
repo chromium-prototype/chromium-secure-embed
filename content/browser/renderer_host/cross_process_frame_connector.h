@@ -100,31 +100,30 @@ class RenderWidgetHostViewChildFrame;
 // CrossProcessFrameConnector class is used in both scenarios, with context-
 // specific behavior (dependency on the RenderFrameProxyHost in the case of
 // OOPIF and dependency on the GuestFrameImpl in the case of SecureEmbed)
-// handled via the Delegate interface.
+// handled via the ProxyInOuterFrame interface.
 class CONTENT_EXPORT CrossProcessFrameConnector
     : public input::ChildFrameInputHelper::Delegate {
  public:
-  class Delegate {
+  class ProxyInOuterFrame {
    public:
-    virtual ~Delegate() = default;
+    virtual ~ProxyInOuterFrame() = default;
 
     // Called when the child frame has updated its visual properties and needs
     // to notify the embedder.
     virtual void DidUpdateVisualProperties(
         const cc::RenderFrameMetadata& metadata) = 0;
 
-    // Disables auto-resize mode for the child frame.
+    // Disables auto-resize mode for child's proxy in the parent.
     virtual void DisableAutoResize() = 0;
 
-    // Enables auto-resize mode for the child frame, allowing it to
-    // automatically resize itself within the given constraints.
+    // Enables auto-resize mode for the child's proxy in the parent, allowing it
+    // to automatically resize itself within the given constraints.
     virtual void EnableAutoResize(const gfx::Size& min_size,
                                   const gfx::Size& max_size) = 0;
 
     // Get the child frame host.
     virtual RenderFrameHostImpl* GetChildRenderFrameHost() const = 0;
 
-    // TODO(secure-embed): Unclear if we should support parent/root view access.
     // Get parent/root views.
     virtual RenderWidgetHostViewBase* GetParentView() = 0;
     virtual RenderWidgetHostViewBase* GetRootView() = 0;
@@ -147,9 +146,8 @@ class CONTENT_EXPORT CrossProcessFrameConnector
         RenderWidgetHostViewChildFrame* view,
         blink::mojom::FrameVisibility visibility) = 0;
 
-    // TODO(secure-embed): Ideally this wouldn't be a method on the delegate
-    // interface at all as it's only applicable to RemoteFrameOwners in blink.
     // Sends the intrinsic sizing information from the child to the embedder.
+    // Should only be called if the child has an intrinsic size.
     virtual void SendIntrinsicSizingInfoToParent(
         blink::mojom::IntrinsicSizingInfoPtr info) = 0;
 
@@ -161,9 +159,8 @@ class CONTENT_EXPORT CrossProcessFrameConnector
                                 bool allow_paint_holding) = 0;
   };
 
-  // Constructor that takes ownership of a delegate for context-specific
-  // operations.
-  explicit CrossProcessFrameConnector(std::unique_ptr<Delegate> delegate);
+  explicit CrossProcessFrameConnector(
+      std::unique_ptr<ProxyInOuterFrame> proxy_in_outer_frame);
 
   CrossProcessFrameConnector(const CrossProcessFrameConnector&) = delete;
   CrossProcessFrameConnector& operator=(const CrossProcessFrameConnector&) =
@@ -445,8 +442,9 @@ class CONTENT_EXPORT CrossProcessFrameConnector
   // CrossProcessFrameConnector.
   RenderFrameHostImpl* current_child_frame_host() const;
 
-  // Delegate for context-specific operations.
-  std::unique_ptr<Delegate> delegate_;
+  // Delegate for context-specific operations that need to be performed by
+  // the owner of this CrossProcessFrameConnector.
+  std::unique_ptr<ProxyInOuterFrame> proxy_in_outer_frame_;
 
   bool is_inert_ = false;
   cc::TouchAction inherited_effective_touch_action_ = cc::TouchAction::kAuto;

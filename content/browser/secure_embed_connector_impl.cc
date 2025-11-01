@@ -47,7 +47,6 @@ SecureEmbedConnectorImpl::SecureEmbedConnectorImpl(
       guest_web_contents_(embedded_web_contents) {
   observer_ = std::make_unique<Observer>(this, embedded_web_contents);
 
-  // Create the connector with the GuestFrameConnectorDelegate.
   auto connector_delegate = std::make_unique<GuestFrameConnectorDelegate>(
       guest_web_contents, delegate_);
   connector_ = std::make_unique<CrossProcessFrameConnector>(
