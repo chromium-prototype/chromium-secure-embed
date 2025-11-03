@@ -2,13 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef CONTENT_BROWSER_GUEST_FRAME_CONNECTOR_DELEGATE_H_
-#define CONTENT_BROWSER_GUEST_FRAME_CONNECTOR_DELEGATE_H_
+#ifndef CONTENT_BROWSER_SECURE_EMBED_CONNECTOR_DELEGATE_H_
+#define CONTENT_BROWSER_SECURE_EMBED_CONNECTOR_DELEGATE_H_
 
 #include "base/memory/raw_ptr.h"
 #include "base/memory/weak_ptr.h"
 #include "content/browser/renderer_host/cross_process_frame_connector.h"
-#include "content/public/browser/guest_frame.h"
+#include "content/public/browser/secure_embed_connector.h"
 #include "content/public/browser/visibility.h"
 #include "third_party/blink/public/mojom/frame/intrinsic_sizing_info.mojom.h"
 #include "third_party/blink/public/mojom/frame/lifecycle.mojom-forward.h"
@@ -34,18 +34,19 @@ class RenderWidgetHostViewChildFrame;
 class WebContents;
 
 // Delegate implementation for secure embed/guest frame scenarios.
-// This delegate handles communication through the guest WebContents and
-// GuestFrame::Delegate for embedded guest content.
-class GuestFrameConnectorDelegate final
+// This delegate handles communication requirements for
+// CrossProcessFrameConnector that require reaching into either the guest
+// WebContents or the embedder WebContents, via the SecureEmbedConnector.
+class SecureEmbedConnectorDelegate final
     : public CrossProcessFrameConnector::ProxyInOuterFrame {
  public:
-  GuestFrameConnectorDelegate(WebContents* guest_web_contents,
-                              GuestFrame::Delegate* guest_delegate);
+  SecureEmbedConnectorDelegate(WebContents* guest_web_contents,
+                              SecureEmbedConnector* connector);
 
-  ~GuestFrameConnectorDelegate() override;
+  ~SecureEmbedConnectorDelegate() override;
 
-  GuestFrameConnectorDelegate(const GuestFrameConnectorDelegate&) = delete;
-  GuestFrameConnectorDelegate& operator=(const GuestFrameConnectorDelegate&) =
+  SecureEmbedConnectorDelegate(const SecureEmbedConnectorDelegate&) = delete;
+  SecureEmbedConnectorDelegate& operator=(const SecureEmbedConnectorDelegate&) =
       delete;
 
   // CrossProcessFrameConnector::Delegate implementation:
@@ -73,10 +74,10 @@ class GuestFrameConnectorDelegate final
   // The guest WebContents being embedded.
   base::WeakPtr<WebContents> guest_web_contents_ = nullptr;
 
-  // Delegate for communicating with the embedder.
-  raw_ptr<GuestFrame::Delegate> guest_delegate_;
+  // The SecureEmbedConnector that provides access to the embedder.
+  raw_ptr<SecureEmbedConnector> secure_embed_connector_ = nullptr;
 };
 
 }  // namespace content
 
-#endif  // CONTENT_BROWSER_GUEST_FRAME_CONNECTOR_DELEGATE_H_
+#endif  // CONTENT_BROWSER_SECURE_EMBED_CONNECTOR_DELEGATE_H_

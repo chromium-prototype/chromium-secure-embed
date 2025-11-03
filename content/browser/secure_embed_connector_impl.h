@@ -11,7 +11,7 @@
 #include "base/memory/weak_ptr.h"
 #include "components/viz/common/surfaces/frame_sink_id.h"
 #include "content/browser/renderer_host/cross_process_frame_connector.h"
-#include "content/public/browser/guest_frame.h"
+#include "content/public/browser/secure_embed_connector.h"
 #include "content/public/browser/web_contents.h"
 #include "third_party/blink/public/mojom/input/focus_type.mojom.h"
 
@@ -40,8 +40,6 @@ class SecureEmbedConnectorImpl : public SecureEmbedConnector {
   // SecureEmbedConnector:
   void SetDelegate(SecureEmbedConnector::Delegate* delegate) override;
   SecureEmbedConnector::Delegate* GetDelegate() override;
-
-  // SecureEmbedConnector::
   void OnSynchronizeVisualProperties(
       const blink::FrameVisualProperties& visual_properties) override;
   const viz::FrameSinkId& GetFrameSinkId() const override;
@@ -66,7 +64,7 @@ class SecureEmbedConnectorImpl : public SecureEmbedConnector {
   raw_ptr<SecureEmbedConnector::Delegate> delegate_ = nullptr;
 
   base::WeakPtr<WebContents> embedder_web_contents_;
-  base::WeakPtr<WebContents> guest_web_contents_ = nullptr;
+  base::WeakPtr<WebContents> guest_web_contents_;
   raw_ptr<RenderWidgetHostViewChildFrame> view_ = nullptr;
 
   // The owned CrossProcessFrameConnector that handles all the frame connection

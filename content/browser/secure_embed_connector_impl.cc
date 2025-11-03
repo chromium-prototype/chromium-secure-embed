@@ -5,12 +5,13 @@
 #include "content/browser/secure_embed_connector_impl.h"
 
 #include "components/input/native_web_keyboard_event.h"
-#include "content/browser/guest_frame_connector_delegate.h"
 #include "content/browser/renderer_host/render_view_host_impl.h"
 #include "content/browser/renderer_host/render_widget_host_delegate.h"
 #include "content/browser/renderer_host/render_widget_host_impl.h"
 #include "content/browser/renderer_host/render_widget_host_view_base.h"
 #include "content/browser/renderer_host/render_widget_host_view_child_frame.h"
+#include "content/browser/secure_embed_connector_delegate.h"
+#include "content/browser/web_contents/web_contents_impl.h"
 #include "content/public/browser/web_contents_observer.h"
 #include "third_party/blink/public/common/frame/frame_visual_properties.h"
 #include "third_party/blink/public/common/input/web_keyboard_event.h"
@@ -22,33 +23,33 @@ namespace content {
 // CrossProcessFrameConnectorBase.
 class SecureEmbedConnectorImpl::Observer : public WebContentsObserver {
  public:
-  explicit Observer(SecureEmbedConnectorImpl* guest_frame,
+  explicit Observer(SecureEmbedConnectorImpl* connector,
                     WebContents* web_contents)
-      : WebContentsObserver(web_contents), guest_frame_(guest_frame) {}
+      : WebContentsObserver(web_contents), connector_(connector) {}
 
   ~Observer() override = default;
 
   // WebContentsObserver:
-  void RenderViewReady() override { guest_frame_->OnRenderViewReady(); }
+  void RenderViewReady() override { connector_->OnRenderViewReady(); }
 
   void RenderFrameHostChanged(RenderFrameHost* old_host,
                               RenderFrameHost* new_host) override {
-    guest_frame_->OnRenderFrameHostChanged(old_host, new_host);
+    connector_->OnRenderFrameHostChanged(old_host, new_host);
   }
 
  private:
-  raw_ptr<SecureEmbedConnectorImpl> guest_frame_;
+  raw_ptr<SecureEmbedConnectorImpl> connector_;
 };
 
 SecureEmbedConnectorImpl::SecureEmbedConnectorImpl(
     WebContentsImpl* embedder_web_contents,
     WebContentsImpl* embedded_web_contents)
     : embedder_web_contents_(embedder_web_contents->GetWeakPtr()),
-      guest_web_contents_(embedded_web_contents) {
+      guest_web_contents_(embedded_web_contents->GetWeakPtr()) {
   observer_ = std::make_unique<Observer>(this, embedded_web_contents);
 
-  auto connector_delegate = std::make_unique<GuestFrameConnectorDelegate>(
-      guest_web_contents, delegate_);
+  auto connector_delegate = std::make_unique<SecureEmbedConnectorDelegate>(
+      embedded_web_contents, this);
   connector_ = std::make_unique<CrossProcessFrameConnector>(
       std::move(connector_delegate));
 
@@ -75,6 +76,15 @@ void SecureEmbedConnectorImpl::SetDelegate(
 
 SecureEmbedConnector::Delegate* SecureEmbedConnectorImpl::GetDelegate() {
   return delegate_;
+}
+
+void SecureEmbedConnectorImpl::OnSynchronizeVisualProperties(
+    const blink::FrameVisualProperties& visual_properties) {
+  connector_->SynchronizeVisualProperties(visual_properties);
+}
+
+const viz::FrameSinkId& SecureEmbedConnectorImpl::GetFrameSinkId() const {
+  return frame_sink_id_;
 }
 
 void SecureEmbedConnectorImpl::ForwardKeyboardEvent(
@@ -166,16 +176,6 @@ void SecureEmbedConnectorImpl::UpdateViewForCurrentRenderFrameHost() {
   auto* child_view = static_cast<RenderWidgetHostViewChildFrame*>(base_view);
 
   connector_->SetView(child_view, /*allow_paint_holding=*/false);
-}
-
-RenderFrameHostImpl* SecureEmbedConnectorImpl::current_child_frame_host()
-    const {
-  if (!embedder_web_contents_) {
-    return nullptr;
-  }
-  return static_cast<WebContentsImpl*>(embedder_web_contents_.get())
-  //return static_cast<WebContentsImpl*>(guest_web_contents_)
-  //    ->GetPrimaryMainFrame();
 }
 
 }  // namespace content
