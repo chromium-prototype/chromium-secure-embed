@@ -75,6 +75,10 @@ SecureEmbedConnector::Delegate* SecureEmbedConnectorImpl::GetDelegate() {
   return delegate_;
 }
 
+CrossProcessFrameConnectorBase* SecureEmbedConnectorImpl::GetCrossProcessFrameConnector() {
+  return this;
+}
+
 void SecureEmbedConnectorImpl::ForwardKeyboardEvent(
     const blink::WebKeyboardEvent& keyboard_event) {
   input::NativeWebKeyboardEvent native_event(
@@ -97,7 +101,7 @@ void SecureEmbedConnectorImpl::ForwardKeyboardEvent(
 
 void SecureEmbedConnectorImpl::SetFocus(bool focused,
                                         blink::mojom::FocusType focus_type) {
-  if (!guest_web_contents_) {
+  if (!guest_web_contents_ || !view_) {
     return;
   }
 

@@ -18,6 +18,7 @@ struct FrameVisualProperties;
 
 namespace content {
 
+class CrossProcessFrameConnectorBase;
 class RenderFrameHost;
 class WebContents;
 
@@ -38,10 +39,6 @@ class CONTENT_EXPORT SecureEmbedConnector {
     // Requests focus in the embedder document for either the embedding element,
     // or the elements before or after it in the tab order, based on `focus_op`.
     virtual void FocusInEmbedder(FocusOperation focus_op) = 0;
-
-    virtual void NotifySwappedRWHVChildFrameFromRenderManager(
-        RenderWidgetHostViewChildFrame* new_view,
-        bool allow_paint_holding) = 0;
   };
 
   virtual ~SecureEmbedConnector() = default;
@@ -73,6 +70,8 @@ class CONTENT_EXPORT SecureEmbedConnector {
 
   // Gets the FrameSinkId of the guest's view.
   virtual const viz::FrameSinkId& GetFrameSinkId() const = 0;
+
+  virtual CrossProcessFrameConnectorBase* GetCrossProcessFrameConnector() = 0;
 };
 
 }  // namespace content

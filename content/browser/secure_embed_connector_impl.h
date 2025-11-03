@@ -44,6 +44,7 @@ class SecureEmbedConnectorImpl : public SecureEmbedConnector,
   // SecureEmbedConnector:
   void SetDelegate(SecureEmbedConnector::Delegate* delegate) override;
   SecureEmbedConnector::Delegate* GetDelegate() override;
+  CrossProcessFrameConnectorBase* GetCrossProcessFrameConnector() override;
 
   // CrossProcessFrameConnectorBase:
   // TODO(secure-embed): Some of the methods that we override here don't need to
@@ -55,7 +56,6 @@ class SecureEmbedConnectorImpl : public SecureEmbedConnector,
   void ForwardKeyboardEvent(
       const blink::WebKeyboardEvent& keyboard_event) override;
   void SetFocus(bool focused, blink::mojom::FocusType focus_type) override;
-  CrossProcessFrameConnectorBase* GetCrossProcessFrameConnector() override;
 
   void SetView(RenderWidgetHostViewChildFrame* view,
                bool allow_paint_holding) override;
