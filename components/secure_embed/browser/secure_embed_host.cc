@@ -22,13 +22,14 @@ namespace secure_embed {
 // static
 size_t SecureEmbedHost::instance_count_for_testing_ = 0;
 
-SecureEmbedHost::SecureEmbedHost(content::RenderFrameHost*) : secure_embed_() {
+SecureEmbedHost::SecureEmbedHost(content::RenderFrameHost* render_frame_host)
+    : render_frame_host_(render_frame_host), secure_embed_() {
   ++instance_count_for_testing_;
 }
 
 SecureEmbedHost::~SecureEmbedHost() {
   --instance_count_for_testing_;
-  if (content::SecureEmbedConnector* connector = GetConnector(); connector) {
+  if (content::SecureEmbedConnector* connector = GetConnector()) {
     connector->SetDelegate(nullptr);
   }
 }
@@ -82,6 +83,13 @@ void SecureEmbedHost::Attach(int64_t content_id) {
     return;
   }
 
+  if (web_contents_to_attach->GetSecureEmbedConnector()
+          ->GetEmbedderWebContents() !=
+      content::WebContents::FromRenderFrameHost(render_frame_host_)) {
+    LOG(ERROR) << "WebContents not configured to embed here";
+    return;
+  }
+
   // TODO(secure-embed): Use web_contents_to_attach to complete the attachment.
   LOG(INFO) << "Successfully retrieved WebContents for content_id: "
             << content_id;
@@ -95,7 +103,7 @@ void SecureEmbedHost::Attach(int64_t content_id) {
 
 void SecureEmbedHost::SynchronizeVisualProperties(
     const blink::FrameVisualProperties& visual_properties) {
-  if (content::SecureEmbedConnector* connector = GetConnector(); connector) {
+  if (content::SecureEmbedConnector* connector = GetConnector()) {
     connector->OnSynchronizeVisualProperties(visual_properties);
   }
 }
@@ -109,7 +117,7 @@ void SecureEmbedHost::DispatchKeyboardEvent(
         "Unexpected message type in SecureEmbedHost::DispatchKeyboardEvent");
     return;
   }
-  if (content::SecureEmbedConnector* connector = GetConnector(); connector) {
+  if (content::SecureEmbedConnector* connector = GetConnector()) {
     connector->ForwardKeyboardEvent(
         static_cast<const blink::WebKeyboardEvent&>(key_event->Event()));
   }
@@ -118,7 +126,7 @@ void SecureEmbedHost::DispatchKeyboardEvent(
 void SecureEmbedHost::SetFocus(bool focused,
                                blink::mojom::FocusType focus_type) {
   know_have_focus_ = false;
-  if (content::SecureEmbedConnector* connector = GetConnector(); connector) {
+  if (content::SecureEmbedConnector* connector = GetConnector()) {
     connector->SetFocus(focused, focus_type);
     if (focused) {
       know_have_focus_ = true;

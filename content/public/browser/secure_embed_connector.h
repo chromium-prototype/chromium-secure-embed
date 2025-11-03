@@ -21,7 +21,8 @@ namespace content {
 class RenderFrameHost;
 class WebContents;
 
-//
+// This is created and owned by WebContents when it's created with
+// `secure_embed_embedder` in its CreateParams.
 class CONTENT_EXPORT SecureEmbedConnector {
  public:
   enum class FocusOperation {
@@ -40,6 +41,14 @@ class CONTENT_EXPORT SecureEmbedConnector {
   };
 
   virtual ~SecureEmbedConnector() = default;
+
+  // Returns the web contents that the WebContents owning this connector
+  // is supposed to be hosted in.
+  //
+  // TODO(secure-embed): There needs to be a way of updating this for when
+  // tabs are moved between windows (including potentially an in-between
+  // windows detached tab state).
+  virtual WebContents* GetEmbedderWebContents() = 0;
 
   // Set by the embedder side to help communicate back to it.
   // This can switch between a value and null, but not two delegates.

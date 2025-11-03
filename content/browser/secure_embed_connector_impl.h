@@ -35,13 +35,7 @@ class SecureEmbedConnectorImpl : public SecureEmbedConnector,
                            WebContentsImpl* embedded_web_contents);
   ~SecureEmbedConnectorImpl() override;
 
-  // Returns the web contents that the WebContents owning this connector
-  // is supposed to be hosted in.
-  //
-  // TODO(secure-embed): There needs to be a way of updating this for when
-  // tabs are moved between windows (including potentially an in-between
-  // windows detached tab state).
-  WebContentsImpl* GetEmbedderWebContents();
+  WebContents* GetEmbedderWebContents() override;
 
   // Convenience wrapper for GetDelegate()->FocusInEmbedder that null-checks
   // the delegate.

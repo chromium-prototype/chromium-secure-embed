@@ -80,8 +80,8 @@ SecureEmbedConnectorImpl::~SecureEmbedConnectorImpl() {
   SetView(nullptr, /*allow_paint_holding=*/false);
 }
 
-WebContentsImpl* SecureEmbedConnectorImpl::GetEmbedderWebContents() {
-  return static_cast<WebContentsImpl*>(embedder_web_contents_.get());
+WebContents* SecureEmbedConnectorImpl::GetEmbedderWebContents() {
+  return embedder_web_contents_.get();
 }
 
 void SecureEmbedConnectorImpl::FocusInEmbedder(FocusOperation focus_op) {

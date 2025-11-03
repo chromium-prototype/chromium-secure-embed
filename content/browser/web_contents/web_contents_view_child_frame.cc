@@ -54,8 +54,9 @@ WebContentsImpl* WebContentsViewChildFrame::GetHostingWebContents() {
     return outer_web_contents;
   }
   if (auto* secure_embed_connector = web_contents_->GetSecureEmbedConnector()) {
-    return static_cast<SecureEmbedConnectorImpl*>(secure_embed_connector)
-        ->GetEmbedderWebContents();
+    return static_cast<WebContentsImpl*>(
+        static_cast<SecureEmbedConnectorImpl*>(secure_embed_connector)
+            ->GetEmbedderWebContents());
   }
   return nullptr;
 }
@@ -229,8 +230,7 @@ void WebContentsViewChildFrame::GotFocus(
 
 void WebContentsViewChildFrame::TakeFocus(bool reverse) {
   if (SecureEmbedConnector* secure_embed_connector =
-          web_contents_->GetSecureEmbedConnector();
-      secure_embed_connector) {
+          web_contents_->GetSecureEmbedConnector()) {
     static_cast<SecureEmbedConnectorImpl*>(secure_embed_connector)
         ->FocusInEmbedder(
             reverse ? SecureEmbedConnector::FocusOperation::kFocusBeforePlugin

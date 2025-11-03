@@ -67,6 +67,7 @@ class COMPONENT_EXPORT(SECURE_EMBED) SecureEmbedHost
   // Count of all alive instances for testing.
   static size_t instance_count_for_testing_;
 
+  raw_ptr<content::RenderFrameHost> render_frame_host_ = nullptr;
   base::WeakPtr<content::WebContents> guest_contents_ = nullptr;
   bool know_have_focus_ = false;
 
