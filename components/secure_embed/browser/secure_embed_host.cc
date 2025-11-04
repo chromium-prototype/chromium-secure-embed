@@ -6,10 +6,9 @@
 
 #include "base/logging.h"
 #include "base/memory/ptr_util.h"
+#include "base/no_destructor.h"
 #include "base/supports_user_data.h"
 #include "components/guest_contents/browser/guest_contents_handle.h"
-#include "content/browser/renderer_host/cross_process_frame_connector.h"
-#include "content/browser/renderer_host/cross_process_frame_connector_base.h"
 #include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/secure_embed_connector.h"
 #include "content/public/browser/web_contents.h"

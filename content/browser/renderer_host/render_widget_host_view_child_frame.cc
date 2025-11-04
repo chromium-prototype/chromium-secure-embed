@@ -135,13 +135,6 @@ void RenderWidgetHostViewChildFrame::SetFrameConnector(
       if (input_transfer_handler) {
         host()->RemoveInputEventObserver(input_transfer_handler);
       }
-      auto* manager = root_view->GetTouchSelectionControllerClientManager();
-      if (manager) {
-        // We have managers in Aura and Android, as well as outside of content/.
-        // There is no manager for Mac OS.
-        selection_controller_client_.reset();
-        manager->RemoveObserver(this);
-      }
     }
   }
   frame_connector_ = frame_connector;
