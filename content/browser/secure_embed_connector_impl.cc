@@ -574,6 +574,9 @@ input::RenderWidgetHostViewInput* SecureEmbedConnectorImpl::GetRootViewInput() {
   return GetRootRenderWidgetHostView();
 }
 
+// Although SetView is called from the WebContentsImpl during navigation,
+// we still need the Observer for RenderViewReady to catch the initial
+// creation or the view won't be set correctly for the initial document.
 void SecureEmbedConnectorImpl::OnRenderViewReady() {
   // When the RenderView is ready, update the view in case it has changed.
   UpdateViewForCurrentRenderFrameHost();
