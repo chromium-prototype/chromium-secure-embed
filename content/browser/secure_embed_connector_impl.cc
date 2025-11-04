@@ -66,8 +66,6 @@ SecureEmbedConnectorImpl::SecureEmbedConnectorImpl(
                       ->GetOutermostMainFrameOrEmbedder()
                       ->GetRenderWidgetHost()
                       ->GetScreenInfos();
-
-  UpdateViewForCurrentRenderFrameHost();
 }
 
 SecureEmbedConnectorImpl::~SecureEmbedConnectorImpl() {
