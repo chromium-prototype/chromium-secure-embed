@@ -18,7 +18,6 @@ struct FrameVisualProperties;
 
 namespace content {
 
-class CrossProcessFrameConnectorBase;
 class RenderFrameHost;
 class WebContents;
 

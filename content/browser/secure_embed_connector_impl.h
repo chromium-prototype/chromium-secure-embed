@@ -141,7 +141,7 @@ class SecureEmbedConnectorImpl : public SecureEmbedConnector,
   // for GuestFrameImpl to get the RenderFrameHost from the guest WebContents.
   RenderFrameHostImpl* current_child_frame_host() const;
 
-  std::unique_ptr<Observer> observer_; 
+  std::unique_ptr<Observer> observer_;
   raw_ptr<SecureEmbedConnector::Delegate> delegate_ = nullptr;
 
   base::WeakPtr<WebContents> embedder_web_contents_;

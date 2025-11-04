@@ -200,11 +200,6 @@ SecureEmbedConnectorImpl::GetRootRenderWidgetHostView() {
   return GetParentRenderWidgetHostView();
 }
 
-void SecureEmbedConnectorImpl::OnRenderViewReady() {
-  // When the RenderView is ready, update the view in case it has changed.
-  UpdateViewForCurrentRenderFrameHost();
-}
-
 void SecureEmbedConnectorImpl::RenderProcessGone() {
   NOTIMPLEMENTED();
 }
@@ -577,6 +572,11 @@ SecureEmbedConnectorImpl::GetParentViewInput() {
 
 input::RenderWidgetHostViewInput* SecureEmbedConnectorImpl::GetRootViewInput() {
   return GetRootRenderWidgetHostView();
+}
+
+void SecureEmbedConnectorImpl::OnRenderViewReady() {
+  // When the RenderView is ready, update the view in case it has changed.
+  UpdateViewForCurrentRenderFrameHost();
 }
 
 void SecureEmbedConnectorImpl::UpdateViewForCurrentRenderFrameHost() {
