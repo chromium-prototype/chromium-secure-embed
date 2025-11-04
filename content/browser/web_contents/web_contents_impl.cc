@@ -1213,8 +1213,7 @@ void WebContentsImpl::NotifySwappedRWHVChildFrameFromRenderManager(
     RenderWidgetHostViewChildFrame* new_view,
     bool allow_paint_holding) {
   if (secure_embed_connector_) {
-    auto* cross_process_frame_connector = secure_embed_connector_->GetCrossProcessFrameConnector();
-    cross_process_frame_connector->SetView(
+    secure_embed_connector_->SetView(
         new_view,
         allow_paint_holding);
   }

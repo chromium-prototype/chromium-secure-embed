@@ -29,11 +29,31 @@
 
 namespace content {
 
+// Nested observer class that forwards relevant events to
+// SecureEmbedConnectorImpl. This avoids function name collisions with
+// CrossProcessFrameConnectorBase.
+class SecureEmbedConnectorImpl::Observer : public WebContentsObserver {
+ public:
+  explicit Observer(SecureEmbedConnectorImpl* guest_frame,
+                    WebContents* web_contents)
+      : WebContentsObserver(web_contents), guest_frame_(guest_frame) {}
+
+  ~Observer() override = default;
+
+  // WebContentsObserver:
+  void RenderViewReady() override { guest_frame_->OnRenderViewReady(); }
+
+ private:
+  raw_ptr<SecureEmbedConnectorImpl> guest_frame_;
+};
+
 SecureEmbedConnectorImpl::SecureEmbedConnectorImpl(
     WebContentsImpl* embedder_web_contents,
     WebContentsImpl* embedded_web_contents)
     : embedder_web_contents_(embedder_web_contents->GetWeakPtr()),
       guest_web_contents_(embedded_web_contents) {
+  observer_ = std::make_unique<Observer>(this, embedded_web_contents);
+
   // TODO(secure-embed): There may not be a view yet, depending on if the
   // WebContents has been shown or navigated. That means calling GetScreenInfos
   // on the RenderWidgetHost would default to the primary display, which may not
@@ -75,12 +95,12 @@ SecureEmbedConnector::Delegate* SecureEmbedConnectorImpl::GetDelegate() {
   return delegate_;
 }
 
-CrossProcessFrameConnectorBase* SecureEmbedConnectorImpl::GetCrossProcessFrameConnector() {
-  return this;
-}
-
 void SecureEmbedConnectorImpl::ForwardKeyboardEvent(
     const blink::WebKeyboardEvent& keyboard_event) {
+  if (!guest_web_contents_ || !view_) {
+    return;
+  }
+
   input::NativeWebKeyboardEvent native_event(
       keyboard_event, GetParentRenderWidgetHostView()->GetNativeView());
 
@@ -178,6 +198,11 @@ SecureEmbedConnectorImpl::GetRootRenderWidgetHostView() {
   // TODO(secure-embed): Do we support multiple levels of embedding?
   // Mixed kinds?
   return GetParentRenderWidgetHostView();
+}
+
+void SecureEmbedConnectorImpl::OnRenderViewReady() {
+  // When the RenderView is ready, update the view in case it has changed.
+  UpdateViewForCurrentRenderFrameHost();
 }
 
 void SecureEmbedConnectorImpl::RenderProcessGone() {

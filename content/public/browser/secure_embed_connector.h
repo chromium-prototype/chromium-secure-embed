@@ -70,8 +70,6 @@ class CONTENT_EXPORT SecureEmbedConnector {
 
   // Gets the FrameSinkId of the guest's view.
   virtual const viz::FrameSinkId& GetFrameSinkId() const = 0;
-
-  virtual CrossProcessFrameConnectorBase* GetCrossProcessFrameConnector() = 0;
 };
 
 }  // namespace content
