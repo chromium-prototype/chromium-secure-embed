@@ -43,7 +43,6 @@ void SecureEmbedHost::Create(
       std::move(receiver));
 }
 
-
 void SecureEmbedHost::SetSecureEmbed(
     mojo::PendingAssociatedRemote<mojom::SecureEmbed> secure_embed) {
   secure_embed_.Bind(std::move(secure_embed));
@@ -105,21 +104,6 @@ void SecureEmbedHost::SynchronizeVisualProperties(
     const blink::FrameVisualProperties& visual_properties) {
   if (content::SecureEmbedConnector* connector = GetConnector()) {
     connector->OnSynchronizeVisualProperties(visual_properties);
-  }
-}
-
-void SecureEmbedHost::DispatchKeyboardEvent(
-    std::unique_ptr<blink::WebCoalescedInputEvent> key_event) {
-  if (!key_event || key_event->CoalescedEventSize() != 1 ||
-      !blink::WebInputEvent::IsKeyboardEventType(
-          key_event->Event().GetType())) {
-    mojo::ReportBadMessage(
-        "Unexpected message type in SecureEmbedHost::DispatchKeyboardEvent");
-    return;
-  }
-  if (content::SecureEmbedConnector* connector = GetConnector()) {
-    connector->ForwardKeyboardEvent(
-        static_cast<const blink::WebKeyboardEvent&>(key_event->Event()));
   }
 }
 

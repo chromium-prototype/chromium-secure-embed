@@ -1213,9 +1213,7 @@ void WebContentsImpl::NotifySwappedRWHVChildFrameFromRenderManager(
     RenderWidgetHostViewChildFrame* new_view,
     bool allow_paint_holding) {
   if (secure_embed_connector_) {
-    secure_embed_connector_->SetView(
-        new_view,
-        allow_paint_holding);
+    secure_embed_connector_->SetView(new_view, allow_paint_holding);
   }
 }
 
@@ -9173,7 +9171,13 @@ WebContentsImpl* WebContentsImpl::GetFocusedWebContents() {
 }
 
 FrameTree* WebContentsImpl::GetFocusedFrameTree() {
-  return GetOutermostWebContents()->node_.focused_frame_tree();
+  if (secure_embed_connector_) {
+    return secure_embed_connector_->GetFocusedFrameTree();
+  }
+  if (GetOuterWebContents()) {
+    return GetOuterWebContents()->GetFocusedFrameTree();
+  }
+  return node_.focused_frame_tree();
 }
 
 void WebContentsImpl::SetFocusToLocationBar() {
@@ -9940,7 +9944,15 @@ void WebContentsImpl::SetFocusedFrameTree(FrameTree* frame_tree_to_focus) {
     return;
   }
 
-  GetOutermostWebContents()->node_.SetFocusedFrameTree(frame_tree_to_focus);
+  if (secure_embed_connector_) {
+    secure_embed_connector_->SetFocusedFrameTree(frame_tree_to_focus);
+    return;
+  } else if (GetOuterWebContents()) {
+    GetOuterWebContents()->SetFocusedFrameTree(frame_tree_to_focus);
+    return;
+  }
+
+  node_.SetFocusedFrameTree(frame_tree_to_focus);
 
   // Send a page level blur to the `old_focused_frame_tree` so that it displays
   // inactive UI and focus `frame_tree_to_focus` to activate it.

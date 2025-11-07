@@ -30,6 +30,7 @@ class RenderWidgetHostInputEventRouter;
 
 namespace content {
 
+class FrameTree;
 class RenderFrameHostImpl;
 class WebContentsImpl;
 
@@ -51,6 +52,9 @@ class SecureEmbedConnectorImpl : public SecureEmbedConnector,
   // the delegate.
   void FocusInEmbedder(FocusOperation focus_op);
 
+  FrameTree* GetFocusedFrameTree();
+  void SetFocusedFrameTree(FrameTree* frame_tree_to_focus);
+
   // SecureEmbedConnector:
   bool IsConfiguredToBeEmbeddedIn(WebContents* web_contents) override;
   void SetDelegate(SecureEmbedConnector::Delegate* delegate) override;
@@ -63,8 +67,6 @@ class SecureEmbedConnectorImpl : public SecureEmbedConnector,
   void OnSynchronizeVisualProperties(
       const blink::FrameVisualProperties& visual_properties) override;
   const viz::FrameSinkId& GetFrameSinkId() const override;
-  void ForwardKeyboardEvent(
-      const blink::WebKeyboardEvent& keyboard_event) override;
   void SetFocus(bool focused, blink::mojom::FocusType focus_type) override;
 
   void SetView(RenderWidgetHostViewChildFrame* view,

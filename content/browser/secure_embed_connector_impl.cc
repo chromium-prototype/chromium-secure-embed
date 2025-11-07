@@ -8,6 +8,7 @@
 #include "components/input/cursor_manager.h"
 #include "components/input/native_web_keyboard_event.h"
 #include "components/input/render_widget_host_input_event_router.h"
+#include "content/browser/renderer_host/frame_tree.h"
 #include "content/browser/renderer_host/render_frame_host_delegate.h"
 #include "content/browser/renderer_host/render_frame_host_manager.h"
 #include "content/browser/renderer_host/render_view_host_impl.h"
@@ -89,6 +90,37 @@ void SecureEmbedConnectorImpl::FocusInEmbedder(FocusOperation focus_op) {
   }
 }
 
+FrameTree* SecureEmbedConnectorImpl::GetFocusedFrameTree() {
+  if (!embedder_web_contents_) {
+    return &guest_web_contents_->GetPrimaryFrameTree();
+  }
+
+  return static_cast<WebContentsImpl*>(embedder_web_contents_.get())
+      ->GetFocusedFrameTree();
+}
+
+void SecureEmbedConnectorImpl::SetFocusedFrameTree(
+    FrameTree* frame_tree_to_focus) {
+  if (!embedder_web_contents_) {
+    return;
+  }
+
+  auto* embedder_web_contents =
+      static_cast<WebContentsImpl*>(embedder_web_contents_.get());
+
+  // Update focused frame tree stored in the embedder.
+  embedder_web_contents->SetFocusedFrameTree(frame_tree_to_focus);
+
+  // Ensure that outter rame trees are focused.
+  embedder_web_contents->GetPrimaryFrameTree().FocusOuterFrameTrees();
+
+  // Ensure that the embedder's page has focus so that it can display active UI
+  // and therefore the embedded plugin is also active.
+  embedder_web_contents->GetPrimaryMainFrame()
+      ->GetRenderWidgetHost()
+      ->SetPageFocus(true);
+}
+
 bool SecureEmbedConnectorImpl::IsConfiguredToBeEmbeddedIn(
     WebContents* web_contents) {
   return embedder_web_contents_.get() == web_contents;
@@ -104,30 +136,6 @@ SecureEmbedConnector::Delegate* SecureEmbedConnectorImpl::GetDelegate() {
   return delegate_;
 }
 
-void SecureEmbedConnectorImpl::ForwardKeyboardEvent(
-    const blink::WebKeyboardEvent& keyboard_event) {
-  if (!guest_web_contents_ || !view_) {
-    return;
-  }
-
-  input::NativeWebKeyboardEvent native_event(
-      keyboard_event, GetParentRenderWidgetHostView()->GetNativeView());
-
-  RenderWidgetHostImpl* target_host = view_->host();
-
-  // If there are multiple widgets on the page (such as when there are
-  // out-of-process iframes), pick the one that should process this event.
-  if (target_host->delegate()) {
-    target_host =
-        target_host->delegate()->GetFocusedRenderWidgetHost(target_host);
-  }
-  if (!target_host) {
-    return;
-  }
-
-  target_host->ForwardKeyboardEvent(native_event);
-}
-
 void SecureEmbedConnectorImpl::SetFocus(bool focused,
                                         blink::mojom::FocusType focus_type) {
   if (!guest_web_contents_ || !view_) {
@@ -140,6 +148,8 @@ void SecureEmbedConnectorImpl::SetFocus(bool focused,
     static_cast<RenderViewHostImpl*>(guest_web_contents_->GetRenderViewHost())
         ->SetInitialFocus(
             /*reverse=*/focus_type == blink::mojom::FocusType::kBackward);
+    // Ensure that the embedded frame tree is the focused frame tree.
+    SetFocusedFrameTree(&guest_web_contents_->GetPrimaryFrameTree());
   }
 }
 

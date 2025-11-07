@@ -47,8 +47,6 @@ class COMPONENT_EXPORT(SECURE_EMBED) SecureEmbedHost
   void Attach(int64_t content_id) override;
   void SynchronizeVisualProperties(
       const blink::FrameVisualProperties& visual_properties) override;
-  void DispatchKeyboardEvent(
-      std::unique_ptr<blink::WebCoalescedInputEvent> key_event) override;
   void SetFocus(bool focused, blink::mojom::FocusType focus_type) override;
 
   // content::SecureEmbedConnector::Delegate implementation:

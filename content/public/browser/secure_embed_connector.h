@@ -59,11 +59,6 @@ class CONTENT_EXPORT SecureEmbedConnector {
   virtual void OnSynchronizeVisualProperties(
       const blink::FrameVisualProperties& visual_properties) = 0;
 
-  // Called by the embedder to forwards a single keyboard event to the
-  // embedded frame.
-  virtual void ForwardKeyboardEvent(
-      const blink::WebKeyboardEvent& keyboard_event) = 0;
-
   // Called by the embedder to either set or clear focus on the embedded frame.
   virtual void SetFocus(bool focused, blink::mojom::FocusType focus_type) = 0;
 
