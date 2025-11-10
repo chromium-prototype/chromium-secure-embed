@@ -372,11 +372,8 @@ bool SecureEmbedConnectorImpl::IsDisplayLocked() const {
 
 void SecureEmbedConnectorImpl::DidUpdateVisualProperties(
     const cc::RenderFrameMetadata& metadata) {
-  NOTIMPLEMENTED();
-  // TODO(secure-embed): Need to pass the visual properties update to the
-  // embedder. When this is done, need to make sure that the two endpoints don't
-  // get into an infinite cycle of updates.
-  // frame_proxy_in_parent_renderer_->DidUpdateVisualProperties(metadata);
+  delegate_->UpdateLocalSurfaceIdFromChild(
+      metadata.local_surface_id.value_or(viz::LocalSurfaceId()));
 }
 
 void SecureEmbedConnectorImpl::SetVisibilityForChildViews(bool visible) const {
