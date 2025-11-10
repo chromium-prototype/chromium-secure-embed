@@ -372,8 +372,10 @@ bool SecureEmbedConnectorImpl::IsDisplayLocked() const {
 
 void SecureEmbedConnectorImpl::DidUpdateVisualProperties(
     const cc::RenderFrameMetadata& metadata) {
-  delegate_->UpdateLocalSurfaceIdFromChild(
-      metadata.local_surface_id.value_or(viz::LocalSurfaceId()));
+  if (metadata.local_surface_id.has_value()) {
+    delegate_->UpdateLocalSurfaceIdFromChild(
+        *metadata.local_surface_id);
+  }
 }
 
 void SecureEmbedConnectorImpl::SetVisibilityForChildViews(bool visible) const {
