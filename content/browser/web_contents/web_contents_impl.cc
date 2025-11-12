@@ -10720,6 +10720,9 @@ WebContentsImpl::GetFaviconURLs() {
 
 void WebContentsImpl::Resize(const gfx::Rect& new_bounds) {
   OPTIONAL_TRACE_EVENT0("content", "WebContentsImpl::Resize");
+  if (secure_embed_connector_) {
+    return;
+  }
 #if defined(USE_AURA)
   aura::Window* window = GetNativeView();
   window->SetBounds(gfx::Rect(window->bounds().origin(), new_bounds.size()));
