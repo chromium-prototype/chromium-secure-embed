@@ -233,12 +233,15 @@ void ForEachRemoteFrameChildrenControlledByWidget(
   }
 }
 
-viz::FrameSinkId GetRemoteFrameSinkId(const HitTestResult& result) {
+viz::FrameSinkId GetFrameSinkIdForFrameOwnerElement(
+    const HitTestResult& result) {
   Node* node = result.InnerNode();
   auto* frame_owner = DynamicTo<HTMLFrameOwnerElement>(node);
-  if (!frame_owner || !frame_owner->ContentFrame() ||
-      !frame_owner->ContentFrame()->IsRemoteFrame())
+  CHECK(frame_owner);
+  if (!frame_owner->ContentFrame() ||
+      !frame_owner->ContentFrame()->IsRemoteFrame()) {
     return viz::FrameSinkId();
+  }
 
   RemoteFrame* remote_frame = To<RemoteFrame>(frame_owner->ContentFrame());
   if (remote_frame->IsIgnoredForHitTest())
@@ -253,6 +256,37 @@ viz::FrameSinkId GetRemoteFrameSinkId(const HitTestResult& result) {
     return viz::FrameSinkId();
 
   return remote_frame->GetFrameSinkId();
+}
+
+viz::FrameSinkId GetFrameSinkIdForPluginElement(const HitTestResult& result) {
+  Node* node = result.InnerNode();
+  HTMLPlugInElement* plugin_element = DynamicTo<HTMLPlugInElement>(node);
+  CHECK(plugin_element);
+  WebPluginContainerImpl* plugin_container = plugin_element->OwnedPlugin();
+  if (!plugin_container) {
+    return viz::FrameSinkId();
+  }
+
+  WebPlugin* plugin = plugin_container->Plugin();
+  if (!plugin) {
+    return viz::FrameSinkId();
+  }
+
+  return plugin->GetFrameSinkId();
+}
+
+viz::FrameSinkId GetFrameSinkIdForHitTestResult(const HitTestResult& result) {
+  Node* node = result.InnerNode();
+
+  if (DynamicTo<HTMLPlugInElement>(node)) {
+    return GetFrameSinkIdForPluginElement(result);
+  }
+
+  if (DynamicTo<HTMLFrameOwnerElement>(node)) {
+    return GetFrameSinkIdForFrameOwnerElement(result);
+  }
+
+  return viz::FrameSinkId();
 }
 
 bool IsElementNotNullAndEditable(Element* element) {
@@ -889,7 +923,8 @@ viz::FrameSinkId WebFrameWidgetImpl::GetFrameSinkIdAtPoint(
     return frame_sink_id_;
   }
 
-  viz::FrameSinkId remote_frame_sink_id = GetRemoteFrameSinkId(result);
+  viz::FrameSinkId remote_frame_sink_id =
+      GetFrameSinkIdForHitTestResult(result);
   if (remote_frame_sink_id.is_valid()) {
     gfx::PointF local_point(result.LocalPoint());
     LayoutObject* object = result_node->GetLayoutObject();
