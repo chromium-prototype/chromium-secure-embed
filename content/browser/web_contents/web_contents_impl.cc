@@ -9209,7 +9209,7 @@ bool WebContentsImpl::ContainsOrIsFocusedWebContents() {
 
 bool WebContentsImpl::ShouldRestrictAccessToFocusedFrame() {
   // If this method is called on an inner WebContents, and the focused frame is
-  // outside of this WebContents's subtree, restrice the access.
+  // outside of this WebContents's subtree, restrict the access.
   return (GetOuterWebContents() || secure_embed_connector_) &&
          !ContainsOrIsFocusedWebContents();
 }

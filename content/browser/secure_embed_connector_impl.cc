@@ -111,7 +111,7 @@ void SecureEmbedConnectorImpl::SetFocusedFrameTree(
   // Update focused frame tree stored in the embedder.
   embedder_web_contents->SetFocusedFrameTree(frame_tree_to_focus);
 
-  // Ensure that outter rame trees are focused.
+  // Ensure that outer frame trees are focused.
   embedder_web_contents->GetPrimaryFrameTree().FocusOuterFrameTrees();
 
   // Ensure that the embedder's page has focus so that it can display active UI
