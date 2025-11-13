@@ -234,10 +234,10 @@ void ForEachRemoteFrameChildrenControlledByWidget(
 }
 
 viz::FrameSinkId GetFrameSinkIdForFrameOwnerElement(
+    HTMLFrameOwnerElement* frame_owner,
     const HitTestResult& result) {
-  Node* node = result.InnerNode();
-  auto* frame_owner = DynamicTo<HTMLFrameOwnerElement>(node);
   CHECK(frame_owner);
+  CHECK_EQ(frame_owner, result.InnerNode());
   if (!frame_owner->ContentFrame() ||
       !frame_owner->ContentFrame()->IsRemoteFrame()) {
     return viz::FrameSinkId();
@@ -246,7 +246,7 @@ viz::FrameSinkId GetFrameSinkIdForFrameOwnerElement(
   RemoteFrame* remote_frame = To<RemoteFrame>(frame_owner->ContentFrame());
   if (remote_frame->IsIgnoredForHitTest())
     return viz::FrameSinkId();
-  LayoutObject* object = node->GetLayoutObject();
+  LayoutObject* object = frame_owner->GetLayoutObject();
   DCHECK(object);
   if (!object->IsBox())
     return viz::FrameSinkId();
@@ -258,10 +258,8 @@ viz::FrameSinkId GetFrameSinkIdForFrameOwnerElement(
   return remote_frame->GetFrameSinkId();
 }
 
-viz::FrameSinkId GetFrameSinkIdForPluginElement(const HitTestResult& result) {
-  Node* node = result.InnerNode();
-  HTMLPlugInElement* plugin_element = DynamicTo<HTMLPlugInElement>(node);
-  CHECK(plugin_element);
+viz::FrameSinkId GetFrameSinkIdForPluginElement(
+    HTMLPlugInElement* plugin_element) {
   WebPluginContainerImpl* plugin_container = plugin_element->OwnedPlugin();
   if (!plugin_container) {
     return viz::FrameSinkId();
@@ -272,18 +270,20 @@ viz::FrameSinkId GetFrameSinkIdForPluginElement(const HitTestResult& result) {
     return viz::FrameSinkId();
   }
 
+  // TODO(secure-embed): Maybe additional checks on bounds and visibility are
+  // needed. See GetFrameSinkIdForFrameOwnerElement().
   return plugin->GetFrameSinkId();
 }
 
 viz::FrameSinkId GetFrameSinkIdForHitTestResult(const HitTestResult& result) {
   Node* node = result.InnerNode();
 
-  if (DynamicTo<HTMLPlugInElement>(node)) {
-    return GetFrameSinkIdForPluginElement(result);
+  if (auto* plugin_element = DynamicTo<HTMLPlugInElement>(node)) {
+    return GetFrameSinkIdForPluginElement(plugin_element);
   }
 
-  if (DynamicTo<HTMLFrameOwnerElement>(node)) {
-    return GetFrameSinkIdForFrameOwnerElement(result);
+  if (auto* frame_owner = DynamicTo<HTMLFrameOwnerElement>(node)) {
+    return GetFrameSinkIdForFrameOwnerElement(frame_owner, result);
   }
 
   return viz::FrameSinkId();

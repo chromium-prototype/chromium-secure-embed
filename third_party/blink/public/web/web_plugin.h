@@ -117,6 +117,8 @@ class WebPlugin {
   virtual void UpdateAllLifecyclePhases(blink::DocumentUpdateReason) = 0;
   virtual void Paint(cc::PaintCanvas*, const gfx::Rect&) = 0;
 
+  // If this plugin uses cc::SurfaceLayer for painting, returns the FrameSinkId
+  // used by that Layer. Otherwise, returns an empty FrameSinkId.
   virtual viz::FrameSinkId GetFrameSinkId() { return viz::FrameSinkId(); }
 
   // Coordinates are relative to the containing window.
