@@ -99,14 +99,16 @@ void SecureEmbedConnectorImpl::SetDelegate(
   CHECK(!(delegate && delegate_));
   if (!delegate && delegate_) {
     observers_.Notify(&Observer::OnSecureEmbedDetached,
-                      delegate_->ParentFrame(), guest_web_contents_.get());
+                      delegate_->ParentFrame(), embedder_web_contents_.get(),
+                      guest_web_contents_.get());
   }
 
   delegate_ = delegate;
 
   if (delegate_) {
     observers_.Notify(&Observer::OnSecureEmbedAttached,
-                      delegate_->ParentFrame(), guest_web_contents_.get());
+                      delegate_->ParentFrame(), embedder_web_contents_.get(),
+                      guest_web_contents_.get());
   }
 }
 

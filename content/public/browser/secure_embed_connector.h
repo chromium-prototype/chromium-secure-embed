@@ -49,10 +49,12 @@ class CONTENT_EXPORT SecureEmbedConnector {
 
   class Observer : public base::CheckedObserver {
    public:
-    virtual void OnSecureEmbedAttached(RenderFrameHost* parent,
-                                       WebContents* child) = 0;
-    virtual void OnSecureEmbedDetached(RenderFrameHost* parent,
-                                       WebContents* child) = 0;
+    virtual void OnSecureEmbedAttached(RenderFrameHost* parent_frame,
+                                       WebContents* parent_web_contents,
+                                       WebContents* child_web_contents) = 0;
+    virtual void OnSecureEmbedDetached(RenderFrameHost* parent_frame,
+                                       WebContents* parent_web_contents,
+                                       WebContents* child_web_contents) = 0;
   };
 
   virtual ~SecureEmbedConnector() = default;

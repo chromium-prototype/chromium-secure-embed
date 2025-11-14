@@ -110,10 +110,12 @@ class PerformanceManagerTabHelper
   void AboutToBeDiscarded(content::WebContents* new_contents) override;
 
   // SecureEmbedConnector::Observer overrides.
-  void OnSecureEmbedAttached(content::RenderFrameHost* parent,
-                             content::WebContents* child) override;
-  void OnSecureEmbedDetached(content::RenderFrameHost* parent,
-                             content::WebContents* child) override;
+  void OnSecureEmbedAttached(content::RenderFrameHost* parent_frame,
+                             content::WebContents* parent_web_contents,
+                             content::WebContents* child_web_contents) override;
+  void OnSecureEmbedDetached(content::RenderFrameHost* parent_frame,
+                             content::WebContents* parent_web_contents,
+                             content::WebContents* child_web_contents) override;
 
   void BindDocumentCoordinationUnit(
       content::RenderFrameHost* render_frame_host,

@@ -198,6 +198,7 @@ void PerformanceManagerTabHelper::SetDestructionObserver(
 
 void PerformanceManagerTabHelper::RenderFrameCreated(
     content::RenderFrameHost* render_frame_host) {
+  LOG(ERROR) << "### RenderFrameCreated:" << render_frame_host;
   DCHECK_NE(nullptr, render_frame_host);
   // This must not exist in the map yet.
   DCHECK(!base::Contains(frames_, render_frame_host));
@@ -572,6 +573,7 @@ void PerformanceManagerTabHelper::InnerWebContentsAttached(
   CHECK(helper);
   auto* page = helper->page_node_.get();
   CHECK(page);
+  LOG(ERROR) << "### InnerWebContentsAttached, rfh = " << render_frame_host;
   auto* frame = GetFrameNode(render_frame_host);
 
   // For a guest view, the RFH should already have been seen.
@@ -631,14 +633,17 @@ void PerformanceManagerTabHelper::AboutToBeDiscarded(
 }
 
 void PerformanceManagerTabHelper::OnSecureEmbedAttached(
-    content::RenderFrameHost* parent,
-    content::WebContents* child) {
-  InnerWebContentsAttached(child, parent);
+    content::RenderFrameHost* parent_frame,
+    content::WebContents* parent_web_contents,
+    content::WebContents* child_web_contents) {
+  FromWebContents(parent_web_contents)
+      ->InnerWebContentsAttached(child_web_contents, parent_frame);
 }
 
 void PerformanceManagerTabHelper::OnSecureEmbedDetached(
-    content::RenderFrameHost* parent,
-    content::WebContents* child) {}
+    content::RenderFrameHost* parent_frame,
+    content::WebContents* parent_web_contents,
+    content::WebContents* child_web_contents) {}
 
 void PerformanceManagerTabHelper::BindDocumentCoordinationUnit(
     content::RenderFrameHost* render_frame_host,
