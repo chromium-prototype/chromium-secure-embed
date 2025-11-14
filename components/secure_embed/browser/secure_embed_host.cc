@@ -39,11 +39,11 @@ SecureEmbedHost::~SecureEmbedHost() {
 void SecureEmbedHost::Create(
     content::RenderFrameHost* render_frame_host,
     mojo::PendingAssociatedReceiver<mojom::SecureEmbedHost> receiver) {
+  LOG(ERROR) << "### SecureEmbedHost::Create: " << render_frame_host;
   mojo::MakeSelfOwnedAssociatedReceiver(
       base::WrapUnique(new SecureEmbedHost(render_frame_host)),
       std::move(receiver));
 }
-
 
 void SecureEmbedHost::SetSecureEmbed(
     mojo::PendingAssociatedRemote<mojom::SecureEmbed> secure_embed) {
@@ -190,6 +190,10 @@ void SecureEmbedHost::FocusInEmbedder(
   }
 
   secure_embed_->RequestFocus(mojo_focus_op);
+}
+
+content::RenderFrameHost* SecureEmbedHost::ParentFrame() {
+  return render_frame_host_;
 }
 
 content::SecureEmbedConnector* SecureEmbedHost::GetConnector() {
