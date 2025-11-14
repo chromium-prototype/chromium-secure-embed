@@ -22,6 +22,7 @@
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/task_manager/web_contents_tags.h"
 #include "chrome/browser/ui/browser.h"
+#include "chrome/browser/ui/browser_finder.h"
 #include "chrome/browser/ui/prefs/prefs_tab_helper.h"
 #include "chrome/browser/ui/ui_features.h"
 #include "chrome/browser/ui/webui/log_web_ui_url.h"
@@ -31,9 +32,11 @@
 #include "chrome/browser/ui/webui/top_chrome/top_chrome_web_ui_controller.h"
 #include "chrome/browser/ui/webui/top_chrome/top_chrome_webui_config.h"
 #include "chrome/browser/ui/webui/top_chrome/webui_contents_preload_state.h"
+#include "chrome/browser/ui/webui_browser/webui_browser_window.h"
 #include "chrome/common/webui_url_constants.h"
 #include "chrome/grit/generated_resources.h"
 #include "components/crash/core/common/crash_key.h"
+#include "components/secure_embed/buildflags/buildflags.h"
 #include "content/public/browser/navigation_controller.h"
 #include "content/public/browser/render_widget_host_view.h"
 #include "content/public/browser/web_contents_delegate.h"
@@ -83,6 +86,19 @@ class FixedCandidateSelector : public webui::PreloadCandidateSelector {
   GURL webui_url_;
 };
 
+#if BUILDFLAG(ENABLE_SECURE_EMBED)
+content::WebContents* GetSecureEmbedEmbedder(
+    content::BrowserContext* browser_context) {
+  Profile* profile = static_cast<Profile*>(browser_context);
+  if (Browser* browser = chrome::FindLastActiveWithProfile(profile)) {
+    if (BrowserWindow* window = browser->window()) {
+      return static_cast<WebUIBrowserWindow*>(window)->GetSecureEmbedEmbedder();
+    }
+  }
+  return nullptr;
+}
+#endif
+
 bool IsFeatureEnabled() {
   return base::FeatureList::IsEnabled(features::kPreloadTopChromeWebUI);
 }
@@ -100,6 +116,9 @@ content::WebContents::CreateParams GetWebContentsCreateParams(
   create_params.initially_hidden = !IsFeatureEnabled();
   create_params.site_instance =
       content::SiteInstance::CreateForURL(browser_context, webui_url);
+#if BUILDFLAG(ENABLE_SECURE_EMBED)
+  create_params.secure_embed_embedder = GetSecureEmbedEmbedder(browser_context);
+#endif
 
   return create_params;
 }
