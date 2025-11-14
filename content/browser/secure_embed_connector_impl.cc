@@ -121,7 +121,7 @@ void SecureEmbedConnectorImpl::SetFocusedFrameTree(
       ->SetPageFocus(true);
 }
 
-void SecureEmbedConnectorImpl::ClearFocusedFrameTreeIfNecessary() {
+void SecureEmbedConnectorImpl::ClearFocusOnInnerWebContents() {
   if (!guest_web_contents_->ContainsOrIsFocusedWebContents()) {
     return;
   }
@@ -171,8 +171,9 @@ void SecureEmbedConnectorImpl::SetFocus(bool focused,
 
   // Ensure that the embedded frame tree is the focused frame tree if it is
   // not already the focused frame tree when the plugin becomes in focus.
-  // kPage doesn't involved focused frame change, skip the check if it is
-  // kPage.
+  // Skip the check for kPage. kPage doesn't involved focused frame change. It
+  // happens when OS window get/lost focus or for parent pages when child page
+  // is in focus, as part of FocusOuterFrameTrees().
   if ((focus_type != blink::mojom::FocusType::kPage) &&
       !guest_web_contents_->ContainsOrIsFocusedWebContents()) {
     SetFocusedFrameTree(&guest_web_contents_->GetPrimaryFrameTree());

@@ -54,7 +54,7 @@ class SecureEmbedConnectorImpl : public SecureEmbedConnector,
 
   FrameTree* GetFocusedFrameTree();
   void SetFocusedFrameTree(FrameTree* frame_tree_to_focus);
-  void ClearFocusedFrameTreeIfNecessary();
+  void ClearFocusOnInnerWebContents();
 
   // SecureEmbedConnector:
   bool IsConfiguredToBeEmbeddedIn(WebContents* web_contents) override;

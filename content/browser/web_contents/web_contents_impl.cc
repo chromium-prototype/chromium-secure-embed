@@ -1495,7 +1495,7 @@ WebContentsImpl::~WebContentsImpl() {
   // TODO(secure-embed): detach secure embed and clear focused frame tree when
   // detaching.
   if (secure_embed_connector_) {
-    secure_embed_connector_->ClearFocusedFrameTreeIfNecessary();
+    secure_embed_connector_->ClearFocusOnInnerWebContents();
   }
 
   if (GetOuterWebContents() &&
@@ -9207,6 +9207,10 @@ bool WebContentsImpl::ContainsOrIsFocusedWebContents() {
   return false;
 }
 
+// TODO(secure-embed): Make `ContainsOrIsFocusedWebContents()` return true for
+// an inner WebContents that contains a focused secure-embed. With that, the
+// caller of `ShouldRestrictAccessToFocusedFrame()` could potentially use
+// `!ContainsOrIsFocusedWebContents()` directly.
 bool WebContentsImpl::ShouldRestrictAccessToFocusedFrame() {
   // If this method is called on an inner WebContents, and the focused frame is
   // outside of this WebContents's subtree, restrict the access.
