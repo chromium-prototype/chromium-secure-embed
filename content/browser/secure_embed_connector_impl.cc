@@ -157,21 +157,25 @@ void SecureEmbedConnectorImpl::SetFocus(bool focused,
   }
 
   view_->host()->SetPageFocus(focused);
-  if (focused) {
-    if (focus_type == blink::mojom::FocusType::kForward ||
-        focus_type == blink::mojom::FocusType::kBackward) {
-      static_cast<RenderViewHostImpl*>(guest_web_contents_->GetRenderViewHost())
-          ->SetInitialFocus(
-              /*reverse=*/focus_type == blink::mojom::FocusType::kBackward);
-    }
-    // Ensure that the embedded frame tree is the focused frame tree if it is
-    // not already the focused frame tree when the plugin becomes in focus.
-    // kPage doesn't involved focused frame change, skip the check if it is
-    // kPage.
-    if ((focus_type != blink::mojom::FocusType::kPage) &&
-        !guest_web_contents_->ContainsOrIsFocusedWebContents()) {
-      SetFocusedFrameTree(&guest_web_contents_->GetPrimaryFrameTree());
-    }
+
+  if (!focused) {
+    return;
+  }
+
+  if (focus_type == blink::mojom::FocusType::kForward ||
+      focus_type == blink::mojom::FocusType::kBackward) {
+    static_cast<RenderViewHostImpl*>(guest_web_contents_->GetRenderViewHost())
+        ->SetInitialFocus(
+            /*reverse=*/focus_type == blink::mojom::FocusType::kBackward);
+  }
+
+  // Ensure that the embedded frame tree is the focused frame tree if it is
+  // not already the focused frame tree when the plugin becomes in focus.
+  // kPage doesn't involved focused frame change, skip the check if it is
+  // kPage.
+  if ((focus_type != blink::mojom::FocusType::kPage) &&
+      !guest_web_contents_->ContainsOrIsFocusedWebContents()) {
+    SetFocusedFrameTree(&guest_web_contents_->GetPrimaryFrameTree());
   }
 }
 
