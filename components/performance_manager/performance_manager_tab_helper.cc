@@ -198,7 +198,6 @@ void PerformanceManagerTabHelper::SetDestructionObserver(
 
 void PerformanceManagerTabHelper::RenderFrameCreated(
     content::RenderFrameHost* render_frame_host) {
-  LOG(ERROR) << "### RenderFrameCreated:" << render_frame_host;
   DCHECK_NE(nullptr, render_frame_host);
   // This must not exist in the map yet.
   DCHECK(!base::Contains(frames_, render_frame_host));
@@ -573,7 +572,6 @@ void PerformanceManagerTabHelper::InnerWebContentsAttached(
   CHECK(helper);
   auto* page = helper->page_node_.get();
   CHECK(page);
-  LOG(ERROR) << "### InnerWebContentsAttached, rfh = " << render_frame_host;
   auto* frame = GetFrameNode(render_frame_host);
 
   // For a guest view, the RFH should already have been seen.

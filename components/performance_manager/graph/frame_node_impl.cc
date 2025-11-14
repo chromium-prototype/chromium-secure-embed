@@ -378,6 +378,7 @@ FrameNodeImpl* FrameNodeImpl::parent_frame_node() const {
 
 FrameNodeImpl* FrameNodeImpl::parent_or_outer_document_or_embedder() const {
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+
   if (parent_frame_node_) {
     return parent_frame_node_;
   }
