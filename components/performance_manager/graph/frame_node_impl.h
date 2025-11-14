@@ -318,7 +318,7 @@ class FrameNodeImpl
   mojo::Receiver<mojom::DocumentCoordinationUnit> receiver_{this};
 
   const raw_ptr<FrameNodeImpl, DanglingUntriaged> parent_frame_node_;
-  raw_ptr<FrameNodeImpl, DanglingUntriaged>
+  const raw_ptr<FrameNodeImpl, DanglingUntriaged>
       outer_document_for_inner_frame_root_;
   const raw_ptr<PageNodeImpl, DanglingUntriaged> page_node_;
   const raw_ptr<ProcessNodeImpl, DanglingUntriaged> process_node_;

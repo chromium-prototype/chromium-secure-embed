@@ -39,7 +39,6 @@ SecureEmbedHost::~SecureEmbedHost() {
 void SecureEmbedHost::Create(
     content::RenderFrameHost* render_frame_host,
     mojo::PendingAssociatedReceiver<mojom::SecureEmbedHost> receiver) {
-  LOG(ERROR) << "### SecureEmbedHost::Create: " << render_frame_host;
   mojo::MakeSelfOwnedAssociatedReceiver(
       base::WrapUnique(new SecureEmbedHost(render_frame_host)),
       std::move(receiver));

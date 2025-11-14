@@ -62,8 +62,7 @@ SecureEmbedConnectorImpl::SecureEmbedConnectorImpl(
   // subsequent updates to |screen_infos_| also come from the root. Note that
   // the below call is not necessarily the root though if there are multiple
   // levels of embedding.
-  screen_infos_ = embedder_web_contents
-                      ->GetPrimaryMainFrame()
+  screen_infos_ = embedder_web_contents->GetPrimaryMainFrame()
                       ->GetOutermostMainFrameOrEmbedder()
                       ->GetRenderWidgetHost()
                       ->GetScreenInfos();
