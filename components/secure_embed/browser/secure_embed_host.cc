@@ -30,8 +30,11 @@ SecureEmbedHost::SecureEmbedHost(content::RenderFrameHost* render_frame_host)
 SecureEmbedHost::~SecureEmbedHost() {
   --instance_count_for_testing_;
   if (content::SecureEmbedConnector* connector = GetConnector()) {
-    connector->SetDelegate(nullptr);
+    // Note: we detach delegate after changing visibility so that
+    // performance_manager doesn't get pertrurbed by us messing w/visibility
+    // of something not top-level.
     connector->OnVisibilityChanged(blink::mojom::FrameVisibility::kNotRendered);
+    connector->SetDelegate(nullptr);
   }
 }
 

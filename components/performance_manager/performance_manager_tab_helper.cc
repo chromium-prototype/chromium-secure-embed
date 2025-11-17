@@ -641,7 +641,13 @@ void PerformanceManagerTabHelper::OnSecureEmbedAttached(
 void PerformanceManagerTabHelper::OnSecureEmbedDetached(
     content::RenderFrameHost* parent_frame,
     content::WebContents* parent_web_contents,
-    content::WebContents* child_web_contents) {}
+    content::WebContents* child_web_contents) {
+  auto* helper = FromWebContents(child_web_contents);
+  CHECK(helper);
+  auto* page = helper->page_node_.get();
+  CHECK(page);
+  page->ClearEmbedderFrameNode();
+}
 
 void PerformanceManagerTabHelper::BindDocumentCoordinationUnit(
     content::RenderFrameHost* render_frame_host,
