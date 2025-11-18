@@ -81,7 +81,6 @@ class SecureEmbedWebPlugin : public blink::WebPlugin,
   raw_ptr<blink::WebPluginContainer> container_ = nullptr;
   scoped_refptr<cc::SurfaceLayer> layer_;
 
-  blink::FrameVisualProperties pending_visual_properties_;
   std::optional<blink::FrameVisualProperties> sent_visual_properties_;
 
   gfx::Rect last_window_rect_;

@@ -163,110 +163,106 @@ void SecureEmbedWebPlugin::SynchronizeVisualProperties() {
     return;
   }
 
+  blink::FrameVisualProperties pending_visual_properties;
+
   // No support for auto-resize.
-  pending_visual_properties_.auto_resize_enabled = false;
-  pending_visual_properties_.min_size_for_auto_resize = gfx::Size();
-  pending_visual_properties_.max_size_for_auto_resize = gfx::Size();
+  pending_visual_properties.auto_resize_enabled = false;
+  pending_visual_properties.min_size_for_auto_resize = gfx::Size();
+  pending_visual_properties.max_size_for_auto_resize = gfx::Size();
 
   blink::WebFrameWidget* ancestor_widget =
       container_->GetDocument().GetFrame()->LocalRoot()->FrameWidget();
   DCHECK(ancestor_widget);
 
   // TODO(secure-embed): Does not include CSS zoom on the embed element.
-  pending_visual_properties_.zoom_level = ancestor_widget->GetZoomLevel();
-  pending_visual_properties_.css_zoom_factor =
+  pending_visual_properties.zoom_level = ancestor_widget->GetZoomLevel();
+  pending_visual_properties.css_zoom_factor =
       ancestor_widget->GetCSSZoomFactor();
-  pending_visual_properties_.page_scale_factor = container_->PageScaleFactor();
-  pending_visual_properties_.is_pinch_gesture_active =
+  pending_visual_properties.page_scale_factor = container_->PageScaleFactor();
+  pending_visual_properties.is_pinch_gesture_active =
       ancestor_widget->PinchGestureActiveInMainFrame();
-  pending_visual_properties_.screen_infos = ancestor_widget->GetScreenInfos();
+  pending_visual_properties.screen_infos = ancestor_widget->GetScreenInfos();
 
   // For separate WebContents acting like an iframe, the "visible viewport" is
   // the portion of the plugin that is visible within the plugin bounds.
-  pending_visual_properties_.visible_viewport_size =
+  pending_visual_properties.visible_viewport_size =
       gfx::Size(last_clip_rect_.width(), last_clip_rect_.height());
 
   // TODO(secure-embed): Do these need any adjustment for plugin location/size?
   const std::vector<gfx::Rect>& viewport_segments =
       ancestor_widget->ViewportSegments();
-  pending_visual_properties_.root_widget_viewport_segments.assign(
+  pending_visual_properties.root_widget_viewport_segments.assign(
       viewport_segments.begin(), viewport_segments.end());
 
-  pending_visual_properties_.rect_in_local_root = last_window_rect_;
-  pending_visual_properties_.local_frame_size =
+  pending_visual_properties.rect_in_local_root = last_window_rect_;
+  pending_visual_properties.local_frame_size =
       gfx::Size(last_window_rect_.width(), last_window_rect_.height());
 
   // TODO(secure-embed): Start with what is actually visible for the plugin. We
   // can use a more accurate calculation for the compositor viewport, similar to
   // what RemoteFrame does, if needed.
-  pending_visual_properties_.compositor_viewport = last_clip_rect_;
+  pending_visual_properties.compositor_viewport = last_clip_rect_;
   // TODO(secure-embed): This is probably not correct.
-  pending_visual_properties_.compositing_scale_factor = 1.0f;
+  pending_visual_properties.compositing_scale_factor = 1.0f;
 
-  // TODO(secure-embed): Not implemented yet.
-  pending_visual_properties_.capture_sequence_number = 0;
-  pending_visual_properties_.cursor_accessibility_scale_factor = 1.0f;
+  // TODO(secure-embed): Support capture_sequence_number_changed.
+  pending_visual_properties.capture_sequence_number = 0;
+  pending_visual_properties.cursor_accessibility_scale_factor = 1.0f;
 
   bool synchronized_props_changed =
       !sent_visual_properties_ ||
       sent_visual_properties_->auto_resize_enabled !=
-          pending_visual_properties_.auto_resize_enabled ||
+          pending_visual_properties.auto_resize_enabled ||
       sent_visual_properties_->min_size_for_auto_resize !=
-          pending_visual_properties_.min_size_for_auto_resize ||
+          pending_visual_properties.min_size_for_auto_resize ||
       sent_visual_properties_->max_size_for_auto_resize !=
-          pending_visual_properties_.max_size_for_auto_resize ||
+          pending_visual_properties.max_size_for_auto_resize ||
       sent_visual_properties_->local_frame_size !=
-          pending_visual_properties_.local_frame_size ||
-      sent_visual_properties_->rect_in_local_root.size() !=
-          pending_visual_properties_.rect_in_local_root.size() ||
+          pending_visual_properties.local_frame_size ||
+      sent_visual_properties_->rect_in_local_root !=
+          pending_visual_properties.rect_in_local_root ||
       sent_visual_properties_->screen_infos !=
-          pending_visual_properties_.screen_infos ||
+          pending_visual_properties.screen_infos ||
       sent_visual_properties_->zoom_level !=
-          pending_visual_properties_.zoom_level ||
+          pending_visual_properties.zoom_level ||
       sent_visual_properties_->css_zoom_factor !=
-          pending_visual_properties_.css_zoom_factor ||
+          pending_visual_properties.css_zoom_factor ||
       sent_visual_properties_->page_scale_factor !=
-          pending_visual_properties_.page_scale_factor ||
+          pending_visual_properties.page_scale_factor ||
       sent_visual_properties_->compositing_scale_factor !=
-          pending_visual_properties_.compositing_scale_factor ||
+          pending_visual_properties.compositing_scale_factor ||
       sent_visual_properties_->cursor_accessibility_scale_factor !=
-          pending_visual_properties_.cursor_accessibility_scale_factor ||
+          pending_visual_properties.cursor_accessibility_scale_factor ||
       sent_visual_properties_->is_pinch_gesture_active !=
-          pending_visual_properties_.is_pinch_gesture_active ||
+          pending_visual_properties.is_pinch_gesture_active ||
       sent_visual_properties_->visible_viewport_size !=
-          pending_visual_properties_.visible_viewport_size ||
+          pending_visual_properties.visible_viewport_size ||
       sent_visual_properties_->compositor_viewport !=
-          pending_visual_properties_.compositor_viewport ||
+          pending_visual_properties.compositor_viewport ||
       sent_visual_properties_->root_widget_viewport_segments !=
-          pending_visual_properties_.root_widget_viewport_segments ||
+          pending_visual_properties.root_widget_viewport_segments ||
       sent_visual_properties_->capture_sequence_number !=
-          pending_visual_properties_.capture_sequence_number;
+          pending_visual_properties.capture_sequence_number;
 
   if (synchronized_props_changed) {
     parent_local_surface_id_allocator_->GenerateId();
   }
 
-  parent_local_surface_id_allocator_->GenerateId();
   auto local_surface_id =
       parent_local_surface_id_allocator_->GetCurrentLocalSurfaceId();
-  pending_visual_properties_.local_surface_id = local_surface_id;
+  pending_visual_properties.local_surface_id = local_surface_id;
 
   viz::SurfaceId surface_id(frame_sink_id_,
-                            pending_visual_properties_.local_surface_id);
+                            pending_visual_properties.local_surface_id);
   DCHECK(surface_id.is_valid());
 
-  // TODO(secure-embed): Support capture_sequence_number_changed.
   // TODO(secure-embed): Support allow_paint_holding.
   layer_->SetSurfaceId(surface_id, cc::DeadlinePolicy::UseDefaultDeadline());
 
-  bool rect_changed = !sent_visual_properties_ ||
-                      sent_visual_properties_->rect_in_local_root !=
-                          pending_visual_properties_.rect_in_local_root;
-  bool visual_properties_changed = synchronized_props_changed || rect_changed;
-
   // TODO(secure-embed): Do we need to support `propagate`?
-  if (visual_properties_changed) {
-    host_->SynchronizeVisualProperties(pending_visual_properties_, last_is_visible_);
+  if (synchronized_props_changed) {
+    host_->SynchronizeVisualProperties(pending_visual_properties,
+                                       last_is_visible_);
     container_->ScheduleAnimation();
   }
 }
