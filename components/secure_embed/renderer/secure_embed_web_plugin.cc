@@ -152,78 +152,123 @@ void SecureEmbedWebPlugin::UpdateGeometry(const gfx::Rect& window_rect,
   frame_sink_id_changed_ = false;
 
   if (frame_sink_id_.is_valid()) {
-    SendVisualProperties();
+    SynchronizeVisualProperties();
   }
 }
 
-void SecureEmbedWebPlugin::SendVisualProperties() {
-  // TODO(secure-embed): This is largely based on RemoteFrame's
-  // SynchronizeVisualProperties(). It's likely that we should cache the last
-  // visual properties and only send an update if something has changed. It's
-  // also possible that some of the updates that RemoteFrame is notified of may
-  // not get here as WebPlugin::UpdateGeometry() calls. Needs further testing.
+void SecureEmbedWebPlugin::SynchronizeVisualProperties() {
+  // Note: This is largely based on RemoteFrame's SynchronizeVisualProperties().
 
-  // TODO(secure-embed): DSF is still not working correctly.
+  if (!frame_sink_id_.is_valid()) {
+    return;
+  }
 
-  blink::FrameVisualProperties visual_properties;
+  // No support for auto-resize.
+  pending_visual_properties_.auto_resize_enabled = false;
+  pending_visual_properties_.min_size_for_auto_resize = gfx::Size();
+  pending_visual_properties_.max_size_for_auto_resize = gfx::Size();
 
-  // From PdfViewWebPluginClient:
-  // Do not rely on `blink::WebPluginContainer::DeviceScaleFactor()`, since it
-  // doesn't always reflect the real screen's device scale. Instead, get the
-  // device scale from the top-level frame's `display::ScreenInfo`.
   blink::WebFrameWidget* ancestor_widget =
       container_->GetDocument().GetFrame()->LocalRoot()->FrameWidget();
   DCHECK(ancestor_widget);
-  double device_scale_factor =
-      ancestor_widget->GetOriginalScreenInfo().device_scale_factor;
 
-  // zoom_factor includes device scale factor, browser zoom, and css zoom.
-  double zoom_level = container_->LayoutZoomFactor();
-  // TODO(secure-embed): Several places doing this conversion mention that it's
-  // lossy and do rounding. Do we need to?
-  double browser_zoom_factor = blink::ZoomLevelToZoomFactor(zoom_level);
-  double css_zoom_factor =
-      zoom_level / (device_scale_factor * browser_zoom_factor);
-
-  visual_properties.zoom_level = zoom_level;
-  visual_properties.css_zoom_factor = css_zoom_factor;
-  visual_properties.page_scale_factor = container_->PageScaleFactor();
-  visual_properties.is_pinch_gesture_active =
+  // TODO(secure-embed): Does not include CSS zoom on the embed element.
+  pending_visual_properties_.zoom_level = ancestor_widget->GetZoomLevel();
+  pending_visual_properties_.css_zoom_factor =
+      ancestor_widget->GetCSSZoomFactor();
+  pending_visual_properties_.page_scale_factor = container_->PageScaleFactor();
+  pending_visual_properties_.is_pinch_gesture_active =
       ancestor_widget->PinchGestureActiveInMainFrame();
-  visual_properties.screen_infos = ancestor_widget->GetScreenInfos();
+  pending_visual_properties_.screen_infos = ancestor_widget->GetScreenInfos();
 
   // For separate WebContents acting like an iframe, the "visible viewport" is
   // the portion of the plugin that is visible within the plugin bounds.
-  visual_properties.visible_viewport_size =
+  pending_visual_properties_.visible_viewport_size =
       gfx::Size(last_clip_rect_.width(), last_clip_rect_.height());
 
   // TODO(secure-embed): Do these need any adjustment for plugin location/size?
   const std::vector<gfx::Rect>& viewport_segments =
       ancestor_widget->ViewportSegments();
-  visual_properties.root_widget_viewport_segments.assign(
+  pending_visual_properties_.root_widget_viewport_segments.assign(
       viewport_segments.begin(), viewport_segments.end());
 
-  visual_properties.rect_in_local_root = last_window_rect_;
-  visual_properties.local_frame_size =
+  pending_visual_properties_.rect_in_local_root = last_window_rect_;
+  pending_visual_properties_.local_frame_size =
       gfx::Size(last_window_rect_.width(), last_window_rect_.height());
 
   // TODO(secure-embed): Start with what is actually visible for the plugin. We
   // can use a more accurate calculation for the compositor viewport, similar to
-  // what RemoteFrame does if needed.
-  visual_properties.compositor_viewport = last_clip_rect_;
+  // what RemoteFrame does, if needed.
+  pending_visual_properties_.compositor_viewport = last_clip_rect_;
   // TODO(secure-embed): This is probably not correct.
-  visual_properties.compositing_scale_factor = 1.0f;
+  pending_visual_properties_.compositing_scale_factor = 1.0f;
+
+  // TODO(secure-embed): Not implemented yet.
+  pending_visual_properties_.capture_sequence_number = 0;
+  pending_visual_properties_.cursor_accessibility_scale_factor = 1.0f;
+
+  bool synchronized_props_changed =
+      !sent_visual_properties_ ||
+      sent_visual_properties_->auto_resize_enabled !=
+          pending_visual_properties_.auto_resize_enabled ||
+      sent_visual_properties_->min_size_for_auto_resize !=
+          pending_visual_properties_.min_size_for_auto_resize ||
+      sent_visual_properties_->max_size_for_auto_resize !=
+          pending_visual_properties_.max_size_for_auto_resize ||
+      sent_visual_properties_->local_frame_size !=
+          pending_visual_properties_.local_frame_size ||
+      sent_visual_properties_->rect_in_local_root.size() !=
+          pending_visual_properties_.rect_in_local_root.size() ||
+      sent_visual_properties_->screen_infos !=
+          pending_visual_properties_.screen_infos ||
+      sent_visual_properties_->zoom_level !=
+          pending_visual_properties_.zoom_level ||
+      sent_visual_properties_->css_zoom_factor !=
+          pending_visual_properties_.css_zoom_factor ||
+      sent_visual_properties_->page_scale_factor !=
+          pending_visual_properties_.page_scale_factor ||
+      sent_visual_properties_->compositing_scale_factor !=
+          pending_visual_properties_.compositing_scale_factor ||
+      sent_visual_properties_->cursor_accessibility_scale_factor !=
+          pending_visual_properties_.cursor_accessibility_scale_factor ||
+      sent_visual_properties_->is_pinch_gesture_active !=
+          pending_visual_properties_.is_pinch_gesture_active ||
+      sent_visual_properties_->visible_viewport_size !=
+          pending_visual_properties_.visible_viewport_size ||
+      sent_visual_properties_->compositor_viewport !=
+          pending_visual_properties_.compositor_viewport ||
+      sent_visual_properties_->root_widget_viewport_segments !=
+          pending_visual_properties_.root_widget_viewport_segments ||
+      sent_visual_properties_->capture_sequence_number !=
+          pending_visual_properties_.capture_sequence_number;
+
+  if (synchronized_props_changed) {
+    parent_local_surface_id_allocator_->GenerateId();
+  }
 
   parent_local_surface_id_allocator_->GenerateId();
   auto local_surface_id =
       parent_local_surface_id_allocator_->GetCurrentLocalSurfaceId();
-  visual_properties.local_surface_id = local_surface_id;
+  pending_visual_properties_.local_surface_id = local_surface_id;
 
-  viz::SurfaceId surface_id(frame_sink_id_, local_surface_id);
+  viz::SurfaceId surface_id(frame_sink_id_,
+                            pending_visual_properties_.local_surface_id);
   DCHECK(surface_id.is_valid());
+
+  // TODO(secure-embed): Support capture_sequence_number_changed.
+  // TODO(secure-embed): Support allow_paint_holding.
   layer_->SetSurfaceId(surface_id, cc::DeadlinePolicy::UseDefaultDeadline());
-  host_->SynchronizeVisualProperties(visual_properties, last_is_visible_);
-  container_->ScheduleAnimation();
+
+  bool rect_changed = !sent_visual_properties_ ||
+                      sent_visual_properties_->rect_in_local_root !=
+                          pending_visual_properties_.rect_in_local_root;
+  bool visual_properties_changed = synchronized_props_changed || rect_changed;
+
+  // TODO(secure-embed): Do we need to support `propagate`?
+  if (visual_properties_changed) {
+    host_->SynchronizeVisualProperties(pending_visual_properties_, last_is_visible_);
+    container_->ScheduleAnimation();
+  }
 }
 
 void SecureEmbedWebPlugin::UpdateFocus(bool focused,
@@ -281,13 +326,18 @@ void SecureEmbedWebPlugin::SetFrameSinkId(
   frame_sink_id_ = frame_sink_id;
   frame_sink_id_changed_ = true;
 
-  SendVisualProperties();
+  SynchronizeVisualProperties();
 }
 
 void SecureEmbedWebPlugin::UpdateLocalSurfaceIdFromChild(
     const ::viz::LocalSurfaceId& local_surface_id) {
-  parent_local_surface_id_allocator_->UpdateFromChild(local_surface_id);
-  SendVisualProperties();
+  if (!parent_local_surface_id_allocator_->UpdateFromChild(local_surface_id)) {
+    return;
+  }
+
+  // The viz::LocalSurfaceId has changed so we call SynchronizeVisualProperties
+  // here to embed it.
+  SynchronizeVisualProperties();
 }
 
 void SecureEmbedWebPlugin::RequestFocus(mojom::FocusOperation focus_op) {
