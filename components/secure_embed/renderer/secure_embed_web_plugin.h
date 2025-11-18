@@ -44,6 +44,7 @@ class SecureEmbedWebPlugin : public blink::WebPlugin,
   v8::Local<v8::Object> V8ScriptableObject(v8::Isolate* isolate) override;
   void UpdateAllLifecyclePhases(blink::DocumentUpdateReason reason) override;
   void Paint(cc::PaintCanvas* canvas, const gfx::Rect& rect) override;
+  viz::FrameSinkId GetFrameSinkId() override;
   void UpdateGeometry(const gfx::Rect& window_rect,
                       const gfx::Rect& clip_rect,
                       const gfx::Rect& unobscured_rect,
@@ -61,6 +62,8 @@ class SecureEmbedWebPlugin : public blink::WebPlugin,
 
   // mojom::SecureEmbed:
   void SetFrameSinkId(const ::viz::FrameSinkId& frame_sink_id) override;
+  void UpdateLocalSurfaceIdFromChild(
+      const ::viz::LocalSurfaceId& local_surface_id) override;
   void RequestFocus(mojom::FocusOperation focus_op) override;
 
  private:

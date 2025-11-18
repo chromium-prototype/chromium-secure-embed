@@ -118,7 +118,8 @@ class MockSecureEmbedHost : public mojom::SecureEmbedHost {
   }
 
   void SynchronizeVisualProperties(
-      const blink::FrameVisualProperties& visual_properties) override {}
+      const blink::FrameVisualProperties& visual_properties,
+      bool is_visible) override {}
 
   void SetFocus(bool focused, blink::mojom::FocusType focus_type) override {}
 

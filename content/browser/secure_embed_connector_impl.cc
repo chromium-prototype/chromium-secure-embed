@@ -33,13 +33,13 @@ namespace content {
 // Nested observer class that forwards relevant events to
 // SecureEmbedConnectorImpl. This avoids function name collisions with
 // CrossProcessFrameConnectorBase.
-class SecureEmbedConnectorImpl::Observer : public WebContentsObserver {
+class SecureEmbedConnectorImpl::WCObserver : public WebContentsObserver {
  public:
-  explicit Observer(SecureEmbedConnectorImpl* guest_frame,
-                    WebContents* web_contents)
+  explicit WCObserver(SecureEmbedConnectorImpl* guest_frame,
+                      WebContents* web_contents)
       : WebContentsObserver(web_contents), guest_frame_(guest_frame) {}
 
-  ~Observer() override = default;
+  ~WCObserver() override = default;
 
   // WebContentsObserver:
   void RenderViewReady() override { guest_frame_->OnRenderViewReady(); }
@@ -53,7 +53,7 @@ SecureEmbedConnectorImpl::SecureEmbedConnectorImpl(
     WebContentsImpl* embedded_web_contents)
     : embedder_web_contents_(embedder_web_contents->GetWeakPtr()),
       guest_web_contents_(embedded_web_contents) {
-  observer_ = std::make_unique<Observer>(this, embedded_web_contents);
+  observer_ = std::make_unique<WCObserver>(this, embedded_web_contents);
 
   // TODO(secure-embed): There may not be a view yet, depending on if the
   // WebContents has been shown or navigated. That means calling GetScreenInfos
@@ -63,7 +63,7 @@ SecureEmbedConnectorImpl::SecureEmbedConnectorImpl(
   // subsequent updates to |screen_infos_| also come from the root. Note that
   // the below call is not necessarily the root though if there are multiple
   // levels of embedding.
-  screen_infos_ = current_child_frame_host()
+  screen_infos_ = embedder_web_contents->GetPrimaryMainFrame()
                       ->GetOutermostMainFrameOrEmbedder()
                       ->GetRenderWidgetHost()
                       ->GetScreenInfos();
@@ -143,11 +143,33 @@ bool SecureEmbedConnectorImpl::IsConfiguredToBeEmbeddedIn(
 void SecureEmbedConnectorImpl::SetDelegate(
     SecureEmbedConnector::Delegate* delegate) {
   CHECK(!(delegate && delegate_));
+  if (!delegate && delegate_) {
+    observers_.Notify(&Observer::OnSecureEmbedDetached,
+                      delegate_->ParentFrame(), embedder_web_contents_.get(),
+                      guest_web_contents_.get());
+  }
+
   delegate_ = delegate;
+
+  if (delegate_) {
+    observers_.Notify(&Observer::OnSecureEmbedAttached,
+                      delegate_->ParentFrame(), embedder_web_contents_.get(),
+                      guest_web_contents_.get());
+  }
 }
 
 SecureEmbedConnector::Delegate* SecureEmbedConnectorImpl::GetDelegate() {
   return delegate_;
+}
+
+void SecureEmbedConnectorImpl::AddObserver(
+    SecureEmbedConnector::Observer* observer) {
+  observers_.AddObserver(observer);
+}
+
+void SecureEmbedConnectorImpl::RemoveObserver(
+    SecureEmbedConnector::Observer* observer) {
+  observers_.RemoveObserver(observer);
 }
 
 void SecureEmbedConnectorImpl::SetFocus(bool focused,
@@ -409,11 +431,12 @@ bool SecureEmbedConnectorImpl::IsDisplayLocked() const {
 
 void SecureEmbedConnectorImpl::DidUpdateVisualProperties(
     const cc::RenderFrameMetadata& metadata) {
-  NOTIMPLEMENTED();
-  // TODO(secure-embed): Need to pass the visual properties update to the
-  // embedder. When this is done, need to make sure that the two endpoints don't
-  // get into an infinite cycle of updates.
-  // frame_proxy_in_parent_renderer_->DidUpdateVisualProperties(metadata);
+  if (metadata.local_surface_id.has_value() &&
+      local_surface_id_ != *metadata.local_surface_id) {
+    // `local_surface_id_` will be updated in SynchronizeVisualProperties()
+    // after a round-trip to the Plugin.
+    delegate_->UpdateLocalSurfaceIdFromChild(*metadata.local_surface_id);
+  }
 }
 
 void SecureEmbedConnectorImpl::SetVisibilityForChildViews(bool visible) const {
@@ -492,19 +515,17 @@ void SecureEmbedConnectorImpl::OnVisibilityChanged(
 
   current_child_frame_host()->VisibilityChanged(visibility_);
 
-  // TODO(secure-embed): Needs finished.
-
-  // If there is an inner WebContents, it should be notified of the change in
-  // the visibility. The Show/Hide methods will not be called if an inner
-  // WebContents exists since the corresponding WebContents will itself call
-  // Show/Hide on all the RenderWidgetHostViews (including this) one.
-  // if (view_->host()
-  //        ->frame_tree()
-  //        ->delegate()
-  //        ->OnRenderFrameProxyVisibilityChanged(frame_proxy_in_parent_renderer_,
-  //                                              visibility_)) {
-  //  return;
-  //}
+  switch (visibility) {
+    case blink::mojom::FrameVisibility::kRenderedInViewport:
+      guest_web_contents_->WasShown();
+      break;
+    case blink::mojom::FrameVisibility::kNotRendered:
+      guest_web_contents_->WasHidden();
+      break;
+    case blink::mojom::FrameVisibility::kRenderedOutOfViewport:
+      guest_web_contents_->WasOccluded();
+      break;
+  }
 
   if (visible && !view_->host()->frame_tree()->IsHidden()) {
     view_->Show();
@@ -685,10 +706,10 @@ void SecureEmbedConnectorImpl::UpdateViewportIntersectionInternal(
 
 RenderFrameHostImpl* SecureEmbedConnectorImpl::current_child_frame_host()
     const {
-  if (!embedder_web_contents_) {
+  if (!guest_web_contents_) {
     return nullptr;
   }
-  return static_cast<WebContentsImpl*>(embedder_web_contents_.get())
+  return static_cast<WebContentsImpl*>(guest_web_contents_.get())
       ->GetPrimaryMainFrame();
 }
 

@@ -46,13 +46,17 @@ class COMPONENT_EXPORT(SECURE_EMBED) SecureEmbedHost
       mojo::PendingAssociatedRemote<mojom::SecureEmbed> secure_embed) override;
   void Attach(int64_t content_id) override;
   void SynchronizeVisualProperties(
-      const blink::FrameVisualProperties& visual_properties) override;
+      const blink::FrameVisualProperties& visual_properties,
+      bool is_visible) override;
   void SetFocus(bool focused, blink::mojom::FocusType focus_type) override;
 
   // content::SecureEmbedConnector::Delegate implementation:
   void SetFrameSinkId(const viz::FrameSinkId& frame_sink_id) override;
+  void UpdateLocalSurfaceIdFromChild(
+      const ::viz::LocalSurfaceId& local_surface_id) override;
   void FocusInEmbedder(
       content::SecureEmbedConnector::FocusOperation focus_op) override;
+  content::RenderFrameHost* ParentFrame() override;
 
  private:
   explicit SecureEmbedHost(content::RenderFrameHost*);

@@ -128,6 +128,10 @@ void SecureEmbedWebPlugin::Paint(cc::PaintCanvas* canvas,
   NOTREACHED();
 }
 
+viz::FrameSinkId SecureEmbedWebPlugin::GetFrameSinkId() {
+  return frame_sink_id_;
+}
+
 void SecureEmbedWebPlugin::UpdateGeometry(const gfx::Rect& window_rect,
                                           const gfx::Rect& clip_rect,
                                           const gfx::Rect& unobscured_rect,
@@ -218,7 +222,7 @@ void SecureEmbedWebPlugin::SendVisualProperties() {
   viz::SurfaceId surface_id(frame_sink_id_, local_surface_id);
   DCHECK(surface_id.is_valid());
   layer_->SetSurfaceId(surface_id, cc::DeadlinePolicy::UseDefaultDeadline());
-  host_->SynchronizeVisualProperties(visual_properties);
+  host_->SynchronizeVisualProperties(visual_properties, last_is_visible_);
   container_->ScheduleAnimation();
 }
 
@@ -268,6 +272,12 @@ void SecureEmbedWebPlugin::SetFrameSinkId(
   frame_sink_id_ = frame_sink_id;
   frame_sink_id_changed_ = true;
 
+  SendVisualProperties();
+}
+
+void SecureEmbedWebPlugin::UpdateLocalSurfaceIdFromChild(
+    const ::viz::LocalSurfaceId& local_surface_id) {
+  parent_local_surface_id_allocator_->UpdateFromChild(local_surface_id);
   SendVisualProperties();
 }
 
