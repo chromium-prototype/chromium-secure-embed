@@ -159,6 +159,19 @@ void SecureEmbedWebPlugin::UpdateGeometry(const gfx::Rect& window_rect,
 void SecureEmbedWebPlugin::SynchronizeVisualProperties() {
   // Note: This is largely based on RemoteFrame's SynchronizeVisualProperties().
 
+  // TODO(secure-embed): The following properties or pieces of functionality
+  // have not yet been vetted as needed or correct implementation:
+  // - css zoom between ancestor widget and embedding element (inclusive).
+  // - viewport segments, do these need any adjustment for plugin location/size?
+  // - compositor viewport, does it need to be more accurate (See RemoteFrame)?
+  //   Right now it's the part of the plugin that's visible.
+  // - compositing scale factor
+  // - capture_sequence_number
+  // - cursor_accessibility_scale_factor
+  // - paint holding
+  // - propagate parameter (see RemoteFrame's implementation, do we need to do
+  //   anything to propagate these changes through the embedded WebContents?)
+
   if (!frame_sink_id_.is_valid()) {
     return;
   }
@@ -174,7 +187,6 @@ void SecureEmbedWebPlugin::SynchronizeVisualProperties() {
       container_->GetDocument().GetFrame()->LocalRoot()->FrameWidget();
   DCHECK(ancestor_widget);
 
-  // TODO(secure-embed): Does not include CSS zoom on the embed element.
   pending_visual_properties.zoom_level = ancestor_widget->GetZoomLevel();
   pending_visual_properties.css_zoom_factor =
       ancestor_widget->GetCSSZoomFactor();
@@ -188,24 +200,15 @@ void SecureEmbedWebPlugin::SynchronizeVisualProperties() {
   pending_visual_properties.visible_viewport_size =
       gfx::Size(last_clip_rect_.width(), last_clip_rect_.height());
 
-  // TODO(secure-embed): Do these need any adjustment for plugin location/size?
   const std::vector<gfx::Rect>& viewport_segments =
       ancestor_widget->ViewportSegments();
   pending_visual_properties.root_widget_viewport_segments.assign(
       viewport_segments.begin(), viewport_segments.end());
-
   pending_visual_properties.rect_in_local_root = last_window_rect_;
   pending_visual_properties.local_frame_size =
       gfx::Size(last_window_rect_.width(), last_window_rect_.height());
-
-  // TODO(secure-embed): Start with what is actually visible for the plugin. We
-  // can use a more accurate calculation for the compositor viewport, similar to
-  // what RemoteFrame does, if needed.
   pending_visual_properties.compositor_viewport = last_clip_rect_;
-  // TODO(secure-embed): This is probably not correct.
   pending_visual_properties.compositing_scale_factor = 1.0f;
-
-  // TODO(secure-embed): Support capture_sequence_number_changed.
   pending_visual_properties.capture_sequence_number = 0;
   pending_visual_properties.cursor_accessibility_scale_factor = 1.0f;
 
@@ -255,14 +258,12 @@ void SecureEmbedWebPlugin::SynchronizeVisualProperties() {
   viz::SurfaceId surface_id(frame_sink_id_,
                             pending_visual_properties.local_surface_id);
   DCHECK(surface_id.is_valid());
-
-  // TODO(secure-embed): Support allow_paint_holding.
   layer_->SetSurfaceId(surface_id, cc::DeadlinePolicy::UseDefaultDeadline());
 
-  // TODO(secure-embed): Do we need to support `propagate`?
   if (synchronized_props_changed) {
     host_->SynchronizeVisualProperties(pending_visual_properties,
                                        last_is_visible_);
+    sent_visual_properties_ = pending_visual_properties;
     container_->ScheduleAnimation();
   }
 }
@@ -321,6 +322,9 @@ void SecureEmbedWebPlugin::SetFrameSinkId(
   }
   frame_sink_id_ = frame_sink_id;
   frame_sink_id_changed_ = true;
+
+  // Any visual properties previously sent are now invalid.
+  sent_visual_properties_ = std::nullopt;
 
   SynchronizeVisualProperties();
 }
