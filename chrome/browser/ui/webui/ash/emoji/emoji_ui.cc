@@ -194,7 +194,8 @@ void EmojiUI::Show(ui::EmojiPickerCategory category,
   // here to reduce code duplication.
 
   auto contents_wrapper = std::make_unique<WebUIContentsWrapperT<EmojiUI>>(
-      GURL(chrome::kChromeUIEmojiPickerURL), profile, IDS_ACCNAME_EMOJI_PICKER);
+      GURL(chrome::kChromeUIEmojiPickerURL), profile, IDS_ACCNAME_EMOJI_PICKER,
+      /*maybe_top_chrome_web_contents=*/nullptr);
   // Need to reload the web contents here because the view isn't visible unless
   // ShowUI is called from the JS side.  By reloading, we trigger the JS to
   // eventually call ShowUI().

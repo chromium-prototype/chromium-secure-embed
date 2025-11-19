@@ -75,7 +75,8 @@ class WebUIContentsPreloadManager : public ProfileObserver,
   // A new preloaded contents will be created, unless the system is under heavy
   // memory pressure.
   RequestResult Request(const GURL& webui_url,
-                        content::BrowserContext* browser_context);
+                        content::BrowserContext* browser_context,
+                        content::WebContents* maybe_top_chrome_web_contents);
 
   // Returns the timeticks when the specific `web_contents` was requested.
   std::optional<base::TimeTicks> GetRequestTime(
@@ -157,7 +158,8 @@ class WebUIContentsPreloadManager : public ProfileObserver,
 
   std::unique_ptr<content::WebContents> CreateNewContents(
       content::BrowserContext* browser_context,
-      GURL url);
+      GURL url,
+      content::WebContents* maybe_top_chrome_web_contents);
 
   void LoadURLForContents(content::WebContents* web_contents, GURL url);
 

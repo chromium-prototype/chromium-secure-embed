@@ -190,4 +190,8 @@ void ShellNativeAppWindow::SetActivateOnPointer(bool activate_on_pointer) {
   NOTIMPLEMENTED();
 }
 
+content::WebContents* ShellNativeAppWindow::GetSecureEmbedEmbedder() {
+  return nullptr;
+}
+
 }  // namespace extensions

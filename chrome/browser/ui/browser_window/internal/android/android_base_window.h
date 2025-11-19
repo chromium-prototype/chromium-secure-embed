@@ -8,6 +8,7 @@
 #include <jni.h>
 
 #include "base/android/scoped_java_ref.h"
+#include "content/public/browser/web_contents.h"
 #include "ui/base/base_window.h"
 
 // Android implementation of |ui::BaseWindow|.
@@ -46,6 +47,8 @@ class AndroidBaseWindow final : public ui::BaseWindow {
   void FlashFrame(bool flash) override;
   ui::ZOrderLevel GetZOrderLevel() const override;
   void SetZOrderLevel(ui::ZOrderLevel order) override;
+
+  content::WebContents* GetSecureEmbedEmbedder() override;
 
  private:
   base::android::ScopedJavaGlobalRef<jobject> java_android_base_window_;

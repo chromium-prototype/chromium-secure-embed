@@ -6,6 +6,7 @@
 
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
+#include "chrome/browser/ui/views/side_panel/side_panel_entry_scope.h"
 #include "chrome/browser/ui/views/side_panel/side_panel_web_ui_view.h"
 #include "chrome/browser/ui/webui/side_panel/read_anything/read_anything_untrusted_page_handler.h"
 #include "chrome/common/webui_url_constants.h"
@@ -32,6 +33,7 @@ ReadAnythingSidePanelWebView::ReadAnythingSidePanelWebView(
               GURL(chrome::kChromeUIUntrustedReadAnythingSidePanelURL),
               profile,
               IDS_READING_MODE_TITLE,
+              scope.GetTopChromeWebContents(),
               /*esc_closes_ui=*/false)) {}
 
 content::WebContents* ReadAnythingSidePanelWebView::OpenURLFromTab(

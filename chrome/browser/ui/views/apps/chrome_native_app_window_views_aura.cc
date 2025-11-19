@@ -120,3 +120,7 @@ void ChromeNativeAppWindowViewsAura::UpdateShape(
     native_window->SetEventTargeter(nullptr);
   }
 }
+
+content::WebContents* ChromeNativeAppWindowViewsAura::GetSecureEmbedEmbedder() {
+  return nullptr;
+}

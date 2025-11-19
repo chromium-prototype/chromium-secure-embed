@@ -9,6 +9,7 @@
 
 #include "ash/public/cpp/shelf_types.h"
 #include "base/memory/raw_ptr.h"
+#include "content/public/browser/web_contents.h"
 #include "ui/base/base_window.h"
 #include "ui/base/mojom/window_show_state.mojom-forward.h"
 
@@ -79,6 +80,7 @@ class AppWindowBase : public ui::BaseWindow {
   void FlashFrame(bool flash) override;
   ui::ZOrderLevel GetZOrderLevel() const override;
   void SetZOrderLevel(ui::ZOrderLevel order) override;
+  content::WebContents* GetSecureEmbedEmbedder() override;
 
  private:
   ash::ShelfID shelf_id_;

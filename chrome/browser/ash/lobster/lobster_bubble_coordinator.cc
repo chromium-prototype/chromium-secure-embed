@@ -51,6 +51,7 @@ void LobsterBubbleCoordinator::LoadUI(Profile* profile,
 
   contents_wrapper_ = std::make_unique<WebUIContentsWrapperT<MakoUntrustedUI>>(
       url, profile, IDS_ACCNAME_ORCA,
+      /*maybe_top_chrome_web_contents=*/nullptr,
       /*esc_closes_ui=*/false);
 
   std::unique_ptr<LobsterView> lobster_view =

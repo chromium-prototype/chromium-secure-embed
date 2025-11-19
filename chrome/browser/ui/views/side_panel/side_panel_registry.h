@@ -74,6 +74,7 @@ class SidePanelRegistry final : public SidePanelEntryObserver,
   // SidePanelEntryScope:
   const tabs::TabInterface& GetTabInterface() const override;
   const BrowserWindowInterface& GetBrowserWindowInterface() const override;
+  content::WebContents* GetTopChromeWebContents() override;
 
  private:
   SidePanelCoordinator* GetCoordinator();

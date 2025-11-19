@@ -246,5 +246,6 @@ CommentsSidePanelCoordinator::CreateCommentsWebView(
           GURL(chrome::kChromeUICommentsSidePanelURL),
           scope.GetBrowserWindowInterface().GetProfile(),
           IDS_COLLABORATION_SHARED_TAB_GROUPS_COMMENTS_TITLE,
+          scope.GetTopChromeWebContents(),
           /*esc_closes_ui=*/false));
 }

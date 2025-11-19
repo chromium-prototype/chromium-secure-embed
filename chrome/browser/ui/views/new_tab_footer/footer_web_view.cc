@@ -13,6 +13,7 @@
 #include "chrome/browser/ui/webui/webui_embedding_context.h"
 #include "chrome/common/webui_url_constants.h"
 #include "chrome/grit/generated_resources.h"
+#include "ui/base/base_window.h"
 #include "ui/base/metadata/metadata_impl_macros.h"
 #include "ui/views/view_class_properties.h"
 
@@ -44,6 +45,8 @@ void NewTabFooterWebView::ShowUI() {
     contents_wrapper_ = std::make_unique<WebUIContentsWrapperT<NewTabFooterUI>>(
         GURL(chrome::kChromeUINewTabFooterURL), browser_->GetProfile(),
         IDS_NEW_TAB_FOOTER_NAME,
+        (browser_->GetWindow() ? browser_->GetWindow()->GetSecureEmbedEmbedder()
+                               : nullptr),
         /*esc_closes_ui=*/false);
     contents_wrapper_->SetHost(weak_factory_.GetWeakPtr());
     SetWebContents(contents_wrapper_->web_contents());

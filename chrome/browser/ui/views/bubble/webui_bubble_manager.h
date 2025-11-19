@@ -26,6 +26,7 @@
 #include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/render_process_host.h"
 #include "content/public/browser/web_contents.h"
+#include "ui/base/base_window.h"
 #include "ui/base/interaction/element_identifier.h"
 #include "ui/views/bubble/bubble_dialog_delegate_view.h"
 #include "ui/views/widget/widget.h"
@@ -205,7 +206,10 @@ WebUIBubbleManagerImpl<T>::CreateWebUIBubbleDialog(
   if (!cached_contents_wrapper()) {
     set_cached_contents_wrapper(std::make_unique<WebUIContentsWrapperT<T>>(
         webui_url_, browser_window_interface_->GetProfile(),
-        task_manager_string_id_));
+        task_manager_string_id_,
+        (browser_window_interface_->GetWindow()
+             ? browser_window_interface_->GetWindow()->GetSecureEmbedEmbedder()
+             : nullptr)));
   }
 
   contents_wrapper = cached_contents_wrapper();

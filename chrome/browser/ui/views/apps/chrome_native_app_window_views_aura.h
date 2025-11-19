@@ -10,6 +10,7 @@
 #include "base/gtest_prod_util.h"
 #include "build/build_config.h"
 #include "chrome/browser/ui/views/apps/chrome_native_app_window_views.h"
+#include "content/public/browser/web_contents.h"
 #include "ui/base/mojom/window_show_state.mojom-forward.h"
 
 // Aura-specific parts of ChromeNativeAppWindowViews. This is used directly on
@@ -41,6 +42,8 @@ class ChromeNativeAppWindowViewsAura : public ChromeNativeAppWindowViews {
   // ui::BaseWindow implementation.
   ui::mojom::WindowShowState GetRestoredState() const override;
   ui::ZOrderLevel GetZOrderLevel() const override;
+
+  content::WebContents* GetSecureEmbedEmbedder() override;
 
   // NativeAppWindow implementation.
   void UpdateShape(std::unique_ptr<ShapeRects> rects) override;

@@ -1213,9 +1213,7 @@ void WebContentsImpl::NotifySwappedRWHVChildFrameFromRenderManager(
     RenderWidgetHostViewChildFrame* new_view,
     bool allow_paint_holding) {
   if (secure_embed_connector_) {
-    secure_embed_connector_->SetView(
-        new_view,
-        allow_paint_holding);
+    secure_embed_connector_->SetView(new_view, allow_paint_holding);
   }
 }
 
@@ -10720,6 +10718,13 @@ WebContentsImpl::GetFaviconURLs() {
 
 void WebContentsImpl::Resize(const gfx::Rect& new_bounds) {
   OPTIONAL_TRACE_EVENT0("content", "WebContentsImpl::Resize");
+  // If we're embeded, the HTML element has control over the size (and
+  // resizing the platform view will resize the embedder, not this).
+  // TODO(secure-embed): Refactor this so this is in the View, which already
+  // has the appropriate platform split.
+  if (secure_embed_connector_) {
+    return;
+  }
 #if defined(USE_AURA)
   aura::Window* window = GetNativeView();
   window->SetBounds(gfx::Rect(window->bounds().origin(), new_bounds.size()));

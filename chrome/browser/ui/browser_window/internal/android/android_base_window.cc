@@ -152,3 +152,7 @@ ui::ZOrderLevel AndroidBaseWindow::GetZOrderLevel() const {
 void AndroidBaseWindow::SetZOrderLevel(ui::ZOrderLevel order) {
   NOTREACHED();
 }
+
+content::WebContents* AndroidBaseWindow::GetSecureEmbedEmbedder() {
+  return nullptr;
+}

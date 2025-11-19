@@ -22,7 +22,6 @@
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/task_manager/web_contents_tags.h"
 #include "chrome/browser/ui/browser.h"
-#include "chrome/browser/ui/browser_finder.h"
 #include "chrome/browser/ui/prefs/prefs_tab_helper.h"
 #include "chrome/browser/ui/ui_features.h"
 #include "chrome/browser/ui/webui/log_web_ui_url.h"
@@ -32,7 +31,6 @@
 #include "chrome/browser/ui/webui/top_chrome/top_chrome_web_ui_controller.h"
 #include "chrome/browser/ui/webui/top_chrome/top_chrome_webui_config.h"
 #include "chrome/browser/ui/webui/top_chrome/webui_contents_preload_state.h"
-#include "chrome/browser/ui/webui_browser/webui_browser_window.h"
 #include "chrome/common/webui_url_constants.h"
 #include "chrome/grit/generated_resources.h"
 #include "components/crash/core/common/crash_key.h"
@@ -86,19 +84,6 @@ class FixedCandidateSelector : public webui::PreloadCandidateSelector {
   GURL webui_url_;
 };
 
-#if BUILDFLAG(ENABLE_SECURE_EMBED)
-content::WebContents* GetSecureEmbedEmbedder(
-    content::BrowserContext* browser_context) {
-  Profile* profile = static_cast<Profile*>(browser_context);
-  if (Browser* browser = chrome::FindLastActiveWithProfile(profile)) {
-    if (BrowserWindow* window = browser->window()) {
-      return static_cast<WebUIBrowserWindow*>(window)->GetSecureEmbedEmbedder();
-    }
-  }
-  return nullptr;
-}
-#endif
-
 bool IsFeatureEnabled() {
   return base::FeatureList::IsEnabled(features::kPreloadTopChromeWebUI);
 }
@@ -110,14 +95,15 @@ bool IsSmartPreloadEnabled() {
 
 content::WebContents::CreateParams GetWebContentsCreateParams(
     const GURL& webui_url,
-    content::BrowserContext* browser_context) {
+    content::BrowserContext* browser_context,
+    content::WebContents* maybe_top_chrome_web_contents) {
   content::WebContents::CreateParams create_params(browser_context);
   // Set it to visible so that the resources are immediately loaded.
   create_params.initially_hidden = !IsFeatureEnabled();
   create_params.site_instance =
       content::SiteInstance::CreateForURL(browser_context, webui_url);
 #if BUILDFLAG(ENABLE_SECURE_EMBED)
-  create_params.secure_embed_embedder = GetSecureEmbedEmbedder(browser_context);
+  create_params.secure_embed_embedder = maybe_top_chrome_web_contents;
 #endif
 
   return create_params;
@@ -381,7 +367,9 @@ void WebUIContentsPreloadManager::MaybePreloadForBrowserContext(
     return;
   }
 
-  SetPreloadedContents(CreateNewContents(browser_context, *preload_url));
+  SetPreloadedContents(
+      CreateNewContents(browser_context, *preload_url,
+                        /*maybe_top_chrome_web_contents=*/nullptr));
   base::UmaHistogramEnumeration("WebUI.TopChrome.Preload.Reason",
                                 preload_reason);
 }
@@ -423,7 +411,8 @@ void WebUIContentsPreloadManager::SetPreloadedContents(
 
 RequestResult WebUIContentsPreloadManager::Request(
     const GURL& webui_url,
-    content::BrowserContext* browser_context) {
+    content::BrowserContext* browser_context,
+    content::WebContents* maybe_top_chrome_web_contents) {
   const base::TimeTicks request_time = base::TimeTicks::Now();
   std::unique_ptr<content::WebContents> web_contents_ret;
   WebUIPreloadResult preload_result = preloaded_web_contents_
@@ -447,7 +436,8 @@ RequestResult WebUIContentsPreloadManager::Request(
     web_contents_ret = std::move(preloaded_web_contents_);
     SetPreloadedContents(nullptr);
   } else {
-    web_contents_ret = CreateNewContents(browser_context, webui_url);
+    web_contents_ret = CreateNewContents(browser_context, webui_url,
+                                         maybe_top_chrome_web_contents);
   }
 
   // Navigate to path if the request URL has a different path.
@@ -515,10 +505,11 @@ void WebUIContentsPreloadManager::DisableNavigationForTesting() {
 std::unique_ptr<content::WebContents>
 WebUIContentsPreloadManager::CreateNewContents(
     content::BrowserContext* browser_context,
-    GURL url) {
+    GURL url,
+    content::WebContents* maybe_top_chrome_web_contents) {
   std::unique_ptr<content::WebContents> web_contents =
-      content::WebContents::Create(
-          GetWebContentsCreateParams(url, browser_context));
+      content::WebContents::Create(GetWebContentsCreateParams(
+          url, browser_context, maybe_top_chrome_web_contents));
 
   // Propagates user prefs to web contents.
   // This is needed by, for example, text selection color on ChromeOS.

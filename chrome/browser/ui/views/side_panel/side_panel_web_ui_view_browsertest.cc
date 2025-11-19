@@ -35,7 +35,8 @@ class TestWebUIContentsWrapper : public WebUIContentsWrapper {
                              /*webui_resizes_host=*/false,
                              /*esc_closes_ui=*/false,
                              /*supports_draggable_regions=*/false,
-                             /*webui_name=*/"Test") {}
+                             /*webui_name=*/"Test",
+                             /*maybe_top_chrome_web_contents=*/nullptr) {}
 
   // WebUIContentsWrapper:
   void ReloadWebContents() override {}

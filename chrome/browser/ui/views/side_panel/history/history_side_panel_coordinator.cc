@@ -78,6 +78,7 @@ std::unique_ptr<views::View> HistorySidePanelCoordinator::CreateHistoryWebView(
       scope, base::RepeatingClosure(), base::RepeatingClosure(),
       std::make_unique<WebUIContentsWrapperT<HistorySidePanelUI>>(
           url, browser_->GetProfile(), IDS_HISTORY_TITLE,
+          scope.GetTopChromeWebContents(),
           /*esc_closes_ui=*/false));
 }
 

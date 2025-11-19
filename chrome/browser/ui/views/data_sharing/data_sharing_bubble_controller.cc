@@ -19,6 +19,7 @@
 #include "components/saved_tab_groups/public/types.h"
 #include "components/tab_groups/tab_group_id.h"
 #include "net/base/url_util.h"
+#include "ui/base/base_window.h"
 #include "ui/base/unowned_user_data/scoped_unowned_user_data.h"
 #include "ui/views/view.h"
 #include "ui/views/view_class_properties.h"
@@ -127,6 +128,9 @@ void DataSharingBubbleController::Show(data_sharing::RequestInfo request_info) {
   auto contents_wrapper =
       std::make_unique<WebUIContentsWrapperT<DataSharingUI>>(
           url.value(), GetProfile(), IDS_DATA_SHARING_BUBBLE_DIALOG_TITLE,
+          (browser_->GetWindow()
+               ? browser_->GetWindow()->GetSecureEmbedEmbedder()
+               : nullptr),
           /*esc_closes_ui=*/true,
           /*supports_draggable_regions=*/false);
   contents_wrapper->GetWebUIController()->SetDelegate(this);

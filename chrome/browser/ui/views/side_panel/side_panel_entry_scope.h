@@ -7,6 +7,8 @@
 
 #include <utility>
 
+#include "content/public/browser/web_contents.h"
+
 class BrowserWindowInterface;
 
 namespace tabs {
@@ -47,6 +49,10 @@ class SidePanelEntryScope {
         std::as_const(*this).GetBrowserWindowInterface());
   }
   virtual const BrowserWindowInterface& GetBrowserWindowInterface() const = 0;
+
+  // When the WebUIBrowser is enabled, this will return a pointer to the
+  // WebContents for top-chrome, if one can be obtained; otherwise nullptr.
+  virtual content::WebContents* GetTopChromeWebContents() = 0;
 
  private:
   const ScopeType scope_type_;

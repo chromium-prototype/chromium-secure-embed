@@ -11,6 +11,10 @@
 #include "ui/base/ui_base_types.h"
 #include "ui/gfx/native_ui_types.h"
 
+namespace content {
+class WebContents;
+}  // namespace content
+
 namespace gfx {
 class Rect;
 }
@@ -94,6 +98,11 @@ class COMPONENT_EXPORT(UI_BASE) BaseWindow {
 
   // Sets the z-order level of the window.
   virtual void SetZOrderLevel(ZOrderLevel order) = 0;
+
+  // If the browser window is going to use the secure embed functionality
+  // to embed user content inside an HTML-based UI, it should return the
+  // hosting WebContents here. Otherwise, it should return nullptr.
+  virtual content::WebContents* GetSecureEmbedEmbedder() = 0;
 };
 
 }  // namespace ui

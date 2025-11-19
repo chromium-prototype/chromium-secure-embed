@@ -49,7 +49,8 @@ class WebUIContentsWrapperT<TestWebUIController> final
                              webui_resizes_host,
                              esc_closes_ui,
                              supports_draggable_regions,
-                             "Test") {}
+                             "Test",
+                             /*maybe_top_chrome_web_contents=*/nullptr) {}
   void ReloadWebContents() override {}
   base::WeakPtr<WebUIContentsWrapper> GetWeakPtr() override {
     return weak_ptr_factory_.GetWeakPtr();

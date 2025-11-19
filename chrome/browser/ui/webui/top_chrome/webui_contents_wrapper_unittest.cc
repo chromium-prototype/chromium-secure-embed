@@ -89,7 +89,14 @@ class MockHost : public WebUIContentsWrapper::Host {
 class TestWebUIContentsWrapper : public WebUIContentsWrapper {
  public:
   explicit TestWebUIContentsWrapper(Profile* profile)
-      : WebUIContentsWrapper(GURL(""), profile, 0, true, true, true, "Test") {}
+      : WebUIContentsWrapper(GURL(""),
+                             profile,
+                             0,
+                             true,
+                             true,
+                             true,
+                             "Test",
+                             /*maybe_top_chrome_web_contents=*/nullptr) {}
   ~TestWebUIContentsWrapper() override = default;
 
   // WebUIContentsWrapper:
