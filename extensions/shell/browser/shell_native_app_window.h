@@ -6,6 +6,7 @@
 #define EXTENSIONS_SHELL_BROWSER_SHELL_NATIVE_APP_WINDOW_H_
 
 #include "base/memory/raw_ptr.h"
+#include "content/public/browser/web_contents.h"
 #include "extensions/browser/app_window/app_window.h"
 #include "extensions/browser/app_window/native_app_window.h"
 #include "third_party/blink/public/mojom/page/draggable_region.mojom-forward.h"
@@ -75,6 +76,8 @@ class ShellNativeAppWindow : public NativeAppWindow {
   void SetVisibleOnAllWorkspaces(bool always_visible) override;
   bool CanHaveAlphaEnabled() const override;
   void SetActivateOnPointer(bool activate_on_pointer) override;
+
+  content::WebContents* GetSecureEmbedEmbedder() override;
 
  private:
   raw_ptr<AppWindow, DanglingUntriaged> app_window_;

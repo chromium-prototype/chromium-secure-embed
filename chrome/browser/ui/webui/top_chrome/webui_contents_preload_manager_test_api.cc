@@ -52,8 +52,8 @@ void WebUIContentsPreloadManagerTestAPI::MaybePreloadForBrowserContextLater(
 void WebUIContentsPreloadManagerTestAPI::PreloadUrl(
     content::BrowserContext* browser_context,
     const GURL& url) {
-  SetPreloadedContents(
-      preload_manager()->CreateNewContents(browser_context, url));
+  SetPreloadedContents(preload_manager()->CreateNewContents(
+      browser_context, url, /*maybe_top_chrome_web_contents=*/nullptr));
 }
 
 bool WebUIContentsPreloadManagerTestAPI::HasPendingPreload() {

@@ -17,6 +17,7 @@
 #include "components/tabs/public/tab_interface.h"
 #include "content/public/browser/web_contents.h"
 #include "extensions/common/extension_id.h"
+#include "ui/base/base_window.h"
 
 SidePanelRegistry::SidePanelRegistry(tabs::TabInterface* tab_interface)
     : SidePanelEntryScope(SidePanelEntryScope::ScopeType::kTab),
@@ -156,4 +157,11 @@ const BrowserWindowInterface& SidePanelRegistry::GetBrowserWindowInterface()
 
 SidePanelCoordinator* SidePanelRegistry::GetCoordinator() {
   return GetBrowserWindowInterface().GetFeatures().side_panel_coordinator();
+}
+
+content::WebContents* SidePanelRegistry::GetTopChromeWebContents() {
+  if (ui::BaseWindow* window = GetBrowserWindowInterface().GetWindow()) {
+    return window->GetSecureEmbedEmbedder();
+  }
+  return nullptr;
 }

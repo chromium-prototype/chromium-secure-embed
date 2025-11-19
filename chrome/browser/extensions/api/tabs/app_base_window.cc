@@ -122,4 +122,8 @@ NativeAppWindow* AppBaseWindow::GetBaseWindow() const {
   return app_window_->GetBaseWindow();
 }
 
+content::WebContents* AppBaseWindow::GetSecureEmbedEmbedder() {
+  return nullptr;
+}
+
 }  // namespace extensions

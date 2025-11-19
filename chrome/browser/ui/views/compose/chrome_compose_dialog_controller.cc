@@ -15,6 +15,7 @@
 #include "components/compose/core/browser/compose_features.h"
 #include "components/compose/core/browser/compose_metrics.h"
 #include "components/compose/core/browser/config.h"
+#include "ui/base/base_window.h"
 #include "ui/views/bubble/bubble_border.h"
 #include "ui/views/bubble/bubble_dialog_delegate_view.h"
 
@@ -53,10 +54,15 @@ void ChromeComposeDialogController::ShowComposeDialog(
 
   Profile* profile =
       Profile::FromBrowserContext(web_contents_->GetBrowserContext());
+  Browser* browser = chrome::FindBrowserWithTab(web_contents_.get());
+  BrowserWindowInterface* browser_window_interface = browser;
   auto bubble_wrapper =
       std::make_unique<WebUIContentsWrapperT<ComposeUntrustedUI>>(
           GURL(chrome::kChromeUIUntrustedComposeUrl), profile,
-          IDS_COMPOSE_DIALOG_TITLE);
+          IDS_COMPOSE_DIALOG_TITLE,
+          (browser_window_interface->GetWindow()
+               ? browser_window_interface->GetWindow()->GetSecureEmbedEmbedder()
+               : nullptr));
 
   // This WebUI needs to know the calling BrowserContents so that the compose
   // request/result can be properly associated with the triggering form.

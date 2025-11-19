@@ -142,7 +142,8 @@ IN_PROC_BROWSER_TEST_F(LogWebUIUrlTest, ShownWebUIForPreloadedPage) {
   // Show the WebUI.
   std::unique_ptr<content::WebContents> web_contents =
       std::move(preload_test_api.preload_manager()
-                    ->Request(url, browser()->profile())
+                    ->Request(url, browser()->profile(),
+                              /*maybe_top_chrome_web_contents=*/nullptr)
                     .web_contents);
   EXPECT_THAT(
       histogram_tester().GetBucketCount(webui::kWebUIShownUrl, origin_hash), 1);

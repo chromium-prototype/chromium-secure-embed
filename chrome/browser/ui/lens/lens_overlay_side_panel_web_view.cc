@@ -10,6 +10,7 @@
 #include "chrome/browser/ui/lens/lens_overlay_controller.h"
 #include "chrome/browser/ui/lens/lens_overlay_event_handler.h"
 #include "chrome/browser/ui/lens/lens_overlay_side_panel_coordinator.h"
+#include "chrome/browser/ui/views/side_panel/side_panel_entry_scope.h"
 #include "chrome/common/webui_url_constants.h"
 #include "chrome/grit/generated_resources.h"
 #include "components/input/native_web_keyboard_event.h"
@@ -38,6 +39,7 @@ LensOverlaySidePanelWebView::LensOverlaySidePanelWebView(
               GURL(chrome::kChromeUILensUntrustedSidePanelAPIURL),
               Profile::FromBrowserContext(browser_context),
               /*task_manager_string_id=*/IDS_SIDE_PANEL_COMPANION_TITLE,
+              scope.GetTopChromeWebContents(),
               /*esc_closes_ui=*/false)),
       coordinator_(coordinator) {
   CHECK(coordinator);

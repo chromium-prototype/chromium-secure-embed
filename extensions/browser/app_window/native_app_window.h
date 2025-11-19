@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "components/web_modal/web_contents_modal_dialog_host.h"
+#include "content/public/browser/web_contents.h"
 #include "extensions/common/mojom/frame.mojom-forward.h"
 #include "third_party/blink/public/mojom/page/draggable_region.mojom-forward.h"
 #include "third_party/skia/include/core/SkColor.h"
@@ -97,6 +98,8 @@ class NativeAppWindow : public ui::BaseWindow,
 
   // Sets whether the window should be activated on pointer event.
   virtual void SetActivateOnPointer(bool activate_on_pointer) = 0;
+
+  content::WebContents* GetSecureEmbedEmbedder() override = 0;
 
   ~NativeAppWindow() override {}
 };

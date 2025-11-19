@@ -82,7 +82,8 @@ class WebUIContentsWrapper : public content::WebContentsDelegate,
                        bool webui_resizes_host,
                        bool esc_closes_ui,
                        bool supports_draggable_regions,
-                       std::string_view webui_name);
+                       std::string_view webui_name,
+                       content::WebContents* maybe_top_chrome_web_contents);
   ~WebUIContentsWrapper() override;
 
   // content::WebContentsDelegate:
@@ -209,11 +210,13 @@ class WebUIContentsWrapperT : public WebUIContentsWrapper {
 
   // TODO(tluk): Consider introducing init params to avoid further cluttering
   // constructor params.
-  WebUIContentsWrapperT(const GURL& webui_url,
-                        Profile* profile,
-                        int task_manager_string_id,
-                        bool esc_closes_ui = true,
-                        bool supports_draggable_regions = false)
+  WebUIContentsWrapperT(
+      const GURL& webui_url,
+      Profile* profile,
+      int task_manager_string_id,
+      content::WebContents* maybe_top_chrome_web_contents = nullptr,
+      bool esc_closes_ui = true,
+      bool supports_draggable_regions = false)
       : WebUIContentsWrapper(webui_url,
                              profile,
                              task_manager_string_id,
@@ -221,7 +224,8 @@ class WebUIContentsWrapperT : public WebUIContentsWrapper {
                                  ->ShouldAutoResizeHost(),
                              esc_closes_ui,
                              supports_draggable_regions,
-                             T::GetWebUIName()),
+                             T::GetWebUIName(),
+                             maybe_top_chrome_web_contents),
         webui_url_(webui_url) {
     static_assert(views_metrics::IsValidWebUIName(
         ConcatStrings({".", T::GetWebUIName()})));

@@ -56,7 +56,8 @@ void MakoBubbleCoordinator::LoadConsentUI(Profile* profile) {
                                                 GetSystemLocale());
 
   contents_wrapper_ = std::make_unique<WebUIContentsWrapperT<MakoUntrustedUI>>(
-      GURL(kChromeUIMakoPrivacyURL), profile, IDS_ACCNAME_ORCA);
+      GURL(kChromeUIMakoPrivacyURL), profile, IDS_ACCNAME_ORCA,
+      /*maybe_top_chrome_web_contents=*/nullptr);
   views::BubbleDialogDelegateView::CreateBubble(
       std::make_unique<MakoConsentView>(contents_wrapper_.get(),
                                         context_caret_bounds_));
@@ -98,6 +99,7 @@ void MakoBubbleCoordinator::LoadEditorUI(
 
   contents_wrapper_ = std::make_unique<WebUIContentsWrapperT<MakoUntrustedUI>>(
       url, profile, IDS_ACCNAME_ORCA,
+      /*maybe_top_chrome_web_contents=*/nullptr,
       /*esc_closes_ui=*/false);
   views::BubbleDialogDelegateView::CreateBubble(
       std::make_unique<MakoRewriteView>(contents_wrapper_.get(),

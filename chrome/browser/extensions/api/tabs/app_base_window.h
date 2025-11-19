@@ -6,6 +6,7 @@
 #define CHROME_BROWSER_EXTENSIONS_API_TABS_APP_BASE_WINDOW_H_
 
 #include "base/memory/raw_ptr.h"
+#include "content/public/browser/web_contents.h"
 #include "extensions/buildflags/buildflags.h"
 #include "ui/base/base_window.h"
 #include "ui/base/mojom/window_show_state.mojom-forward.h"
@@ -53,6 +54,8 @@ class AppBaseWindow : public ui::BaseWindow {
   void FlashFrame(bool flash) override;
   ui::ZOrderLevel GetZOrderLevel() const override;
   void SetZOrderLevel(ui::ZOrderLevel order) override;
+
+  content::WebContents* GetSecureEmbedEmbedder() override;
 
   NativeAppWindow* GetBaseWindow() const;
 

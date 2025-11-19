@@ -12,6 +12,7 @@
 #include "chrome/browser/ui/browser_element_identifiers.h"
 #include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "chrome/browser/ui/ui_features.h"
+#include "chrome/browser/ui/views/side_panel/side_panel_entry_scope.h"
 #include "chrome/common/webui_url_constants.h"
 #include "chrome/grit/generated_resources.h"
 #include "ui/base/metadata/metadata_impl_macros.h"
@@ -36,6 +37,7 @@ ReadLaterSidePanelWebView::ReadLaterSidePanelWebView(
               GURL(chrome::kChromeUIReadLaterURL),
               profile,
               IDS_READ_LATER_TITLE,
+              scope.GetTopChromeWebContents(),
               /*esc_closes_ui=*/false)),
       tab_strip_model_(tab_strip_model) {
   SetProperty(views::kElementIdentifierKey,

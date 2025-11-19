@@ -304,7 +304,8 @@ IN_PROC_BROWSER_TEST_F(WebUIContentsPreloadManagerPageLoadMetricsTest,
 
   WebUIContentsPreloadManager::RequestResult request_result =
       preload_manager()->Request(*test_api().GetPreloadedURL(),
-                                 browser()->profile());
+                                 browser()->profile(),
+                                 /*maybe_top_chrome_web_contents=*/nullptr);
   content::WebContents* web_contents = request_result.web_contents.get();
   ASSERT_NE(web_contents, nullptr);
 
@@ -381,7 +382,8 @@ IN_PROC_BROWSER_TEST_F(WebUIContentsPreloadManagerHistoryClusterMetricTest,
   std::unique_ptr<content::WebContents> web_contents = std::move(
       preload_manager()
           ->Request(GURL(chrome::kChromeUIHistoryClustersSidePanelURL),
-                    browser()->profile())
+                    browser()->profile(),
+                    /*maybe_top_chrome_web_contents=*/nullptr)
           .web_contents);
   web_contents->UpdateWebContentsVisibility(content::Visibility::VISIBLE);
   // History Cluster metrics are recorded on WebUI destruction.

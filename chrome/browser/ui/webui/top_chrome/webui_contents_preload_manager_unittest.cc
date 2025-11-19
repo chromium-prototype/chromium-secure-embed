@@ -136,7 +136,8 @@ TEST_F(WebUIContentsPreloadManagerTest, RequestReturnsNonNull) {
   std::unique_ptr<content::BrowserContext> browser_context =
       std::make_unique<TestingProfile>();
   RequestResult result =
-      preload_manager()->Request(GURL("about:blank"), browser_context.get());
+      preload_manager()->Request(GURL("about:blank"), browser_context.get(),
+                                 /*maybe_top_chrome_web_contents=*/nullptr);
   std::unique_ptr<content::WebContents> web_contents =
       std::move(result.web_contents);
   EXPECT_NE(web_contents, nullptr);
@@ -146,7 +147,8 @@ TEST_F(WebUIContentsPreloadManagerTest,
        PreloadedContentsIsNotNullAfterRequest) {
   std::unique_ptr<content::BrowserContext> browser_context =
       std::make_unique<TestingProfile>();
-  preload_manager()->Request(GURL("about:blank"), browser_context.get());
+  preload_manager()->Request(GURL("about:blank"), browser_context.get(),
+                             /*maybe_top_chrome_web_contents=*/nullptr);
   FastForwardToTriggerPreload();
   EXPECT_NE(preload_manager()->preloaded_web_contents(), nullptr);
 }
@@ -179,7 +181,8 @@ TEST_F(WebUIContentsPreloadManagerTest,
   std::unique_ptr<content::BrowserContext> second_browser_context =
       std::make_unique<TestingProfile>();
   RequestResult result = preload_manager()->Request(
-      GURL("about:blank"), second_browser_context.get());
+      GURL("about:blank"), second_browser_context.get(),
+      /*maybe_top_chrome_web_contents=*/nullptr);
   std::unique_ptr<content::WebContents> made_web_contents =
       std::move(result.web_contents);
 
@@ -195,7 +198,8 @@ TEST_F(WebUIContentsPreloadManagerTest,
       preload_manager()->preloaded_web_contents();
 
   RequestResult result =
-      preload_manager()->Request(GURL("about:blank"), browser_context.get());
+      preload_manager()->Request(GURL("about:blank"), browser_context.get(),
+                                 /*maybe_top_chrome_web_contents=*/nullptr);
 
   std::unique_ptr<content::WebContents> made_web_contents =
       std::move(result.web_contents);
@@ -235,8 +239,12 @@ TEST_F(WebUIContentsPreloadManagerTest, RequestNavigation) {
     EXPECT_EQ(preloaded_web_contents->GetURL(), url_to_preload);
 
     RequestResult result =
-        preload_manager()->Request(url_to_preload, browser_context.get());
+
+        preload_manager()->Request(url_to_preload, browser_context.get(),
+                                   /*maybe_top_chrome_web_contents=*/nullptr);
+
     std::unique_ptr<content::WebContents> web_contents =
+
         std::move(result.web_contents);
 
     EXPECT_EQ(web_contents.get(), preloaded_web_contents);
@@ -252,9 +260,12 @@ TEST_F(WebUIContentsPreloadManagerTest, RequestNavigation) {
         preload_manager()->preloaded_web_contents();
 
     RequestResult result =
-        preload_manager()->Request(different_url, browser_context.get());
+
+        preload_manager()->Request(different_url, browser_context.get(),
+                                   /*maybe_top_chrome_web_contents=*/nullptr);
 
     std::unique_ptr<content::WebContents> web_contents =
+
         std::move(result.web_contents);
     // WebContents is reused and navigated to the given URL.
     EXPECT_EQ(web_contents.get(), preloaded_web_contents);
@@ -273,7 +284,8 @@ TEST_F(WebUIContentsPreloadManagerTest, IsReadyToShow) {
 
   // `is_ready_to_show` should be initially false.
   RequestResult result =
-      preload_manager()->Request(preloaded_url, browser_context.get());
+      preload_manager()->Request(preloaded_url, browser_context.get(),
+                                 /*maybe_top_chrome_web_contents=*/nullptr);
   EXPECT_NE(result.web_contents, nullptr);
   EXPECT_FALSE(result.is_ready_to_show);
 
@@ -289,7 +301,9 @@ TEST_F(WebUIContentsPreloadManagerTest, IsReadyToShow) {
   webui_controller->embedder()->ShowUI();
 
   // `is_ready_to_show` should be true after ShowUI() call.
-  result = preload_manager()->Request(preloaded_url, browser_context.get());
+  result =
+      preload_manager()->Request(preloaded_url, browser_context.get(),
+                                 /*maybe_top_chrome_web_contents=*/nullptr);
   EXPECT_TRUE(result.is_ready_to_show);
 }
 
@@ -303,7 +317,10 @@ TEST_F(WebUIContentsPreloadManagerTest, RequestThenWarmupShouldNotCrash) {
       *(test_api().GetNextWebUIURLToPreload(browser_context.get()));
 
   RequestResult result =
-      preload_manager()->Request(url_to_preload, browser_context.get());
+
+      preload_manager()->Request(url_to_preload, browser_context.get(),
+                                 /*maybe_top_chrome_web_contents=*/nullptr);
+
   // Preload for a different browser context.
   test_api().MaybePreloadForBrowserContext(browser_context2.get());
 }
@@ -322,8 +339,8 @@ TEST_F(WebUIContentsPreloadManagerTest, CandidateSelector) {
 
   ON_CALL(preload_candidate_selector(), GetURLToPreload(_))
       .WillByDefault(Return(url2));
-  RequestResult result =
-      preload_manager()->Request(url1, browser_context.get());
+  RequestResult result = preload_manager()->Request(
+      url1, browser_context.get(), /*maybe_top_chrome_web_contents=*/nullptr);
   EXPECT_EQ(result.web_contents->GetVisibleURL(), url1);
 
   FastForwardToTriggerPreload();
@@ -346,8 +363,8 @@ TEST_F(WebUIContentsPreloadManagerTest, PreloadOnWebUIDestroy) {
   // Now, show URL1, then URL2 is preloaded.
   ON_CALL(preload_candidate_selector(), GetURLToPreload(_))
       .WillByDefault(Return(url2));
-  RequestResult result =
-      preload_manager()->Request(url1, browser_context.get());
+  RequestResult result = preload_manager()->Request(
+      url1, browser_context.get(), /*maybe_top_chrome_web_contents=*/nullptr);
   EXPECT_EQ(result.web_contents->GetVisibleURL(), url1);
   FastForwardToTriggerPreload();
   EXPECT_EQ(preload_manager()->preloaded_web_contents()->GetVisibleURL(), url2);
@@ -375,7 +392,8 @@ TEST_F(WebUIContentsPreloadManagerTest, RequestURLHasPath) {
               url1);
     const GURL url1_with_path = url1.Resolve("path");
     RequestResult result =
-        preload_manager()->Request(url1_with_path, browser_context.get());
+        preload_manager()->Request(url1_with_path, browser_context.get(),
+                                   /*maybe_top_chrome_web_contents=*/nullptr);
     EXPECT_EQ(result.web_contents->GetVisibleURL(), url1_with_path);
   }
 
@@ -386,7 +404,8 @@ TEST_F(WebUIContentsPreloadManagerTest, RequestURLHasPath) {
               url1);
     const GURL url2_with_path = url2.Resolve("path");
     RequestResult result =
-        preload_manager()->Request(url2_with_path, browser_context.get());
+        preload_manager()->Request(url2_with_path, browser_context.get(),
+                                   /*maybe_top_chrome_web_contents=*/nullptr);
     EXPECT_EQ(result.web_contents->GetVisibleURL(), url2_with_path);
   }
 }

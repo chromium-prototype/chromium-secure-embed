@@ -210,6 +210,7 @@ SidePanelControllerViews::CreateCustomizeChromeWebView(
               Profile::FromBrowserContext(
                   tab_->GetContents()->GetBrowserContext()),
               IDS_SIDE_PANEL_CUSTOMIZE_CHROME_TITLE,
+              scope.GetTopChromeWebContents(),
               /*esc_closes_ui=*/false));
   customize_chrome_web_view->SetProperty(
       views::kElementIdentifierKey, kCustomizeChromeSidePanelWebViewElementId);

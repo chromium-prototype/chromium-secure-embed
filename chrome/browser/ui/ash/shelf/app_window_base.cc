@@ -113,3 +113,7 @@ ui::ZOrderLevel AppWindowBase::GetZOrderLevel() const {
 void AppWindowBase::SetZOrderLevel(ui::ZOrderLevel level) {
   NOTREACHED();
 }
+
+content::WebContents* AppWindowBase::GetSecureEmbedEmbedder() {
+  return nullptr;
+}

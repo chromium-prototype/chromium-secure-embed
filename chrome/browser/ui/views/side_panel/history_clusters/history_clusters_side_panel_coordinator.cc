@@ -107,6 +107,7 @@ HistoryClustersSidePanelCoordinator::CreateHistoryClustersWebView(
           scope, base::RepeatingClosure(), base::RepeatingClosure(),
           std::make_unique<WebUIContentsWrapperT<HistoryClustersSidePanelUI>>(
               url, profile(), IDS_HISTORY_TITLE,
+              scope.GetTopChromeWebContents(),
               /*esc_closes_ui=*/false));
   history_clusters_ui_ =
       side_panel_ui->contents_wrapper()->GetWebUIController()->GetWeakPtr();

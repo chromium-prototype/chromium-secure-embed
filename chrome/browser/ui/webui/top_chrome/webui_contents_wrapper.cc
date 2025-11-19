@@ -32,10 +32,12 @@ bool IsEscapeEvent(const input::NativeWebKeyboardEvent& event) {
 }
 
 RequestResult Request(const GURL& webui_url,
-                      content::BrowserContext* browser_context) {
+                      content::BrowserContext* browser_context,
+                      content::WebContents* maybe_top_chrome_web_contents) {
   auto* preload_manager = WebUIContentsPreloadManager::GetInstance();
   CHECK(preload_manager);
-  return preload_manager->Request(webui_url, browser_context);
+  return preload_manager->Request(webui_url, browser_context,
+                                  maybe_top_chrome_web_contents);
 }
 
 // Enables the web contents to automatically resize to its content and
@@ -93,17 +95,20 @@ content::WebContents* WebUIContentsWrapper::Host::AddNewContents(
   return nullptr;
 }
 
-WebUIContentsWrapper::WebUIContentsWrapper(const GURL& webui_url,
-                                           Profile* profile,
-                                           int task_manager_string_id,
-                                           bool webui_resizes_host,
-                                           bool esc_closes_ui,
-                                           bool supports_draggable_regions,
-                                           std::string_view webui_name)
+WebUIContentsWrapper::WebUIContentsWrapper(
+    const GURL& webui_url,
+    Profile* profile,
+    int task_manager_string_id,
+    bool webui_resizes_host,
+    bool esc_closes_ui,
+    bool supports_draggable_regions,
+    std::string_view webui_name,
+    content::WebContents* maybe_top_chrome_web_contents)
     : webui_resizes_host_(webui_resizes_host),
       esc_closes_ui_(esc_closes_ui),
       supports_draggable_regions_(supports_draggable_regions) {
-  RequestResult make_contents_result = Request(webui_url, profile);
+  RequestResult make_contents_result =
+      Request(webui_url, profile, maybe_top_chrome_web_contents);
   web_contents_ = std::move(make_contents_result.web_contents);
   is_ready_to_show_ = make_contents_result.is_ready_to_show;
 

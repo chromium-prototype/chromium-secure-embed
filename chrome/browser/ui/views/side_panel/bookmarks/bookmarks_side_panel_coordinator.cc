@@ -52,7 +52,7 @@ BookmarksSidePanelCoordinator::CreateBookmarksWebView(
           std::make_unique<WebUIContentsWrapperT<BookmarksSidePanelUI>>(
               GURL(chrome::kChromeUIBookmarksSidePanelURL),
               scope.GetBrowserWindowInterface().GetProfile(),
-              IDS_BOOKMARK_MANAGER_TITLE,
+              IDS_BOOKMARK_MANAGER_TITLE, scope.GetTopChromeWebContents(),
               /*esc_closes_ui=*/false));
   bookmarks_web_view->SetProperty(views::kElementIdentifierKey,
                                   kBookmarkSidePanelWebViewElementId);
