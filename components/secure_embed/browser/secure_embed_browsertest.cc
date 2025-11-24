@@ -4,6 +4,7 @@
 
 #include "base/command_line.h"
 #include "base/run_loop.h"
+#include "base/test/bind.h"
 #include "base/test/run_until.h"
 #include "components/guest_contents/browser/guest_contents_handle.h"
 #include "components/secure_embed/browser/secure_embed_host.h"
@@ -83,15 +84,15 @@ class SecureEmbedBrowserTest : public content::ContentBrowserTest {
     return base::test::RunUntil([&]() {
       base::RunLoop run_loop;
 
+      // Passing in gfx::Size() to avoid scaling the captured rect, specified
+      // via capture_rect, to a different size if the underlying device is doing
+      // pixel scaling.
       rwhv->CopyFromSurface(
           capture_rect, gfx::Size(),
-          base::BindOnce(
-              [](base::OnceClosure quit_closure, bool* result,
-                 float device_scale_factor,
-                 const std::vector<std::pair<gfx::Point, SkColor>>*
-                     expected_colors,
-                 const SkBitmap& bitmap) {
-                *result = false;
+          base::BindLambdaForTesting(
+              [quit_closure = run_loop.QuitClosure(), &all_pixels_correct,
+               device_scale_factor, &expected_colors](const SkBitmap& bitmap) {
+                all_pixels_correct = false;
 
                 if (bitmap.drawsNothing()) {
                   std::move(quit_closure).Run();
@@ -99,7 +100,7 @@ class SecureEmbedBrowserTest : public content::ContentBrowserTest {
                 }
 
                 bool all_match = true;
-                for (const auto& [point, expected_color] : *expected_colors) {
+                for (const auto& [point, expected_color] : expected_colors) {
                   // Scale the point by device scale factor to get physical
                   // pixel coordinates in the bitmap.
                   int physical_x =
@@ -115,13 +116,11 @@ class SecureEmbedBrowserTest : public content::ContentBrowserTest {
                 }
 
                 if (all_match) {
-                  *result = true;
+                  all_pixels_correct = true;
                 }
 
                 std::move(quit_closure).Run();
-              },
-              run_loop.QuitClosure(), &all_pixels_correct, device_scale_factor,
-              &expected_colors));
+              }));
 
       run_loop.Run();
       return all_pixels_correct;
@@ -186,17 +185,17 @@ class SecureEmbedBrowserTest : public content::ContentBrowserTest {
   }
 
   // Verify box rendering at standard location with specified color. The box is
-  // 50x50 CSS pixels at position (50,50).
+  // 50x50 CSS pixels at position (10, 10).
   void VerifyBoxRendering(SkColor box_color) {
     auto* rwhv = web_contents()->GetRenderWidgetHostView();
     ASSERT_NE(rwhv, nullptr);
 
-    gfx::Rect capture_rect(40, 40, 70, 70);
+    gfx::Rect capture_rect(0, 0, 70, 70);
     std::vector<std::pair<gfx::Point, SkColor>> expected_colors = {
         {gfx::Point(0, 0), SK_ColorWHITE},
         {gfx::Point(10, 10), box_color},
         {gfx::Point(59, 59), box_color},
-        {gfx::Point(69, 69), SK_ColorWHITE},
+        {gfx::Point(60, 60), SK_ColorWHITE},
     };
     EXPECT_TRUE(VerifyPixelColors(rwhv, capture_rect, expected_colors));
   }
