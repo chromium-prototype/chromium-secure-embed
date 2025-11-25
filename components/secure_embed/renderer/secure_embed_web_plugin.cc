@@ -344,6 +344,7 @@ void SecureEmbedWebPlugin::ChildProcessGone() {
   crashed_layer_->SetMasksToBounds(true);
   crashed_layer_->SetIsDrawable(true);
   container_->SetCcLayer(crashed_layer_.get());
+  container_->ScheduleAnimation();
 }
 
 void SecureEmbedWebPlugin::RequestFocus(mojom::FocusOperation focus_op) {
