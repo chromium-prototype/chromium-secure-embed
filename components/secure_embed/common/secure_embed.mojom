@@ -44,6 +44,9 @@ interface SecureEmbedHost {
   SynchronizeVisualProperties(blink.mojom.FrameVisualProperties visual_properties,
                               bool is_visible);
 
+  // Notifies that the visibility of the plugin has changed.
+  SetVisibility(bool is_visible);
+
   // Notifies that the plugin either gained or lost focus.
   SetFocus(bool focused, blink.mojom.FocusType focus_type);
 };

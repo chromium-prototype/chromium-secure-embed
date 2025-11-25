@@ -33,19 +33,38 @@ namespace content {
 // Nested observer class that forwards relevant events to
 // SecureEmbedConnectorImpl. This avoids function name collisions with
 // CrossProcessFrameConnectorBase.
-class SecureEmbedConnectorImpl::WCObserver : public WebContentsObserver {
+class SecureEmbedConnectorImpl::EmbeddedWebContentsObserver
+    : public WebContentsObserver {
  public:
-  explicit WCObserver(SecureEmbedConnectorImpl* guest_frame,
-                      WebContents* web_contents)
-      : WebContentsObserver(web_contents), guest_frame_(guest_frame) {}
+  explicit EmbeddedWebContentsObserver(SecureEmbedConnectorImpl* connector,
+                                       WebContents* web_contents)
+      : WebContentsObserver(web_contents), connector_(connector) {}
 
-  ~WCObserver() override = default;
+  ~EmbeddedWebContentsObserver() override = default;
 
   // WebContentsObserver:
-  void RenderViewReady() override { guest_frame_->OnRenderViewReady(); }
+  void RenderViewReady() override { connector_->OnRenderViewReady(); }
 
  private:
-  raw_ptr<SecureEmbedConnectorImpl> guest_frame_;
+  raw_ptr<SecureEmbedConnectorImpl> connector_;
+};
+
+class SecureEmbedConnectorImpl::EmbedderWebContentsObserver
+    : public WebContentsObserver {
+ public:
+  explicit EmbedderWebContentsObserver(SecureEmbedConnectorImpl* connector,
+                                       WebContents* web_contents)
+      : WebContentsObserver(web_contents), connector_(connector) {}
+
+  ~EmbedderWebContentsObserver() override = default;
+
+  // WebContentsObserver:
+  void OnVisibilityChanged(Visibility visibility) override {
+    connector_->EmbedderVisibilityChanged(visibility);
+  }
+
+ private:
+  raw_ptr<SecureEmbedConnectorImpl> connector_;
 };
 
 SecureEmbedConnectorImpl::SecureEmbedConnectorImpl(
@@ -53,7 +72,10 @@ SecureEmbedConnectorImpl::SecureEmbedConnectorImpl(
     WebContentsImpl* embedded_web_contents)
     : embedder_web_contents_(embedder_web_contents->GetWeakPtr()),
       guest_web_contents_(embedded_web_contents) {
-  observer_ = std::make_unique<WCObserver>(this, embedded_web_contents);
+  embedded_observer_ = std::make_unique<EmbeddedWebContentsObserver>(
+      this, embedded_web_contents);
+  embedder_observer_ = std::make_unique<EmbedderWebContentsObserver>(
+      this, embedder_web_contents);
 
   // TODO(secure-embed): There may not be a view yet, depending on if the
   // WebContents has been shown or navigated. That means calling GetScreenInfos
@@ -506,6 +528,11 @@ void SecureEmbedConnectorImpl::OnSetInheritedEffectiveTouchAction(
 
 void SecureEmbedConnectorImpl::OnVisibilityChanged(
     blink::mojom::FrameVisibility visibility) {
+  // Visibility changes can come from multiple sources. The embedding
+  // WebContents can update its visibility state which needs propagated to the
+  // embedded WebContents. Similarly, any element in the embedder WebContents
+  // that contains the embedded WebContents can also change visibility state,
+  // from the root to the <embed> (inclusive).
   bool visible = visibility != blink::mojom::FrameVisibility::kNotRendered;
   visibility_ = visibility;
 
@@ -600,11 +627,6 @@ Visibility SecureEmbedConnectorImpl::EmbedderVisibility() {
     return Visibility::HIDDEN;
   }
 
-  // TODO(secure-embed): Need to get the embedder visibility rather than the
-  // embedded visibility. Embedder = SecureEmbed. May need to add a method to
-  // SecureEmbedDelegate for this or ensure that visibility state is pushed to
-  // the GuestFrame when it changes.
-  NOTIMPLEMENTED();
   return embedder_web_contents_->GetVisibility();
 }
 
@@ -647,6 +669,17 @@ input::RenderWidgetHostViewInput* SecureEmbedConnectorImpl::GetRootViewInput() {
 void SecureEmbedConnectorImpl::OnRenderViewReady() {
   // When the RenderView is ready, update the view in case it has changed.
   UpdateViewForCurrentRenderFrameHost();
+}
+
+void SecureEmbedConnectorImpl::EmbedderVisibilityChanged(
+    content::Visibility visibility) {
+  // When the embedder visibility changes, we may need to update the embedded
+  // visibility as well. Changes in the visibility at the embedder WebContents
+  // level don't automatically show up as a visibility change at the embed/
+  // plugin level.
+  if (delegate_) {
+    delegate_->EmbedderVisibilityChanged(visibility);
+  }
 }
 
 void SecureEmbedConnectorImpl::UpdateViewForCurrentRenderFrameHost() {

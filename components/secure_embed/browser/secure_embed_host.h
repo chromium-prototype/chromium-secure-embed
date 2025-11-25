@@ -9,6 +9,7 @@
 #include "base/memory/weak_ptr.h"
 #include "components/secure_embed/common/secure_embed.mojom.h"
 #include "content/public/browser/secure_embed_connector.h"
+#include "content/public/browser/visibility.h"
 #include "mojo/public/cpp/bindings/associated_remote.h"
 #include "mojo/public/cpp/bindings/pending_associated_receiver.h"
 #include "mojo/public/cpp/bindings/self_owned_associated_receiver.h"
@@ -48,6 +49,7 @@ class COMPONENT_EXPORT(SECURE_EMBED) SecureEmbedHost
   void SynchronizeVisualProperties(
       const blink::FrameVisualProperties& visual_properties,
       bool is_visible) override;
+  void SetVisibility(bool is_visible) override;
   void SetFocus(bool focused, blink::mojom::FocusType focus_type) override;
 
   // content::SecureEmbedConnector::Delegate implementation:
@@ -56,6 +58,7 @@ class COMPONENT_EXPORT(SECURE_EMBED) SecureEmbedHost
       const ::viz::LocalSurfaceId& local_surface_id) override;
   void FocusInEmbedder(
       content::SecureEmbedConnector::FocusOperation focus_op) override;
+  void EmbedderVisibilityChanged(content::Visibility visibility) override;
   content::RenderFrameHost* ParentFrame() override;
 
  private:

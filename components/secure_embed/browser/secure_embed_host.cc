@@ -116,6 +116,14 @@ void SecureEmbedHost::SynchronizeVisualProperties(
   }
 }
 
+void SecureEmbedHost::SetVisibility(bool is_visible) {
+  if (content::SecureEmbedConnector* connector = GetConnector()) {
+    connector->OnVisibilityChanged(
+        is_visible ? blink::mojom::FrameVisibility::kRenderedInViewport
+                   : blink::mojom::FrameVisibility::kNotRendered);
+  }
+}
+
 void SecureEmbedHost::SetFocus(bool focused,
                                blink::mojom::FocusType focus_type) {
   know_have_focus_ = false;
@@ -177,6 +185,13 @@ void SecureEmbedHost::FocusInEmbedder(
   }
 
   secure_embed_->RequestFocus(mojo_focus_op);
+}
+
+void SecureEmbedHost::EmbedderVisibilityChanged(
+    content::Visibility visibility) {
+  // TODO(secure-embed): Content visibility could also be OCCLUDED. Need to
+  // determine how that maps.
+  SetVisibility(visibility == content::Visibility::VISIBLE);
 }
 
 content::RenderFrameHost* SecureEmbedHost::ParentFrame() {

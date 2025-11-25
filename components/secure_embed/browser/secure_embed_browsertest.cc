@@ -9,6 +9,8 @@
 #include "components/guest_contents/browser/guest_contents_handle.h"
 #include "components/secure_embed/browser/secure_embed_host.h"
 #include "content/public/browser/browser_context.h"
+#include "content/public/browser/render_widget_host.h"
+#include "content/public/browser/render_widget_host_observer.h"
 #include "content/public/browser/render_widget_host_view.h"
 #include "content/public/browser/secure_embed_connector.h"
 #include "content/public/browser/web_contents.h"
@@ -26,6 +28,48 @@ namespace {
 constexpr char kEmbedTagTestUrl[] = "/secure_embed/embed_tag.html";
 constexpr char kAttachHarnessUrl[] =
     "/secure_embed/single_embed_attach_harness.html";
+
+// Observer that waits for a RenderWidgetHost visibility change.
+class RenderWidgetHostVisibilityWaiter
+    : public content::RenderWidgetHostObserver {
+ public:
+  RenderWidgetHostVisibilityWaiter(content::RenderWidgetHost* rwh,
+                                   bool expected_visibility)
+      : expected_visibility_(expected_visibility) {
+    rwh->AddObserver(this);
+    rwh_ = rwh;
+  }
+
+  ~RenderWidgetHostVisibilityWaiter() override { rwh_->RemoveObserver(this); }
+
+  void Wait() {
+    if (!satisfied_) {
+      run_loop_.Run();
+    }
+  }
+
+  // RenderWidgetHostObserver:
+  void RenderWidgetHostVisibilityChanged(content::RenderWidgetHost* widget_host,
+                                         bool became_visible) override {
+    if (became_visible == expected_visibility_) {
+      satisfied_ = true;
+      run_loop_.Quit();
+    }
+  }
+
+  void RenderWidgetHostDestroyed(
+      content::RenderWidgetHost* widget_host) override {
+    rwh_->RemoveObserver(this);
+    rwh_ = nullptr;
+  }
+
+ private:
+  bool expected_visibility_;
+  bool satisfied_ = false;
+  base::RunLoop run_loop_;
+  raw_ptr<content::RenderWidgetHost> rwh_ = nullptr;
+};
+
 }  // namespace
 
 class SecureEmbedBrowserTest : public content::ContentBrowserTest {
@@ -134,10 +178,12 @@ class SecureEmbedBrowserTest : public content::ContentBrowserTest {
   }
 
   // Create a guest WebContents configured for secure embed.
-  std::unique_ptr<content::WebContents> CreateGuestWebContents() {
+  std::unique_ptr<content::WebContents> CreateGuestWebContents(
+      content::WebContents* embedder = nullptr) {
     content::WebContents::CreateParams create_params(
         shell()->web_contents()->GetBrowserContext());
-    create_params.secure_embed_embedder = shell()->web_contents();
+    create_params.secure_embed_embedder =
+        embedder ? embedder : shell()->web_contents();
     std::unique_ptr<content::WebContents> guest_contents =
         content::WebContents::Create(create_params);
     EXPECT_NE(guest_contents, nullptr);
@@ -283,6 +329,144 @@ IN_PROC_BROWSER_TEST_F(SecureEmbedBrowserTest, VisibilityHiddenStopsRendering) {
       web_contents(),
       "document.querySelector('embed').style.visibility = 'visible';"));
   VerifyBoxRendering(SK_ColorRED);
+}
+
+IN_PROC_BROWSER_TEST_F(SecureEmbedBrowserTest, TabSwitchingUpdatesVisibility) {
+  // This test simulates a tab switch by changing the visibility of the top-
+  // level WebContents. The secure embed guest should receive visibility
+  // updates accordingly. This is similar to SitePerProcessBrowserTest::
+  // TabSwitchingUpdatesVisibility.
+
+  auto guest_contents =
+      SetupHarnessAndGuestWithContent("/secure_embed/red_box.html");
+  AttachGuestToEmbed(guest_contents.get());
+
+  VerifyBoxRendering(SK_ColorRED);
+
+  content::RenderFrameHost* guest_frame = guest_contents->GetPrimaryMainFrame();
+  auto* guest_rwh = guest_frame->GetRenderWidgetHost();
+  ASSERT_NE(guest_rwh, nullptr);
+  EXPECT_TRUE(guest_rwh->GetView()->IsShowing());
+
+  // Simulate tab switch away (hide) and back (show), verifying guest
+  // visibility.
+  {
+    RenderWidgetHostVisibilityWaiter waiter(guest_rwh, false);
+    web_contents()->WasHidden();
+    waiter.Wait();
+    EXPECT_FALSE(guest_rwh->GetView()->IsShowing());
+  }
+
+  {
+    RenderWidgetHostVisibilityWaiter waiter(guest_rwh, true);
+    web_contents()->WasShown();
+    waiter.Wait();
+    EXPECT_TRUE(guest_rwh->GetView()->IsShowing());
+  }
+
+  VerifyBoxRendering(SK_ColorRED);
+}
+
+IN_PROC_BROWSER_TEST_F(SecureEmbedBrowserTest,
+                       VisibilityCrossesSurfaceEmbedBoundary) {
+  // This test creates a nested structure using secure embeds to verify that
+  // visibility changes propagate through multiple embedding levels. When
+  // visibility of the outermost embed is set to hidden, both the middle and
+  // inner guests should report themselves as hidden. This test goes from
+  // visible to hidden and back to visible, verifying the visibility state at
+  // each step.
+
+  // Navigate the parent page to the attach harness.
+  GURL parent_url = embedded_test_server()->GetURL(
+      "/secure_embed/single_embed_attach_harness.html");
+  ASSERT_TRUE(NavigateToURL(web_contents(), parent_url));
+
+  // Create the middle guest and set up its embed for the inner guest.
+  auto middle_guest = CreateGuestWebContents();
+  GURL middle_url = embedded_test_server()->GetURL(
+      "/secure_embed/single_embed_attach_harness.html");
+  ASSERT_TRUE(NavigateToURL(middle_guest.get(), middle_url));
+  ASSERT_TRUE(content::WaitForLoadStop(middle_guest.get()));
+
+  // Create the innermost guest.
+  auto inner_guest = CreateGuestWebContents(middle_guest.get());
+  GURL inner_url = embedded_test_server()->GetURL("/secure_embed/red_box.html");
+  ASSERT_TRUE(NavigateToURL(inner_guest.get(), inner_url));
+  ASSERT_TRUE(content::WaitForLoadStop(inner_guest.get()));
+
+  int inner_guest_id = GetGuestHandleId(inner_guest.get());
+  int middle_guest_id = GetGuestHandleId(middle_guest.get());
+
+  // Attach the middle guest to the parent's embed element.
+  std::string attach_middle_script =
+      "createEmbed(" + base::NumberToString(middle_guest_id) + ");";
+  ASSERT_TRUE(content::ExecJs(web_contents(), attach_middle_script));
+  ASSERT_TRUE(WaitForHostCreation(1));
+
+  // Attach the inner guest to the middle guest's embed element.
+  std::string attach_inner_script =
+      "createEmbed(" + base::NumberToString(inner_guest_id) + ");";
+  ASSERT_TRUE(content::ExecJs(middle_guest.get(), attach_inner_script));
+  ASSERT_TRUE(WaitForHostCreation(2));
+
+  content::RenderFrameHost* parent_frame =
+      web_contents()->GetPrimaryMainFrame();
+  content::RenderFrameHost* middle_frame = middle_guest->GetPrimaryMainFrame();
+  content::RenderFrameHost* inner_frame = inner_guest->GetPrimaryMainFrame();
+
+  auto* parent_rwh = parent_frame->GetRenderWidgetHost();
+  auto* middle_rwh = middle_frame->GetRenderWidgetHost();
+  auto* inner_rwh = inner_frame->GetRenderWidgetHost();
+
+  // Verify all frames are initially visible.
+  EXPECT_TRUE(parent_rwh->GetView()->IsShowing());
+  EXPECT_TRUE(middle_rwh->GetView()->IsShowing());
+  EXPECT_TRUE(inner_rwh->GetView()->IsShowing());
+
+  VerifyBoxRendering(SK_ColorRED);
+
+  // Transition to hidden.
+  {
+    // Create visibility observers for the guest frames to detect when they
+    // become hidden.
+    RenderWidgetHostVisibilityWaiter middle_waiter(middle_rwh, false);
+    RenderWidgetHostVisibilityWaiter inner_waiter(inner_rwh, false);
+
+    // Hide the embed element in the parent, which should propagate to all
+    // nested guests.
+    ASSERT_TRUE(content::ExecJs(
+        web_contents(),
+        "document.querySelector('embed').style.visibility = 'hidden';"));
+
+    middle_waiter.Wait();
+    inner_waiter.Wait();
+
+    // Verify all guest frames are now hidden.
+    EXPECT_TRUE(parent_rwh->GetView()->IsShowing());
+    EXPECT_FALSE(middle_rwh->GetView()->IsShowing());
+    EXPECT_FALSE(inner_rwh->GetView()->IsShowing());
+  }
+
+  // Transition to visible.
+  {
+    // Create visibility observers for the guest frames to detect when they
+    // become visible again.
+    RenderWidgetHostVisibilityWaiter middle_waiter(middle_rwh, true);
+    RenderWidgetHostVisibilityWaiter inner_waiter(inner_rwh, true);
+
+    // Show the embed element again.
+    ASSERT_TRUE(content::ExecJs(
+        web_contents(),
+        "document.querySelector('embed').style.visibility = 'visible';"));
+
+    middle_waiter.Wait();
+    inner_waiter.Wait();
+
+    // Verify all frames are visible again.
+    EXPECT_TRUE(parent_rwh->GetView()->IsShowing());
+    EXPECT_TRUE(middle_rwh->GetView()->IsShowing());
+    EXPECT_TRUE(inner_rwh->GetView()->IsShowing());
+  }
 }
 
 IN_PROC_BROWSER_TEST_F(SecureEmbedBrowserTest, DisplayNoneStopsRendering) {
