@@ -135,11 +135,13 @@ class SecureEmbedConnectorImpl : public SecureEmbedConnector,
   input::RenderWidgetHostViewInput* GetRootViewInput() override;
 
   void OnRenderViewReady();
+  void EmbedderVisibilityChanged(content::Visibility visibility);
 
  private:
   // Forward decl for internal observer that tracks WebContents events and
   // forwards them to this class.
-  class WCObserver;
+  class EmbeddedWebContentsObserver;
+  class EmbedderWebContentsObserver;
 
   // Resets the rect and the viz::LocalSurfaceId of the connector to ensure the
   // unguessable surface ID is not reused after a cross-process navigation.
@@ -158,7 +160,8 @@ class SecureEmbedConnectorImpl : public SecureEmbedConnector,
   // for GuestFrameImpl to get the RenderFrameHost from the guest WebContents.
   RenderFrameHostImpl* current_child_frame_host() const;
 
-  std::unique_ptr<WCObserver> observer_;
+  std::unique_ptr<EmbeddedWebContentsObserver> embedded_observer_;
+  std::unique_ptr<EmbedderWebContentsObserver> embedder_observer_;
   raw_ptr<SecureEmbedConnector::Delegate> delegate_ = nullptr;
 
   base::WeakPtr<WebContents> embedder_web_contents_;

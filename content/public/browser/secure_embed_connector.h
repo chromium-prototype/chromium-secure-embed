@@ -9,6 +9,7 @@
 #include "components/viz/common/surfaces/frame_sink_id.h"
 #include "components/viz/common/surfaces/local_surface_id.h"
 #include "content/common/content_export.h"
+#include "content/public/browser/visibility.h"
 #include "third_party/blink/public/common/input/web_keyboard_event.h"
 #include "third_party/blink/public/mojom/frame/lifecycle.mojom.h"
 #include "third_party/blink/public/mojom/input/focus_type.mojom.h"
@@ -43,6 +44,9 @@ class CONTENT_EXPORT SecureEmbedConnector {
     // Requests focus in the embedder document for either the embedding element,
     // or the elements before or after it in the tab order, based on `focus_op`.
     virtual void FocusInEmbedder(FocusOperation focus_op) = 0;
+
+    // Notifies the delegate that the embedder's visibility has changed.
+    virtual void EmbedderVisibilityChanged(content::Visibility visibility) = 0;
 
     // Returns the exact frame the contents is embedded in.
     virtual RenderFrameHost* ParentFrame() = 0;

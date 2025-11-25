@@ -273,7 +273,15 @@ void SecureEmbedWebPlugin::UpdateFocus(bool focused,
   host_->SetFocus(focused, focus_type);
 }
 
-void SecureEmbedWebPlugin::UpdateVisibility(bool is_visible) {}
+void SecureEmbedWebPlugin::UpdateVisibility(bool is_visible) {
+  // Note that visibility could be different than the plugin is aware if the
+  // embedder WebContents is not visible.
+  if (last_is_visible_ == is_visible) {
+    return;
+  }
+  last_is_visible_ = is_visible;
+  host_->SetVisibility(last_is_visible_);
+}
 
 blink::WebInputEventResult SecureEmbedWebPlugin::HandleInputEvent(
     const blink::WebCoalescedInputEvent& coalesced_event,
