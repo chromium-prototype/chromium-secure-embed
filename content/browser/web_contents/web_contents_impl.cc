@@ -3397,8 +3397,8 @@ void WebContentsImpl::AttachInnerWebContentsImpl(
   render_frame_host_impl->set_inner_tree_main_frame_tree_node_id(
       inner_main_frame->frame_tree_node()->frame_tree_node_id());
 
-  // When attaching a WebContents as an inner WebContents, we need to replace
-  // the Webcontents' view with a WebContentsViewChildFrame.
+  // When attaching a WebContents as an secure-embed child WebContents, we need
+  // to replace the Webcontents' view with a WebContentsViewChildFrame.
   inner_web_contents_impl->view_ = std::make_unique<WebContentsViewChildFrame>(
       inner_web_contents_impl,
       GetContentClient()->browser()->GetWebContentsViewDelegate(

@@ -133,7 +133,7 @@ class SecureEmbedConnectorImpl : public SecureEmbedConnector,
   input::RenderWidgetHostViewInput* GetParentViewInput() override;
   input::RenderWidgetHostViewInput* GetRootViewInput() override;
 
-  // Updates the view_ member to track the current RenderWidgetHostView
+  // Updates the `view_` member to track the current RenderWidgetHostView
   // associated with the guest WebContents.
   void UpdateViewForCurrentRenderFrameHost();
 
