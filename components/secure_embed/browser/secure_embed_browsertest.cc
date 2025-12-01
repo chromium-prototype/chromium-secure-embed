@@ -135,15 +135,12 @@ class SecureEmbedBrowserTest : public content::ContentBrowserTest {
     ASSERT_TRUE(NavigateToURL(web_contents(), harness_url));
   }
 
-  // Create a guest WebContents configured for secure embed.
   std::unique_ptr<content::WebContents> CreateGuestWebContents() {
     content::WebContents::CreateParams create_params(
         shell()->web_contents()->GetBrowserContext());
-    create_params.secure_embed_embedder = shell()->web_contents();
     std::unique_ptr<content::WebContents> guest_contents =
         content::WebContents::Create(create_params);
     EXPECT_NE(guest_contents, nullptr);
-    EXPECT_NE(guest_contents->GetSecureEmbedConnector(), nullptr);
     return guest_contents;
   }
 
@@ -166,6 +163,7 @@ class SecureEmbedBrowserTest : public content::ContentBrowserTest {
         "createEmbed(" + base::NumberToString(guest_handle->id()) + ");";
     ASSERT_TRUE(content::ExecJs(web_contents(), script));
     ASSERT_TRUE(WaitForHostCreation(expected_host_count));
+    EXPECT_NE(guest_contents->GetSecureEmbedConnector(), nullptr);
   }
 
   // Get the guest handle for the provided guest WebContents.
