@@ -442,4 +442,45 @@ IN_PROC_BROWSER_TEST_F(SecureEmbedBrowserTest, ReattachSameGuestToNewEmbed) {
   VerifyBoxRendering(SK_ColorRED);
 }
 
+#if defined(USE_AURA)
+// Test that the proper (top-level) InputManager is used for embedded
+// WebContents. BoundingBoxUpdateWaiter is aura-specific. This triggers
+// a selection change on top-level when the embed is focused.
+IN_PROC_BROWSER_TEST_F(SecureEmbedBrowserTest, InputManager) {
+  auto guest_contents =
+      SetupHarnessAndGuestWithContent("/secure_embed/red_box.html");
+  AttachGuestToEmbed(guest_contents.get());
+
+  content::BoundingBoxUpdateWaiter waiter(web_contents());
+
+  const char kAddTextScript[] = R"(
+     let text = document.createTextNode("Some text to select");
+     document.body.appendChild(text);
+  )";
+  ASSERT_TRUE(content::ExecJs(web_contents(), kAddTextScript));
+  ASSERT_TRUE(content::ExecJs(guest_contents.get(), kAddTextScript));
+
+  const char kFocusScript[] = R"(
+    document.getElementsByTagName("embed")[0].focus();
+  )";
+
+  ASSERT_TRUE(content::ExecJs(web_contents(), kFocusScript));
+
+  const char kSelectionChange[] = R"(
+     let range = document.createRange();
+     range.selectNodeContents(document.body);
+     window.getSelection().addRange(range);
+  )";
+
+  // BoundingBoxUpdateWaiter asks the top-level for active frame's selection
+  // change whenever the top-level's selection changes, so we need to have
+  // both frames change their selections.
+  ASSERT_TRUE(content::ExecJs(guest_contents.get(), kSelectionChange));
+  ASSERT_TRUE(content::ExecJs(web_contents(), kSelectionChange));
+
+  waiter.Wait();
+}
+
+#endif
+
 }  // namespace secure_embed
