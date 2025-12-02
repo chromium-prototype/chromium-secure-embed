@@ -60,7 +60,7 @@ class SecureEmbedBrowserTest : public content::ContentBrowserTest {
         .ExtractInt();
   }
 
-  bool WaitForHostCreation(size_t expected_count) {
+  bool WaitForHostAttachment(size_t expected_count) {
     // Host creation is asynchronous because it requires mojo IPC between
     // the renderer process (SecureEmbedWebPlugin) and browser process
     // (SecureEmbedHost). Poll until the expected number of hosts are created.
@@ -162,7 +162,7 @@ class SecureEmbedBrowserTest : public content::ContentBrowserTest {
     std::string script =
         "createEmbed(" + base::NumberToString(guest_handle->id()) + ");";
     ASSERT_TRUE(content::ExecJs(web_contents(), script));
-    ASSERT_TRUE(WaitForHostCreation(expected_host_count));
+    ASSERT_TRUE(WaitForHostAttachment(expected_host_count));
     EXPECT_NE(guest_contents->GetSecureEmbedConnector(), nullptr);
   }
 
@@ -206,7 +206,7 @@ IN_PROC_BROWSER_TEST_F(SecureEmbedBrowserTest, EmbedTagCreatesPlugin) {
 
   EXPECT_EQ(1, CountEmbedElementsInPage());
 
-  ASSERT_TRUE(WaitForHostCreation(1));
+  ASSERT_TRUE(WaitForHostAttachment(1));
   EXPECT_EQ(1u, SecureEmbedHost::GetInstanceCountForTesting());
 }
 
