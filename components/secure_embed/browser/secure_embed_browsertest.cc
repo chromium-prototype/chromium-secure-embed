@@ -452,7 +452,7 @@ IN_PROC_BROWSER_TEST_F(SecureEmbedBrowserTest, ReattachSameGuestToNewEmbed) {
 //  query TextInputManager's selection state to potentially update the
 //  clipboard; this test exercises a similar code path via
 //  BoundingBoxUpdateWaiter querying the selection's bounding box).
-IN_PROC_BROWSER_TEST_F(SecureEmbedBrowserTest, InputManager) {
+IN_PROC_BROWSER_TEST_F(SecureEmbedBrowserTest, TextInputManager) {
   auto guest_contents =
       SetupHarnessAndGuestWithContent("/secure_embed/red_box.html");
   AttachGuestToEmbed(guest_contents.get());
