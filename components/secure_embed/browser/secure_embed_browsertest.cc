@@ -65,7 +65,8 @@ class SecureEmbedBrowserTest : public content::ContentBrowserTest {
     // the renderer process (SecureEmbedWebPlugin) and browser process
     // (SecureEmbedHost). Poll until the expected number of hosts are created.
     return base::test::RunUntil([&]() {
-      return SecureEmbedHost::GetInstanceCountForTesting() >= expected_count;
+      return SecureEmbedHost::GetAttachedInstanceCountForTesting() >=
+             expected_count;
     });
   }
 
