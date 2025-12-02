@@ -17,6 +17,7 @@
 #include "content/public/test/browser_test_utils.h"
 #include "content/public/test/content_browser_test.h"
 #include "content/public/test/no_renderer_crashes_assertion.h"
+#include "content/public/test/text_input_test_utils.h"
 #include "content/shell/browser/shell.h"
 #include "third_party/skia/include/core/SkBitmap.h"
 #include "third_party/skia/include/core/SkColor.h"
@@ -442,16 +443,21 @@ IN_PROC_BROWSER_TEST_F(SecureEmbedBrowserTest, ReattachSameGuestToNewEmbed) {
   VerifyBoxRendering(SK_ColorRED);
 }
 
-#if defined(USE_AURA)
-// Test that the proper (top-level) InputManager is used for embedded
-// WebContents. BoundingBoxUpdateWaiter is aura-specific. This triggers
-// a selection change on top-level when the embed is focused.
+#if defined(USE_AURA)  // BoundingBoxUpdateWaiter is aura-specific.
+
+// Test that the proper (top-level) TextInputManager is used for embedded
+// WebContents. This tests triggers a selection change at top-level when the
+// embed is focused, which used to crash on querying the selection state.
+// (In particular, platforms with a selection clipboard buffer --- e.g. X11 ---
+//  query TextInputManager's selection state to potentially update the
+//  clipboard; this test exercises a similar code path via
+//  BoundingBoxUpdateWaiter querying the selection's bounding box).
 IN_PROC_BROWSER_TEST_F(SecureEmbedBrowserTest, InputManager) {
   auto guest_contents =
       SetupHarnessAndGuestWithContent("/secure_embed/red_box.html");
   AttachGuestToEmbed(guest_contents.get());
-
-  content::BoundingBoxUpdateWaiter waiter(web_contents());
+  content::TextInputManagerTester input_tester(web_contents());
+  content::TextInputManagerTester guest_input_tester(guest_contents.get());
 
   const char kAddTextScript[] = R"(
      let text = document.createTextNode("Some text to select");
@@ -475,10 +481,15 @@ IN_PROC_BROWSER_TEST_F(SecureEmbedBrowserTest, InputManager) {
   // BoundingBoxUpdateWaiter asks the top-level for active frame's selection
   // change whenever the top-level's selection changes, so we need to have
   // both frames change their selections.
+  content::BoundingBoxUpdateWaiter waiter(web_contents());
   ASSERT_TRUE(content::ExecJs(guest_contents.get(), kSelectionChange));
   ASSERT_TRUE(content::ExecJs(web_contents(), kSelectionChange));
 
   waiter.Wait();
+
+  // If the same TextInputManager is used for the guest as top-level, they'll
+  // have the same option of last updated view.
+  EXPECT_EQ(input_tester.GetUpdatedView(), guest_input_tester.GetUpdatedView());
 }
 
 #endif
