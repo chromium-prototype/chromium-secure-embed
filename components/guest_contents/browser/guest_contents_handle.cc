@@ -82,7 +82,7 @@ void GuestContentsHandle::WebContentsDestroyed() {
 }
 
 GuestId GuestContentsHandle::GetNextId() {
-  static GuestId next_id = 0;
+  static GuestId next_id = 1;
   return next_id++;
 }
 

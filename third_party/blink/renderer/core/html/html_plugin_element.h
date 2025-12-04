@@ -119,6 +119,8 @@ class CORE_EXPORT HTMLPlugInElement
   // if necessary.
   virtual LayoutEmbeddedContent* LayoutEmbeddedContentForJSBindings() const;
 
+  void ParseAttribute(const AttributeModificationParams& params) override;
+
   LayoutEmbeddedObject* GetLayoutEmbeddedObject() const;
   bool AllowedToLoadFrameURL(const String& url);
   bool RequestObject(const PluginParameters& plugin_params);

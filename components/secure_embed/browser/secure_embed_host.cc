@@ -30,13 +30,7 @@ SecureEmbedHost::SecureEmbedHost(content::RenderFrameHost* render_frame_host)
 
 SecureEmbedHost::~SecureEmbedHost() {
   --instance_count_for_testing_;
-  if (content::SecureEmbedConnector* connector = GetConnector()) {
-    // Note: we detach delegate after changing visibility so that
-    // performance_manager doesn't get pertrurbed by us messing w/visibility
-    // of something not top-level.
-    connector->OnVisibilityChanged(blink::mojom::FrameVisibility::kNotRendered);
-    connector->SetDelegate(nullptr);
-  }
+  Detach();
 }
 
 // static
@@ -61,6 +55,7 @@ void SecureEmbedHost::Attach(int64_t content_id) {
   CHECK(secure_embed_);
 
   int guest_id = static_cast<int>(content_id);
+  CHECK(guest_id > 0);
   guest_contents::GuestContentsHandle* guest_handle =
       guest_contents::GuestContentsHandle::FromID(guest_id);
 
@@ -77,26 +72,46 @@ void SecureEmbedHost::Attach(int64_t content_id) {
     return;
   }
 
-  know_have_focus_ = false;
+  // If the guest WebContents is already attached to a SecureEmbedConnector, we
+  // need to detach it first. Since we're detaching some other host we need to
+  // notify it of the detachment so the host and SecureEmbedWebPlugin stay in
+  // sync.
+  if (auto* connector = web_contents_to_attach->GetSecureEmbedConnector()) {
+    connector->GetDelegate()->DetachedByHost();
+    content::SecureEmbedConnector::Detach(web_contents_to_attach);
+  }
+
+  // If this host already has a guest attached, we need to detach it first. Note
+  // that this request comes from the embedder side, so we don't notify the
+  // SecureEmbed as it initiated the detachment.
+  Detach();
+
   guest_contents_ = web_contents_to_attach->GetWeakPtr();
   content::SecureEmbedConnector::Attach(
       content::WebContents::FromRenderFrameHost(ParentFrame()),
-      web_contents_to_attach);
+      web_contents_to_attach, this);
 
   ++attached_instance_count_for_testing_;
-  // TODO(secure-embed): decrement attached_instance_count_for_testing_ on
-  // detachment.
 
-  auto* connector = GetConnector();
-  connector->SetDelegate(this);
   if (web_contents_to_attach->IsCrashed()) {
     // The child process may have crashed before the renderer for embedder
     // got chance to attach it.
     secure_embed_->ChildProcessGone();
   } else {
+    auto* connector = GetConnector();
     CHECK(connector->GetFrameSinkId().is_valid());
     secure_embed_->SetFrameSinkId(connector->GetFrameSinkId());
   }
+}
+
+void SecureEmbedHost::Detach() {
+  if (GetConnector()) {
+    content::SecureEmbedConnector::Detach(guest_contents_.get());
+    guest_contents_ = nullptr;
+    attached_instance_count_for_testing_--;
+  }
+  know_have_focus_ = false;
+  CHECK(!guest_contents_);
 }
 
 void SecureEmbedHost::SynchronizeVisualProperties(
@@ -155,6 +170,17 @@ void SecureEmbedHost::UpdateLocalSurfaceIdFromChild(
 void SecureEmbedHost::ChildProcessGone() {
   if (secure_embed_) {
     secure_embed_->ChildProcessGone();
+  }
+}
+
+void SecureEmbedHost::DetachedByHost() {
+  // We're being forcibly detached (guest being re-attached elsewhere).
+  CHECK(guest_contents_);
+
+  if (secure_embed_) {
+    // Notify the renderer's SecureEmbedWebPlugin that the host initiated
+    // the detachment.
+    secure_embed_->DetachedByHost();
   }
 }
 
