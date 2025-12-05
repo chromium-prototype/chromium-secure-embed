@@ -50,8 +50,8 @@ WebContentsViewChildFrame::WebContentsViewChildFrame(
 WebContentsViewChildFrame::~WebContentsViewChildFrame() = default;
 
 WebContentsView* WebContentsViewChildFrame::GetOuterView() {
-  if (auto* hosting_web_contents = web_contents_->GetOuterWebContents()) {
-    return hosting_web_contents->GetView();
+  if (auto* outer_web_contents = web_contents_->GetOuterWebContents()) {
+    return outer_web_contents->GetView();
   }
   if (auto* secure_embed_connector = web_contents_->GetSecureEmbedConnector()) {
     return static_cast<SecureEmbedConnectorImpl*>(secure_embed_connector)
@@ -66,9 +66,9 @@ const WebContentsView* WebContentsViewChildFrame::GetOuterView() const {
 }
 
 RenderViewHostDelegateView* WebContentsViewChildFrame::GetOuterDelegateView() {
-  if (auto* hosting_web_contents = web_contents_->GetOuterWebContents()) {
+  if (auto* outer_web_contents = web_contents_->GetOuterWebContents()) {
     RenderViewHostImpl* outer_rvh = static_cast<RenderViewHostImpl*>(
-        hosting_web_contents->GetRenderViewHost());
+        outer_web_contents->GetRenderViewHost());
     CHECK(outer_rvh);
     return outer_rvh->GetDelegate()->GetDelegateView();
   }
@@ -278,8 +278,8 @@ void WebContentsViewChildFrame::StartDragging(
     view->StartDragging(drop_data, source_origin, ops, image, cursor_offset,
                         drag_obj_rect, event_info, source_rwh);
   } else {
-    if (auto* hosting_web_contents = web_contents_->GetOuterWebContents()) {
-      hosting_web_contents->SystemDragEnded(source_rwh);
+    if (auto* outer_web_contents = web_contents_->GetOuterWebContents()) {
+      outer_web_contents->SystemDragEnded(source_rwh);
     } else if (auto* secure_embed_connector =
                    web_contents_->GetSecureEmbedConnector()) {
       static_cast<SecureEmbedConnectorImpl*>(secure_embed_connector)
