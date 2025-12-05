@@ -86,8 +86,29 @@ SecureEmbedConnectorImpl::~SecureEmbedConnectorImpl() {
   SetView(nullptr, /*allow_paint_holding=*/false);
 }
 
-WebContents* SecureEmbedConnectorImpl::GetEmbedderWebContents() {
-  return embedder_web_contents_.get();
+WebContentsView* SecureEmbedConnectorImpl::GetEmbedderWebContentsView() {
+  if (embedder_web_contents_) {
+    return static_cast<WebContentsImpl*>(embedder_web_contents_.get())
+        ->GetView();
+  }
+  return nullptr;
+}
+
+RenderViewHostDelegateView*
+SecureEmbedConnectorImpl::GetEmbedderRenderViewHostDelegateView() {
+  if (embedder_web_contents_) {
+    return static_cast<WebContentsImpl*>(embedder_web_contents_.get())
+        ->GetDelegateView();
+  }
+  return nullptr;
+}
+
+void SecureEmbedConnectorImpl::EmbedderSystemDragEnded(
+    RenderWidgetHost* source_rwh) {
+  if (embedder_web_contents_) {
+    static_cast<WebContentsImpl*>(embedder_web_contents_.get())
+        ->SystemDragEnded(source_rwh);
+  }
 }
 
 input::RenderWidgetHostInputEventRouter*

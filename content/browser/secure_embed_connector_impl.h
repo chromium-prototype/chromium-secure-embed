@@ -34,6 +34,9 @@ class FrameTree;
 class RenderFrameHostImpl;
 class WebContentsImpl;
 class TextInputManager;
+class WebContentsView;
+class RenderViewHostDelegateView;
+class RenderWidgetHost;
 
 class SecureEmbedConnectorImpl : public SecureEmbedConnector,
                                  public CrossProcessFrameConnectorBase {
@@ -43,7 +46,9 @@ class SecureEmbedConnectorImpl : public SecureEmbedConnector,
                            WebContentsImpl* embedded_web_contents);
   ~SecureEmbedConnectorImpl() override;
 
-  WebContents* GetEmbedderWebContents();
+  WebContentsView* GetEmbedderWebContentsView();
+  RenderViewHostDelegateView* GetEmbedderRenderViewHostDelegateView();
+  void EmbedderSystemDragEnded(RenderWidgetHost* source_rwh);
 
   // Returns the input event router that the WebContents this is owned by
   // should register with.

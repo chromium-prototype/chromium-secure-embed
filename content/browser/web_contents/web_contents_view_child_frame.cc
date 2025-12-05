@@ -50,15 +50,7 @@ WebContentsViewChildFrame::WebContentsViewChildFrame(
 WebContentsViewChildFrame::~WebContentsViewChildFrame() = default;
 
 WebContentsImpl* WebContentsViewChildFrame::GetHostingWebContents() {
-  if (auto* outer_web_contents = web_contents_->GetOuterWebContents()) {
-    return outer_web_contents;
-  }
-  if (auto* secure_embed_connector = web_contents_->GetSecureEmbedConnector()) {
-    return static_cast<WebContentsImpl*>(
-        static_cast<SecureEmbedConnectorImpl*>(secure_embed_connector)
-            ->GetEmbedderWebContents());
-  }
-  return nullptr;
+  return web_contents_->GetOuterWebContents();
 }
 
 const WebContentsImpl* WebContentsViewChildFrame::GetHostingWebContents()
@@ -70,6 +62,10 @@ WebContentsView* WebContentsViewChildFrame::GetOuterView() {
   if (auto* hosting_web_contents = GetHostingWebContents()) {
     return hosting_web_contents->GetView();
   }
+  if (auto* secure_embed_connector = web_contents_->GetSecureEmbedConnector()) {
+    return static_cast<SecureEmbedConnectorImpl*>(secure_embed_connector)
+        ->GetEmbedderWebContentsView();
+  }
 
   return nullptr;
 }
@@ -79,10 +75,17 @@ const WebContentsView* WebContentsViewChildFrame::GetOuterView() const {
 }
 
 RenderViewHostDelegateView* WebContentsViewChildFrame::GetOuterDelegateView() {
-  RenderViewHostImpl* outer_rvh = static_cast<RenderViewHostImpl*>(
-      GetHostingWebContents()->GetRenderViewHost());
-  CHECK(outer_rvh);
-  return outer_rvh->GetDelegate()->GetDelegateView();
+  if (auto* hosting_web_contents = GetHostingWebContents()) {
+    RenderViewHostImpl* outer_rvh = static_cast<RenderViewHostImpl*>(
+        hosting_web_contents->GetRenderViewHost());
+    CHECK(outer_rvh);
+    return outer_rvh->GetDelegate()->GetDelegateView();
+  }
+  if (auto* secure_embed_connector = web_contents_->GetSecureEmbedConnector()) {
+    return static_cast<SecureEmbedConnectorImpl*>(secure_embed_connector)
+        ->GetEmbedderRenderViewHostDelegateView();
+  }
+  return nullptr;
 }
 
 gfx::NativeView WebContentsViewChildFrame::GetNativeView() const {
@@ -284,7 +287,13 @@ void WebContentsViewChildFrame::StartDragging(
     view->StartDragging(drop_data, source_origin, ops, image, cursor_offset,
                         drag_obj_rect, event_info, source_rwh);
   } else {
-    GetHostingWebContents()->SystemDragEnded(source_rwh);
+    if (auto* hosting_web_contents = GetHostingWebContents()) {
+      hosting_web_contents->SystemDragEnded(source_rwh);
+    } else if (auto* secure_embed_connector =
+                   web_contents_->GetSecureEmbedConnector()) {
+      static_cast<SecureEmbedConnectorImpl*>(secure_embed_connector)
+          ->EmbedderSystemDragEnded(source_rwh);
+    }
   }
 }
 
