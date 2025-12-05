@@ -161,6 +161,8 @@ class SecureEmbedConnectorImpl : public SecureEmbedConnector,
       const blink::mojom::ViewportIntersectionState& intersection_state,
       bool include_visual_properties);
 
+  WebContentsImpl* embedder_web_contents();
+
   // Get the RenderFrameHost for the embedded WebContents. This is similar to
   // the CrossProcessFrameConnectorBase::current_child_frame_host(), but adapted
   // for GuestFrameImpl to get the RenderFrameHost from the guest WebContents.
