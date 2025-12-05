@@ -64,7 +64,6 @@ void SecureEmbedHost::AttachConnector(int64_t content_id) {
   guest_contents::GuestContentsHandle* guest_handle =
       guest_contents::GuestContentsHandle::FromID(guest_id);
 
-  // TODO(secure-embed): These LOG's should probably be ReportBadMessage.
   if (!guest_handle) {
     mojo::ReportBadMessage(
         "GuestContentsHandle not found for content_id in "
