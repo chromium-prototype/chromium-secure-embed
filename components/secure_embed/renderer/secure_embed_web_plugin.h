@@ -70,7 +70,7 @@ class SecureEmbedWebPlugin : public blink::WebPlugin,
   void UpdateLocalSurfaceIdFromChild(
       const ::viz::LocalSurfaceId& local_surface_id) override;
   void ChildProcessGone() override;
-  void DetachedByHost() override;
+  void DetachPlugin() override;
   void RequestFocus(mojom::FocusOperation focus_op) override;
 
   // cc::ContentLayerClient, used only if we're painting a sad frame.

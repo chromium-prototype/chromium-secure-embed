@@ -53,6 +53,9 @@ class CONTENT_EXPORT SecureEmbedConnector {
 
     // Returns the exact frame the contents is embedded in.
     virtual RenderFrameHost* ParentFrame() = 0;
+
+    // Returns whether this delegate's host still has an attached guest.
+    virtual bool IsAttachedForTesting() const = 0;
   };
 
   class Observer : public base::CheckedObserver {
@@ -67,8 +70,7 @@ class CONTENT_EXPORT SecureEmbedConnector {
 
   // Attach a WebContents to a parent WebContents. This creates a
   // SecureEmbedConnector owned by the child WebContents.
-  static void Attach(WebContents* parent_web_contents,
-                     WebContents* child_web_contents,
+  static void Attach(WebContents* child_web_contents,
                      SecureEmbedConnector::Delegate* delegate);
 
   // Detach the SecureEmbedConnector from the child WebContents. This destroys

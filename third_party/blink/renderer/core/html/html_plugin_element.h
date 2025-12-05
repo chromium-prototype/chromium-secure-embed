@@ -110,6 +110,7 @@ class CORE_EXPORT HTMLPlugInElement
       const QualifiedName&,
       const AtomicString&,
       HeapVector<CSSPropertyValue, 8>&) override;
+  void ParseAttribute(const AttributeModificationParams& params) override;
   // HTMLFrameOwnerElement overrides:
   void DisconnectContentFrame() override;
   void NaturalSizingInfoChanged() final;
@@ -118,8 +119,6 @@ class CORE_EXPORT HTMLPlugInElement
   // Create or update the LayoutEmbeddedContent and return it, triggering layout
   // if necessary.
   virtual LayoutEmbeddedContent* LayoutEmbeddedContentForJSBindings() const;
-
-  void ParseAttribute(const AttributeModificationParams& params) override;
 
   LayoutEmbeddedObject* GetLayoutEmbeddedObject() const;
   bool AllowedToLoadFrameURL(const String& url);

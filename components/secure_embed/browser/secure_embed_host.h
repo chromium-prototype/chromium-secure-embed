@@ -42,8 +42,8 @@ class COMPONENT_EXPORT(SECURE_EMBED) SecureEmbedHost
   // mojom::SecureEmbedHost implementation:
   void SetSecureEmbed(
       mojo::PendingAssociatedRemote<mojom::SecureEmbed> secure_embed) override;
-  void Attach(int64_t content_id) override;
-  void Detach() override;
+  void AttachConnector(int64_t content_id) override;
+  void DetachConnector() override;
   void SynchronizeVisualProperties(
       const blink::FrameVisualProperties& visual_properties,
       bool is_visible) override;
@@ -58,6 +58,7 @@ class COMPONENT_EXPORT(SECURE_EMBED) SecureEmbedHost
   void ChildProcessGone() override;
   void DetachedByHost() override;
   content::RenderFrameHost* ParentFrame() override;
+  bool IsAttachedForTesting() const override;
 
  private:
   explicit SecureEmbedHost(content::RenderFrameHost*);

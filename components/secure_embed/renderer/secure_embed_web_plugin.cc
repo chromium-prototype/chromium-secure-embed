@@ -81,7 +81,9 @@ bool SecureEmbedWebPlugin::Initialize(blink::WebPluginContainer* container) {
     host_->SetSecureEmbed(std::move(pending_remote));
 
     // Then attach with the content ID.
-    host_->Attach(contents_id_);
+    if (contents_id_ > 0) {
+      host_->AttachConnector(contents_id_);
+    }
   }
   return true;
 }
@@ -290,17 +292,17 @@ void SecureEmbedWebPlugin::UpdateDataAttribute(
 
   int new_contents_id = -1;
   if (!base::StringToInt(attribute_value.Utf8(), &new_contents_id) ||
-      new_contents_id < 0 || new_contents_id == contents_id_) {
+      new_contents_id == contents_id_) {
     return;
   }
 
   contents_id_ = new_contents_id;
   if (host_) {
-    if (contents_id_ == 0) {
-      host_->Detach();
+    if (contents_id_ <= 0) {
+      host_->DetachConnector();
       DetachInternal();
     } else {
-      host_->Attach(contents_id_);
+      host_->AttachConnector(contents_id_);
     }
   }
 }
@@ -373,13 +375,15 @@ void SecureEmbedWebPlugin::ChildProcessGone() {
   container_->ScheduleAnimation();
 }
 
-void SecureEmbedWebPlugin::DetachedByHost() {
+void SecureEmbedWebPlugin::DetachPlugin() {
   // The browser forcibly detached the guest that was previously attached to
   // to this plugin. This can happen when the guest is being re-attached
   // elsewhere.
-  // TODO(secure-embed): If a plugin gets detached by the host, should we push
-  // back to the DOM that the content ID is now 0?
   contents_id_ = 0;
+  // We send this change back to the renderer so that the data-content-id
+  // attribute is updated accordingly. It'll be async but will allow detection
+  // of the detachment eventually.
+  container_->GetElement().SetAttribute("data-content-id", "0");
   DetachInternal();
 }
 

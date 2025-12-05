@@ -34,7 +34,7 @@ interface SecureEmbed {
 
   // Called when the browser forcibly detaches the guest, typically because
   // it's being re-attached elsewhere.
-  DetachedByHost();
+  DetachPlugin();
 };
 
 // Implemented by Browser. Available on RenderFrameHost.
@@ -45,10 +45,10 @@ interface SecureEmbedHost {
 
   // Attaches the guest content identified by `content_id` (a
   // GuestContentsHandle) to the host.
-  Attach(int64 content_id);
+  AttachConnector(int64 content_id);
 
   // Detaches the guest content from the host.
-  Detach();
+  DetachConnector();
 
   // `is_visible` here reports visibility with respect to visibility: CSS
   // property; the embed may also be hidden by display:none in which case

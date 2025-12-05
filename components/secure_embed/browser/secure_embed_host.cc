@@ -30,7 +30,7 @@ SecureEmbedHost::SecureEmbedHost(content::RenderFrameHost* render_frame_host)
 
 SecureEmbedHost::~SecureEmbedHost() {
   --instance_count_for_testing_;
-  Detach();
+  DetachConnector();
 }
 
 // static
@@ -49,26 +49,34 @@ void SecureEmbedHost::SetSecureEmbed(
       &SecureEmbedHost::OnSecureEmbedDisconnected, base::Unretained(this)));
 }
 
-void SecureEmbedHost::Attach(int64_t content_id) {
-  // Should never call Attach without having a valid SecureEmbed remote already
+void SecureEmbedHost::AttachConnector(int64_t content_id) {
+  // Should never call attach without having a valid SecureEmbed remote already
   // bound.
   CHECK(secure_embed_);
 
   int guest_id = static_cast<int>(content_id);
-  CHECK(guest_id > 0);
+  if (guest_id <= 0) {
+    mojo::ReportBadMessage(
+        "Invalid content_id in SecureEmbedHost::AttachConnector");
+    return;
+  }
+
   guest_contents::GuestContentsHandle* guest_handle =
       guest_contents::GuestContentsHandle::FromID(guest_id);
 
   // TODO(secure-embed): These LOG's should probably be ReportBadMessage.
   if (!guest_handle) {
-    LOG(ERROR) << "GuestContentsHandle not found for content_id: "
-               << content_id;
+    mojo::ReportBadMessage(
+        "GuestContentsHandle not found for content_id in "
+        "SecureEmbedHost::AttachConnector");
     return;
   }
 
   content::WebContents* web_contents_to_attach = guest_handle->web_contents();
   if (!web_contents_to_attach) {
-    LOG(ERROR) << "WebContents not found for GuestContentsHandle";
+    mojo::ReportBadMessage(
+        "WebContents not found for GuestContentsHandle in "
+        "SecureEmbedHost::AttachConnector");
     return;
   }
 
@@ -78,18 +86,16 @@ void SecureEmbedHost::Attach(int64_t content_id) {
   // sync.
   if (auto* connector = web_contents_to_attach->GetSecureEmbedConnector()) {
     connector->GetDelegate()->DetachedByHost();
-    content::SecureEmbedConnector::Detach(web_contents_to_attach);
+    CHECK(web_contents_to_attach->GetSecureEmbedConnector() == nullptr);
   }
 
   // If this host already has a guest attached, we need to detach it first. Note
   // that this request comes from the embedder side, so we don't notify the
   // SecureEmbed as it initiated the detachment.
-  Detach();
+  DetachConnector();
 
   guest_contents_ = web_contents_to_attach->GetWeakPtr();
-  content::SecureEmbedConnector::Attach(
-      content::WebContents::FromRenderFrameHost(ParentFrame()),
-      web_contents_to_attach, this);
+  content::SecureEmbedConnector::Attach(web_contents_to_attach, this);
 
   ++attached_instance_count_for_testing_;
 
@@ -104,7 +110,7 @@ void SecureEmbedHost::Attach(int64_t content_id) {
   }
 }
 
-void SecureEmbedHost::Detach() {
+void SecureEmbedHost::DetachConnector() {
   if (GetConnector()) {
     content::SecureEmbedConnector::Detach(guest_contents_.get());
     guest_contents_ = nullptr;
@@ -180,8 +186,9 @@ void SecureEmbedHost::DetachedByHost() {
   if (secure_embed_) {
     // Notify the renderer's SecureEmbedWebPlugin that the host initiated
     // the detachment.
-    secure_embed_->DetachedByHost();
+    secure_embed_->DetachPlugin();
   }
+  DetachConnector();
 }
 
 void SecureEmbedHost::FocusInEmbedder(
@@ -217,6 +224,10 @@ content::RenderFrameHost* SecureEmbedHost::ParentFrame() {
 
 content::SecureEmbedConnector* SecureEmbedHost::GetConnector() {
   return guest_contents_ ? guest_contents_->GetSecureEmbedConnector() : nullptr;
+}
+
+bool SecureEmbedHost::IsAttachedForTesting() const {
+  return guest_contents_ != nullptr;
 }
 
 }  // namespace secure_embed

@@ -82,6 +82,7 @@ void GuestContentsHandle::WebContentsDestroyed() {
 }
 
 GuestId GuestContentsHandle::GetNextId() {
+  // GuestId of 0 is reserved to mean "no guest/content".
   static GuestId next_id = 1;
   return next_id++;
 }
