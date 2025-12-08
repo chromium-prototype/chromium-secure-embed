@@ -58,16 +58,6 @@ class CONTENT_EXPORT SecureEmbedConnector {
     virtual bool IsAttachedForTesting() const = 0;
   };
 
-  class Observer : public base::CheckedObserver {
-   public:
-    virtual void OnSecureEmbedAttached(RenderFrameHost* parent_frame,
-                                       WebContents* parent_web_contents,
-                                       WebContents* child_web_contents) = 0;
-    virtual void OnSecureEmbedDetached(RenderFrameHost* parent_frame,
-                                       WebContents* parent_web_contents,
-                                       WebContents* child_web_contents) = 0;
-  };
-
   // Attach a WebContents to a parent WebContents. This creates a
   // SecureEmbedConnector owned by the child WebContents.
   static void Attach(WebContents* child_web_contents,
@@ -78,9 +68,6 @@ class CONTENT_EXPORT SecureEmbedConnector {
   static void Detach(WebContents* child_web_contents);
 
   virtual ~SecureEmbedConnector() = default;
-
-  virtual void AddObserver(Observer* observer) = 0;
-  virtual void RemoveObserver(Observer* observer) = 0;
 
   virtual Delegate* GetDelegate() = 0;
 

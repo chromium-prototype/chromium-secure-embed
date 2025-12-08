@@ -62,7 +62,6 @@ void SecureEmbedConnector::Attach(WebContents* child_web_contents,
   static_cast<WebContentsImpl*>(child_web_contents)
       ->SetSecureEmbedConnector(std::move(connector));
   connector_ptr->UpdateViewForCurrentRenderFrameHost();
-  connector_ptr->AfterAttached();
 }
 
 // static
@@ -73,9 +72,9 @@ void SecureEmbedConnector::Detach(WebContents* child_web_contents) {
     // performance_manager doesn't get perturbed by us messing w/visibility of
     // something not top-level.
     connector->OnVisibilityChanged(blink::mojom::FrameVisibility::kNotRendered);
-    connector->BeforeDetached();
-    // connector will be freed by the following ClearSecureEmbedConnector().
   }
+
+  // Connector will be freed by ClearSecureEmbedConnector().
   static_cast<WebContentsImpl*>(child_web_contents)
       ->ClearSecureEmbedConnector();
 }
@@ -187,30 +186,8 @@ void SecureEmbedConnectorImpl::ClearFocusOnInnerWebContents() {
       ->SetAsFocusedWebContentsIfNecessary();
 }
 
-void SecureEmbedConnectorImpl::AfterAttached() {
-  observers_.Notify(&Observer::OnSecureEmbedAttached, delegate_->ParentFrame(),
-                    embedder_web_contents_.get(), guest_web_contents_.get());
-}
-
-void SecureEmbedConnectorImpl::BeforeDetached() {
-  // TODO(secure-embed): Naming for OnSecureEmbedDetached isn't quite right here
-  // as we're about to detach but haven't detached yet.
-  observers_.Notify(&Observer::OnSecureEmbedDetached, delegate_->ParentFrame(),
-                    embedder_web_contents_.get(), guest_web_contents_.get());
-}
-
 SecureEmbedConnector::Delegate* SecureEmbedConnectorImpl::GetDelegate() {
   return delegate_;
-}
-
-void SecureEmbedConnectorImpl::AddObserver(
-    SecureEmbedConnector::Observer* observer) {
-  observers_.AddObserver(observer);
-}
-
-void SecureEmbedConnectorImpl::RemoveObserver(
-    SecureEmbedConnector::Observer* observer) {
-  observers_.RemoveObserver(observer);
 }
 
 void SecureEmbedConnectorImpl::SetFocus(bool focused,
