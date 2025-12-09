@@ -49,12 +49,11 @@ class SecureEmbedConnectorImpl::WCObserver : public WebContentsObserver {
 };
 
 // static
-void SecureEmbedConnector::Attach(WebContents* child_web_contents,
+void SecureEmbedConnector::Attach(WebContents* parent_web_contents,
+                                  WebContents* child_web_contents,
                                   SecureEmbedConnector::Delegate* delegate) {
   // Must Detach the child before re-Attaching.
   CHECK(!child_web_contents->GetSecureEmbedConnector());
-  auto* parent_web_contents =
-      content::WebContents::FromRenderFrameHost(delegate->ParentFrame());
   auto connector = std::make_unique<SecureEmbedConnectorImpl>(
       static_cast<WebContentsImpl*>(parent_web_contents),
       static_cast<WebContentsImpl*>(child_web_contents), delegate);
