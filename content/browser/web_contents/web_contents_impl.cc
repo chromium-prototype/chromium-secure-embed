@@ -9345,8 +9345,6 @@ void WebContentsImpl::SetFocusToLocationBar() {
   }
 }
 
-// TODO(secure-embed): update the check if we support secure embed inside other
-// secure embed or inner WebContents.
 bool WebContentsImpl::ContainsOrIsFocusedWebContents() {
   return SecureEmbedConnectorImpl::ContainsOrIsFocusedWebContents(this);
 }

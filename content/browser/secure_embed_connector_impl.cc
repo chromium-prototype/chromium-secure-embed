@@ -190,9 +190,6 @@ void SecureEmbedConnectorImpl::SetFocusedFrameTree(
   // or an inner WebContents in the subtree.
   CHECK(ContainsOrIsFocusedWebContents(guest_web_contents_));
 
-  // Set the root frame as the focused frame.
-  frame_tree_to_focus->SetFocusedFrame(frame_tree_to_focus->root(), nullptr);
-
   // Ensure that outer frame trees are focused.
   embedder_web_contents()->GetPrimaryFrameTree().FocusOuterFrameTrees();
 
