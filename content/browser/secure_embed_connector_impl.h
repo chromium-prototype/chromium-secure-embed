@@ -6,6 +6,7 @@
 #define CONTENT_BROWSER_SECURE_EMBED_CONNECTOR_IMPL_H_
 
 #include <memory>
+#include <optional>
 
 #include "base/memory/raw_ptr.h"
 #include "base/memory/weak_ptr.h"
@@ -19,6 +20,7 @@
 #include "third_party/blink/public/mojom/frame/viewport_intersection_state.mojom.h"
 #include "third_party/blink/public/mojom/input/input_event_result.mojom-shared.h"
 #include "third_party/blink/public/mojom/input/pointer_lock_result.mojom-shared.h"
+#include "ui/compositor/compositor.h"
 #include "ui/display/screen_infos.h"
 #include "ui/gfx/geometry/rect.h"
 
@@ -215,6 +217,9 @@ class SecureEmbedConnectorImpl : public SecureEmbedConnector,
   uint32_t capture_sequence_number_ = 0u;
 
   cc::TouchAction inherited_effective_touch_action_ = cc::TouchAction::kAuto;
+
+  mutable std::optional<ui::Compositor::ScopedKeepSurfaceAliveCallback>
+      keep_surface_alive_;
 
   bool is_inert_ = false;
   bool is_throttled_ = false;
