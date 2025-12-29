@@ -138,6 +138,7 @@ class SecureEmbedConnectorImpl : public SecureEmbedConnector,
   bool IsVisible() override;
   void DelegateWasShown() override;
   content::Visibility EmbedderVisibility() override;
+  void ForceRenderable(bool renderable) override;
 
   // input::ChildFrameInputHelper::Delegate:
   input::RenderWidgetHostViewInput* GetParentViewInput() override;

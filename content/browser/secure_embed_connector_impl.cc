@@ -492,19 +492,22 @@ void SecureEmbedConnectorImpl::DidUpdateVisualProperties(
 }
 
 void SecureEmbedConnectorImpl::SetVisibilityForChildViews(bool visible) const {
+  current_child_frame_host()->SetVisibilityForChildViews(visible);
+}
+
+void SecureEmbedConnectorImpl::ForceRenderable(bool renderable) {
   // We may be force-shown by WebContents to enable tab capture, even if we're
   // in background. To enable that, we want to create a reference to the
   // surface, to help the compositor notice its capture; this won't be created
   // by the parent renderer unless it gets actually painted.
   auto surface_id = view_->GetCurrentSurfaceId();
-  if (visible && view_ && surface_id.is_valid()) {
+  if (renderable && view_ && surface_id.is_valid()) {
     // TODO(secure-embed): Do we ever need to update it?
     keep_surface_alive_ =
         view_->GetCompositor()->TakeScopedKeepSurfaceAliveCallback(surface_id);
   } else {
     keep_surface_alive_.reset();
   }
-  current_child_frame_host()->SetVisibilityForChildViews(visible);
 }
 
 void SecureEmbedConnectorImpl::SetLocalFrameSize(
