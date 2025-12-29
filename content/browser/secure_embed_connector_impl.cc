@@ -466,7 +466,11 @@ cc::TouchAction SecureEmbedConnectorImpl::InheritedEffectiveTouchAction()
 }
 
 bool SecureEmbedConnectorImpl::IsHidden() const {
-  return visibility_ == blink::mojom::FrameVisibility::kNotRendered;
+  // We want IsHidden() to return true even when the page isn't actually
+  // rendering us, since WebContents may want to render us for features like
+  // capture; any CSS that's hiding us should make us not show up incorrectly
+  // in the parent renderer regardless.
+  return !embedder_web_contents_;
 }
 
 bool SecureEmbedConnectorImpl::IsThrottled() const {
