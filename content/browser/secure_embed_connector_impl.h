@@ -219,7 +219,7 @@ class SecureEmbedConnectorImpl : public SecureEmbedConnector,
 
   cc::TouchAction inherited_effective_touch_action_ = cc::TouchAction::kAuto;
 
-  mutable std::optional<ui::Compositor::ScopedKeepSurfaceAliveCallback>
+  std::optional<ui::Compositor::ScopedKeepSurfaceAliveCallback>
       keep_surface_alive_;
 
   bool is_inert_ = false;
