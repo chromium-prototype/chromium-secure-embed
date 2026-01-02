@@ -577,7 +577,6 @@ void SecureEmbedConnectorImpl::OnSetInheritedEffectiveTouchAction(
 
 void SecureEmbedConnectorImpl::OnVisibilityChanged(
     blink::mojom::FrameVisibility visibility) {
-  bool visible = visibility != blink::mojom::FrameVisibility::kNotRendered;
   visibility_ = visibility;
 
   if (!view_) {
@@ -596,12 +595,6 @@ void SecureEmbedConnectorImpl::OnVisibilityChanged(
     case blink::mojom::FrameVisibility::kRenderedOutOfViewport:
       guest_web_contents_->WasOccluded();
       break;
-  }
-
-  if (visible && !view_->host()->frame_tree()->IsHidden()) {
-    view_->Show();
-  } else if (!visible) {
-    view_->Hide();
   }
 }
 
