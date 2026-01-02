@@ -151,6 +151,8 @@ class SecureEmbedConnectorImpl : public SecureEmbedConnector,
   void OnRenderViewReady();
 
  private:
+  void MaybeRefreshSurfaceKeepAlive();
+
   // Forward decl for internal observer that tracks WebContents events and
   // forwards them to this class.
   class WCObserver;

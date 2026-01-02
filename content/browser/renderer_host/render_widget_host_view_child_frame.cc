@@ -256,7 +256,7 @@ void RenderWidgetHostViewChildFrame::ShowWithVisibility(
     return;
 
   if (!CanBecomeVisible())
-     return;
+    return;
 
   host()->WasShown({} /* record_tab_switch_time_request */);
 

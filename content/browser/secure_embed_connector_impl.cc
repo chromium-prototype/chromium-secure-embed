@@ -294,6 +294,8 @@ void SecureEmbedConnectorImpl::SetView(RenderWidgetHostViewChildFrame* view,
     if (delegate_) {
       delegate_->SetFrameSinkId(frame_sink_id_);
     }
+
+    MaybeRefreshSurfaceKeepAlive();
   }
 }
 
@@ -341,6 +343,8 @@ void SecureEmbedConnectorImpl::SynchronizeVisualProperties(
   last_received_css_zoom_factor_ = visual_properties.css_zoom_factor;
   last_received_local_frame_size_ = visual_properties.local_frame_size;
   screen_infos_ = visual_properties.screen_infos;
+  bool local_surface_id_changed =
+      (local_surface_id_ != visual_properties.local_surface_id);
   local_surface_id_ = visual_properties.local_surface_id;
 
   // TODO(secure-embed): Not implemented yet.
@@ -372,6 +376,10 @@ void SecureEmbedConnectorImpl::SynchronizeVisualProperties(
       visual_properties.root_widget_viewport_segments);
 
   render_widget_host->UpdateVisualProperties(propagate);
+
+  if (local_surface_id_changed) {
+    MaybeRefreshSurfaceKeepAlive();
+  }
 }
 
 void SecureEmbedConnectorImpl::UpdateCursor(const ui::Cursor& cursor) {
@@ -506,7 +514,6 @@ void SecureEmbedConnectorImpl::ForceRenderable(bool renderable) {
   // by the parent renderer unless it gets actually painted.
   auto surface_id = view_->GetCurrentSurfaceId();
   if (renderable && view_ && surface_id.is_valid()) {
-    // TODO(secure-embed): Do we ever need to update it?
     keep_surface_alive_ =
         view_->GetCompositor()->TakeScopedKeepSurfaceAliveCallback(surface_id);
   } else {
@@ -799,6 +806,12 @@ RenderFrameHostImpl* SecureEmbedConnectorImpl::current_child_frame_host()
   }
   return static_cast<WebContentsImpl*>(guest_web_contents_.get())
       ->GetPrimaryMainFrame();
+}
+
+void SecureEmbedConnectorImpl::MaybeRefreshSurfaceKeepAlive() {
+  if (keep_surface_alive_) {
+    ForceRenderable(true);
+  }
 }
 
 }  // namespace content
