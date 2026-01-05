@@ -31,9 +31,10 @@
 
 namespace content {
 
-class WebContentsVideoCaptureDevice;
 class MouseCursorOverlayController;
 class RenderFrameHost;
+class WebContents;
+class WebContentsVideoCaptureDevice;
 
 // Monitors the WebContents instance and notifies the parent
 // WebContentsVideoCaptureDevice |device| class any time the frame sink or
@@ -104,6 +105,7 @@ class CONTENT_EXPORT WebContentsFrameTracker final
   void CaptureTargetChanged() override;
 
   void SetWebContentsAndContextFromRoutingId(const GlobalRenderFrameHostId& id);
+  void OnVisibilityChanged(Visibility visibility) override;
 
   // Start/stop cropping or restricting a tab-caputre video track.
   //
@@ -169,6 +171,7 @@ class CONTENT_EXPORT WebContentsFrameTracker final
   std::unique_ptr<Context> context_;
   viz::FrameSinkId target_frame_sink_id_;
   gfx::NativeView target_native_view_ = gfx::NativeView();
+  raw_ptr<content::WebContents> target_web_contents_ = nullptr;
 
   struct SubCaptureTargetInfo {
     SubCaptureTargetInfo(media::mojom::SubCaptureTargetType type,

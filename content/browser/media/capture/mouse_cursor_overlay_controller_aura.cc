@@ -6,6 +6,7 @@
 
 #include "base/memory/raw_ptr.h"
 #include "content/browser/media/capture/mouse_cursor_overlay_controller.h"
+#include "content/public/browser/web_contents.h"
 #include "third_party/skia/include/core/SkBitmap.h"
 #include "ui/aura/client/cursor_shape_client.h"
 #include "ui/aura/window.h"
@@ -24,8 +25,11 @@ class MouseCursorOverlayController::Observer final
       public aura::WindowObserver {
  public:
   explicit Observer(MouseCursorOverlayController* controller,
-                    aura::Window* window)
-      : controller_(controller), window_(window) {
+                    aura::Window* window,
+                    base::WeakPtr<WebContents> restrict_to)
+      : controller_(controller),
+        window_(window),
+        restrict_to_(std::move(restrict_to)) {
     DCHECK(controller_);
     DCHECK(window_);
     controller_->OnMouseHasGoneIdle();
@@ -80,6 +84,14 @@ class MouseCursorOverlayController::Observer final
       aura::Window::ConvertPointToTarget(
           static_cast<aura::Window*>(event.target()), window_, &location);
     }
+
+    if (restrict_to_) {
+      gfx::Rect subwindow_rect = restrict_to_->GetViewBounds();
+      gfx::Rect aura_rect = window_->GetBoundsInScreen();
+      location -= gfx::Vector2dF(subwindow_rect.x() - aura_rect.x(),
+                                 subwindow_rect.y() - aura_rect.y());
+    }
+
     return location;
   }
 
@@ -87,6 +99,7 @@ class MouseCursorOverlayController::Observer final
     if (!IsWindowActive() || event.type() == ui::EventType::kMouseExited) {
       return kOutsideSurface;
     }
+
     gfx::PointF location = AsLocationInWindow(event);
     int x = std::round(location.x());
     int y = std::round(location.y());
@@ -94,7 +107,10 @@ class MouseCursorOverlayController::Observer final
     // When performing a drag on some platforms, it's possible to
     // trigger mouse events with coordinates outside the surface, so
     // make sure we don't transmit such coordinates.
-    const gfx::Size& window_size = window_->bounds().size();
+    gfx::Size window_size = window_->bounds().size();
+    if (restrict_to_) {
+      window_size = restrict_to_->GetViewBounds().size();
+    }
     if (x < 0 || y < 0 || x >= window_size.width() ||
         y >= window_size.height()) {
       return kOutsideSurface;
@@ -143,6 +159,7 @@ class MouseCursorOverlayController::Observer final
 
   const raw_ptr<MouseCursorOverlayController> controller_;
   raw_ptr<aura::Window> window_;
+  base::WeakPtr<WebContents> restrict_to_;
 };
 
 MouseCursorOverlayController::MouseCursorOverlayController()
@@ -166,12 +183,16 @@ MouseCursorOverlayController::~MouseCursorOverlayController() {
   Stop();
 }
 
-void MouseCursorOverlayController::SetTargetView(aura::Window* window) {
+void MouseCursorOverlayController::SetTargetView(
+    aura::Window* window,
+    content::WebContents* restrict_to) {
   DCHECK_CALLED_ON_VALID_SEQUENCE(ui_sequence_checker_);
 
   observer_.reset();
   if (window) {
-    observer_ = std::make_unique<Observer>(this, window);
+    observer_ = std::make_unique<Observer>(
+        this, window,
+        restrict_to ? restrict_to->GetWeakPtr() : base::WeakPtr<WebContents>());
   }
 }
 
