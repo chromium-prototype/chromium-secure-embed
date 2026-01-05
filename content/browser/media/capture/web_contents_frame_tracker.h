@@ -171,7 +171,6 @@ class CONTENT_EXPORT WebContentsFrameTracker final
   std::unique_ptr<Context> context_;
   viz::FrameSinkId target_frame_sink_id_;
   gfx::NativeView target_native_view_ = gfx::NativeView();
-  raw_ptr<content::WebContents> target_web_contents_ = nullptr;
 
   struct SubCaptureTargetInfo {
     SubCaptureTargetInfo(media::mojom::SubCaptureTargetType type,

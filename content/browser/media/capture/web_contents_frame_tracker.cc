@@ -435,13 +435,12 @@ void WebContentsFrameTracker::OnPossibleTargetChange() {
 
 void WebContentsFrameTracker::SetTargetView(gfx::NativeView view) {
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
-  if (view == target_native_view_ && web_contents() == target_web_contents_) {
-    // We don't have to worry about ABA issues on WebContents because it will
-    // go to null during `WebContentsDestroyed()`.
+  // We don't have to worry about web_contents() changing other than to null
+  // since SetWebContentsAndContextFromRoutingId() is only called once.
+  if (view == target_native_view_) {
     return;
   }
   target_native_view_ = view;
-  target_web_contents_ = web_contents();
 #if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS)
   if (cursor_controller_) {
     cursor_controller_->SetTargetView(view, web_contents());
