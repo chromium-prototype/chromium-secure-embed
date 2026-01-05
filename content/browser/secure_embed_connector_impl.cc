@@ -474,7 +474,7 @@ cc::TouchAction SecureEmbedConnectorImpl::InheritedEffectiveTouchAction()
 }
 
 bool SecureEmbedConnectorImpl::IsHidden() const {
-  // We want IsHidden() to return true even when the page isn't actually
+  // We want IsHidden() to return false even when the page isn't actually
   // rendering us, since WebContents may want to render us for features like
   // capture; any CSS that's hiding us should make us not show up incorrectly
   // in the parent renderer regardless.
