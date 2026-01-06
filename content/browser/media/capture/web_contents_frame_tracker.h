@@ -31,10 +31,9 @@
 
 namespace content {
 
+class WebContentsVideoCaptureDevice;
 class MouseCursorOverlayController;
 class RenderFrameHost;
-class WebContents;
-class WebContentsVideoCaptureDevice;
 
 // Monitors the WebContents instance and notifies the parent
 // WebContentsVideoCaptureDevice |device| class any time the frame sink or
