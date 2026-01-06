@@ -11,6 +11,7 @@
 #include "base/functional/callback_helpers.h"
 #include "base/mac/mac_util.h"
 #include "base/memory/raw_ptr.h"
+#include "content/public/browser/web_contents.h"
 #include "skia/ext/skia_utils_mac.h"
 #include "ui/base/cocoa/tracking_area.h"
 
@@ -92,8 +93,10 @@ namespace content {
 
 class MouseCursorOverlayController::Observer {
  public:
-  explicit Observer(MouseCursorOverlayController* controller, NSView* view)
-      : controller_(controller), view_(view) {
+  explicit Observer(MouseCursorOverlayController* controller,
+                    NSView* view,
+                    base::WeakPtr<WebContents> restrict_to)
+      : controller_(controller), view_(view), restrict_to_(restrict_to) {
     DCHECK(controller_);
     DCHECK(view_);
     controller_->OnMouseHasGoneIdle();
@@ -133,7 +136,7 @@ class MouseCursorOverlayController::Observer {
       return;
     }
 
-    const bool cursor_within_surface =
+    bool cursor_within_surface =
         NSPointInRect(location_in_window, NSRectFromCGRect([view_ bounds]));
 
     // Compute the location within the view using Aura conventions: (0,0) is the
@@ -144,6 +147,32 @@ class MouseCursorOverlayController::Observer {
     if (![view_ isFlipped]) {
       location_aura.y = NSHeight([view_ bounds]) - location_aura.y;
     }
+
+    if (restrict_to_) {
+      // Translate the point to be with respect to `restrict_to_`, and
+      // clip to it.
+
+      gfx::Rect subwindow_rect = restrict_to_->GetViewBounds();
+      NSRect view_rect = [view_ convertRect:[view_ bounds] toView:nil];
+
+      // Likewise, we want upper-left corner here since we'll be comparing it
+      // to subwindow_rect.
+      if (![view_ isFlipped]) {
+        view_rect.origin.y = NSHeight([view_ bounds]) - view_rect.origin.y;
+      }
+
+      view_rect.origin = [[view_ window] convertPointToScreen:view_rect.origin];
+
+      location_aura.x -= (subwindow_rect.x() - view_rect.origin.x);
+      location_aura.y -= (subwindow_rect.y() - view_rect.origin.y);
+
+      if (location_aura.x < 0 || location_aura.y < 0 ||
+          location_aura.x >= subwindow_rect.width() ||
+          location_aura.y >= subwindow_rect.height()) {
+        cursor_within_surface = false;
+      }
+    }
+
     controller_->OnMouseMoved(gfx::PointF(location_aura.x, location_aura.y));
     if (controller_->ShouldSendMouseEvents()) {
       controller_->OnMouseCoordinatesUpdated(
@@ -155,6 +184,7 @@ class MouseCursorOverlayController::Observer {
 
   const raw_ptr<MouseCursorOverlayController> controller_;
   NSView* __strong view_;
+  base::WeakPtr<WebContents> restrict_to_;
   MouseCursorOverlayTracker* __strong mouse_tracker_;
 };
 
@@ -179,12 +209,16 @@ MouseCursorOverlayController::~MouseCursorOverlayController() {
   Stop();
 }
 
-void MouseCursorOverlayController::SetTargetView(gfx::NativeView view) {
+void MouseCursorOverlayController::SetTargetView(
+    gfx::NativeView view,
+    content::WebContents* restrict_to) {
   DCHECK_CALLED_ON_VALID_SEQUENCE(ui_sequence_checker_);
 
   observer_.reset();
   if (view) {
-    observer_ = std::make_unique<Observer>(this, view.GetNativeNSView());
+    observer_ = std::make_unique<Observer>(
+        this, view.GetNativeNSView(),
+        restrict_to ? restrict_to->GetWeakPtr() : base::WeakPtr<WebContents>());
   }
 }
 
