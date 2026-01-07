@@ -61,6 +61,8 @@ class MouseCursorOverlayController::Observer final
     return nullptr;
   }
 
+  WebContents* GetRestrictTo() { return restrict_to_.get(); }
+
  private:
   bool IsWindowActive() const {
     if (window_) {
@@ -220,7 +222,10 @@ gfx::RectF MouseCursorOverlayController::ComputeRelativeBoundsForOverlay(
   if (!window)
     return gfx::RectF();
 
-  const gfx::Size& window_size = window->bounds().size();
+  gfx::Size window_size = window->bounds().size();
+  if (WebContents* restrict_to = observer_->GetRestrictTo()) {
+    window_size = restrict_to->GetViewBounds().size();
+  }
   std::optional<ui::CursorData> cursor_data =
       aura::client::GetCursorShapeClient().GetCursorData(cursor);
   if (window_size.IsEmpty() || !window->GetRootWindow() || !cursor_data)

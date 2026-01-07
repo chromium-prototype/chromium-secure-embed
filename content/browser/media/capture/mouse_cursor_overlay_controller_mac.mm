@@ -127,6 +127,13 @@ class MouseCursorOverlayController::Observer {
     return nil;
   }
 
+  static WebContents* GetRestrictTo(const std::unique_ptr<Observer>& observer) {
+    if (observer) {
+      return observer->restrict_to_.get();
+    }
+    return nullptr;
+  }
+
  private:
   void OnMouseMoved(const NSPoint& location_in_window) {
     // Ignore mouse movements if the window is inactive or the view is hidden.
@@ -155,7 +162,8 @@ class MouseCursorOverlayController::Observer {
 
       gfx::Rect subwindow_rect = restrict_to_->GetViewBounds();
       NSRect ns_view_rect = [view_ convertRect:[view_ bounds] toView:nil];
-      ns_view_rect.origin = [[view_ window] convertPointToScreen:ns_view_rect.origin];
+      ns_view_rect.origin =
+          [[view_ window] convertPointToScreen:ns_view_rect.origin];
       gfx::Rect view_rect = gfx::ScreenRectFromNSRect(ns_view_rect);
 
       location_aura.x -= (subwindow_rect.x() - view_rect.x());
@@ -237,6 +245,9 @@ gfx::RectF MouseCursorOverlayController::ComputeRelativeBoundsForOverlay(
   if (NSView* view = Observer::GetTargetView(observer_)) {
     const NSRect view_bounds = [view bounds];
     target_size = gfx::Size(NSWidth(view_bounds), NSHeight(view_bounds));
+    if (WebContents* restrict_to = Observer::GetRestrictTo(observer_)) {
+      target_size = restrict_to->GetViewBounds().size();
+    }
   } else {
     // The target for capture can be a views::Widget, which is an NSWindow,
     // not a NSView. This path is used in that case.
