@@ -513,7 +513,7 @@ void SecureEmbedConnectorImpl::ForceRenderable(bool renderable) {
   // surface, to help the compositor notice its capture; this won't be created
   // by the parent renderer unless it gets actually painted.
   auto surface_id = view_->GetCurrentSurfaceId();
-  if (renderable && view_ && surface_id.is_valid()) {
+  if (renderable && view_ && view_->GetCompositor() && surface_id.is_valid()) {
     keep_surface_alive_ =
         view_->GetCompositor()->TakeScopedKeepSurfaceAliveCallback(surface_id);
   } else {
