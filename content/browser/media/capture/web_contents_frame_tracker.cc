@@ -304,6 +304,11 @@ void WebContentsFrameTracker::WebContentsDestroyed() {
   OnPossibleTargetChange();
 }
 
+void WebContentsFrameTracker::OnVisibilityChanged(Visibility visibility) {
+  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+  OnPossibleTargetChange();
+}
+
 void WebContentsFrameTracker::CaptureTargetChanged() {
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
   OnPossibleTargetChange();
@@ -317,11 +322,6 @@ void WebContentsFrameTracker::SetWebContentsAndContextFromRoutingId(
     // If the routing ID was invalid, don't set up a context.
     context_ = std::make_unique<WebContentsContext>(web_contents());
   }
-  OnPossibleTargetChange();
-}
-
-void WebContentsFrameTracker::OnVisibilityChanged(Visibility visibility) {
-  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
   OnPossibleTargetChange();
 }
 

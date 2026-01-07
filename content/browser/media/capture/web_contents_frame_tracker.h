@@ -101,10 +101,11 @@ class CONTENT_EXPORT WebContentsFrameTracker final
   void RenderFrameHostChanged(RenderFrameHost* old_host,
                               RenderFrameHost* new_host) override;
   void WebContentsDestroyed() override;
+  void OnVisibilityChanged(Visibility visibility) override;
+
   void CaptureTargetChanged() override;
 
   void SetWebContentsAndContextFromRoutingId(const GlobalRenderFrameHostId& id);
-  void OnVisibilityChanged(Visibility visibility) override;
 
   // Start/stop cropping or restricting a tab-caputre video track.
   //

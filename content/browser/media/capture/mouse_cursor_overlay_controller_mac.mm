@@ -14,6 +14,7 @@
 #include "content/public/browser/web_contents.h"
 #include "skia/ext/skia_utils_mac.h"
 #include "ui/base/cocoa/tracking_area.h"
+#include "ui/gfx/mac/coordinate_conversion.h"
 
 namespace {
 using LocationUpdateCallback = base::RepeatingCallback<void(const NSPoint&)>;
@@ -153,18 +154,12 @@ class MouseCursorOverlayController::Observer {
       // clip to it.
 
       gfx::Rect subwindow_rect = restrict_to_->GetViewBounds();
-      NSRect view_rect = [view_ convertRect:[view_ bounds] toView:nil];
+      NSRect ns_view_rect = [view_ convertRect:[view_ bounds] toView:nil];
+      ns_view_rect.origin = [[view_ window] convertPointToScreen:ns_view_rect.origin];
+      gfx::Rect view_rect = gfx::ScreenRectFromNSRect(ns_view_rect);
 
-      // Likewise, we want upper-left corner here since we'll be comparing it
-      // to subwindow_rect.
-      if (![view_ isFlipped]) {
-        view_rect.origin.y = NSHeight([view_ bounds]) - view_rect.origin.y;
-      }
-
-      view_rect.origin = [[view_ window] convertPointToScreen:view_rect.origin];
-
-      location_aura.x -= (subwindow_rect.x() - view_rect.origin.x);
-      location_aura.y -= (subwindow_rect.y() - view_rect.origin.y);
+      location_aura.x -= (subwindow_rect.x() - view_rect.x());
+      location_aura.y -= (subwindow_rect.y() - view_rect.y());
 
       if (location_aura.x < 0 || location_aura.y < 0 ||
           location_aura.x >= subwindow_rect.width() ||
