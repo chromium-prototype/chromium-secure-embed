@@ -35,17 +35,31 @@ namespace content {
 // CrossProcessFrameConnectorBase.
 class SecureEmbedConnectorImpl::WCObserver : public WebContentsObserver {
  public:
-  explicit WCObserver(SecureEmbedConnectorImpl* guest_frame,
-                      WebContents* web_contents)
-      : WebContentsObserver(web_contents), guest_frame_(guest_frame) {}
+  explicit WCObserver(SecureEmbedConnectorImpl* connector,
+                      WebContents* web_contents,
+                      bool is_embedder)
+      : WebContentsObserver(web_contents),
+        is_embedder(is_embedder),
+        connector_(connector) {}
 
   ~WCObserver() override = default;
 
   // WebContentsObserver:
-  void RenderViewReady() override { guest_frame_->OnRenderViewReady(); }
+  void RenderViewReady() override {
+    if (!is_embedder) {
+      connector_->OnEmbeddedRenderViewReady();
+    }
+  }
+
+  void OnVisibilityChanged(Visibility visibility) override {
+    if (is_embedder) {
+      connector_->OnEmbedderVisibilityChanged(visibility);
+    }
+  }
 
  private:
-  raw_ptr<SecureEmbedConnectorImpl> guest_frame_;
+  bool is_embedder;
+  raw_ptr<SecureEmbedConnectorImpl> connector_;
 };
 
 // static
@@ -85,7 +99,10 @@ SecureEmbedConnectorImpl::SecureEmbedConnectorImpl(
     : delegate_(delegate),
       embedder_web_contents_(embedder_web_contents->GetWeakPtr()),
       guest_web_contents_(embedded_web_contents) {
-  observer_ = std::make_unique<WCObserver>(this, embedded_web_contents);
+  embedder_observer_ =
+      std::make_unique<WCObserver>(this, embedder_web_contents, true);
+  embedded_observer_ =
+      std::make_unique<WCObserver>(this, embedded_web_contents, false);
 
   // TODO(secure-embed): There may not be a view yet, depending on if the
   // WebContents has been shown or navigated. That means calling GetScreenInfos
@@ -286,8 +303,9 @@ void SecureEmbedConnectorImpl::SetView(RenderWidgetHostViewChildFrame* view,
   // try to move these updates to a single IPC (see https://crbug.com/750179).
   if (view_) {
     view_->SetFrameConnector(this);
-    if (visibility_ != blink::mojom::FrameVisibility::kRenderedInViewport) {
-      OnVisibilityChanged(visibility_);
+    if (embedder_visibility_ !=
+        blink::mojom::FrameVisibility::kRenderedInViewport) {
+      OnVisibilityChanged(embedder_visibility_);
     }
 
     frame_sink_id_ = view_->GetFrameSinkId();
@@ -466,7 +484,7 @@ cc::TouchAction SecureEmbedConnectorImpl::InheritedEffectiveTouchAction()
 }
 
 bool SecureEmbedConnectorImpl::IsHidden() const {
-  return visibility_ == blink::mojom::FrameVisibility::kNotRendered;
+  return embedder_visibility_ == blink::mojom::FrameVisibility::kNotRendered;
 }
 
 bool SecureEmbedConnectorImpl::IsThrottled() const {
@@ -558,16 +576,29 @@ void SecureEmbedConnectorImpl::OnSetInheritedEffectiveTouchAction(
 
 void SecureEmbedConnectorImpl::OnVisibilityChanged(
     blink::mojom::FrameVisibility visibility) {
-  bool visible = visibility != blink::mojom::FrameVisibility::kNotRendered;
-  visibility_ = visibility;
+  embedder_visibility_ = visibility;
 
   if (!view_) {
     return;
   }
 
-  current_child_frame_host()->VisibilityChanged(visibility_);
+  // The visibility that applies to the guest is the intersection of the
+  // embedder element's visibility, the embedder WebContents's visibility, and
+  // the embedded WebContents visibility. Note that the embedded WebContents's
+  // visibility is independent of its view's visibility.
+  blink::mojom::FrameVisibility used_visibility = embedder_visibility_;
+  if (used_visibility != blink::mojom::FrameVisibility::kNotRendered &&
+      (EmbedderVisibility() == Visibility::HIDDEN ||
+       guest_web_contents_->GetVisibility() == Visibility::HIDDEN)) {
+    used_visibility = blink::mojom::FrameVisibility::kNotRendered;
+  }
 
-  switch (visibility) {
+  current_child_frame_host()->VisibilityChanged(used_visibility);
+
+  // Don't change the visibility of the actual guest WebContents as its
+  // visibility is independent of its view's visibility.
+  /*
+  switch (used_visibility) {
     case blink::mojom::FrameVisibility::kRenderedInViewport:
       guest_web_contents_->WasShown();
       break;
@@ -578,8 +609,10 @@ void SecureEmbedConnectorImpl::OnVisibilityChanged(
       guest_web_contents_->WasOccluded();
       break;
   }
+  */
 
-  if (visible && !view_->host()->frame_tree()->IsHidden()) {
+  bool visible = used_visibility != blink::mojom::FrameVisibility::kNotRendered;
+  if (visible) {
     view_->Show();
   } else if (!visible) {
     view_->Hide();
@@ -635,7 +668,7 @@ void SecureEmbedConnectorImpl::UpdateViewportIntersection(
 }
 
 bool SecureEmbedConnectorImpl::IsVisible() {
-  if (visibility_ == blink::mojom::FrameVisibility::kNotRendered ||
+  if (embedder_visibility_ == blink::mojom::FrameVisibility::kNotRendered ||
       GetIntersectionState().viewport_intersection.IsEmpty()) {
     return false;
   }
@@ -652,11 +685,6 @@ Visibility SecureEmbedConnectorImpl::EmbedderVisibility() {
     return Visibility::HIDDEN;
   }
 
-  // TODO(secure-embed): Need to get the embedder visibility rather than the
-  // embedded visibility. Embedder = SecureEmbed. May need to add a method to
-  // SecureEmbedDelegate for this or ensure that visibility state is pushed to
-  // the GuestFrame when it changes.
-  NOTIMPLEMENTED();
   return embedder_web_contents()->GetVisibility();
 }
 
@@ -696,9 +724,18 @@ input::RenderWidgetHostViewInput* SecureEmbedConnectorImpl::GetRootViewInput() {
 // Although SetView is called from the WebContentsImpl during navigation,
 // we still need the Observer for RenderViewReady to catch the initial
 // creation or the view won't be set correctly for the initial document.
-void SecureEmbedConnectorImpl::OnRenderViewReady() {
+void SecureEmbedConnectorImpl::OnEmbeddedRenderViewReady() {
   // When the RenderView is ready, update the view in case it has changed.
   UpdateViewForCurrentRenderFrameHost();
+}
+
+void SecureEmbedConnectorImpl::OnEmbedderVisibilityChanged(
+    Visibility visibility) {
+  // Trigger a call to re-evaluate visibility based on the new embedder
+  // WebContents visibility state. We specifically use the stored state as
+  // `embedder_visibility_` is based on the embed element's visibility, not the
+  // embedder WebContents's visibility.
+  OnVisibilityChanged(embedder_visibility_);
 }
 
 void SecureEmbedConnectorImpl::UpdateViewForCurrentRenderFrameHost() {

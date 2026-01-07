@@ -145,7 +145,8 @@ class SecureEmbedConnectorImpl : public SecureEmbedConnector,
   // associated with the guest WebContents.
   void UpdateViewForCurrentRenderFrameHost();
 
-  void OnRenderViewReady();
+  void OnEmbeddedRenderViewReady();
+  void OnEmbedderVisibilityChanged(content::Visibility visibility);
 
  private:
   // Forward decl for internal observer that tracks WebContents events and
@@ -170,7 +171,8 @@ class SecureEmbedConnectorImpl : public SecureEmbedConnector,
   // for GuestFrameImpl to get the RenderFrameHost from the guest WebContents.
   RenderFrameHostImpl* current_child_frame_host() const;
 
-  std::unique_ptr<WCObserver> observer_;
+  std::unique_ptr<WCObserver> embedder_observer_;
+  std::unique_ptr<WCObserver> embedded_observer_;
   raw_ptr<SecureEmbedConnector::Delegate> delegate_ = nullptr;
 
   base::WeakPtr<WebContents> embedder_web_contents_;
@@ -202,7 +204,7 @@ class SecureEmbedConnectorImpl : public SecureEmbedConnector,
 
   // Visibility state of the corresponding secureembed element in parent process
   // which is set through CSS or scrolling.
-  blink::mojom::FrameVisibility visibility_ =
+  blink::mojom::FrameVisibility embedder_visibility_ =
       blink::mojom::FrameVisibility::kRenderedInViewport;
 
   // The last received FrameSinkId from the guest WebContents's view.

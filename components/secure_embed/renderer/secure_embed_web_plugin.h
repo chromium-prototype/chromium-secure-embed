@@ -85,6 +85,7 @@ class SecureEmbedWebPlugin : public blink::WebPlugin,
   void OnSecureEmbedHostDisconnected();
 
   void SynchronizeVisualProperties();
+  void UpdatePluginVisibility();
 
   void DetachInternal();
   void InitializeSurfaceLayer();

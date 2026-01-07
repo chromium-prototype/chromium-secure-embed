@@ -18,6 +18,7 @@
 #include "third_party/blink/public/common/frame/frame_visual_properties.h"
 #include "third_party/blink/public/common/input/web_coalesced_input_event.h"
 #include "third_party/blink/public/common/page/page_zoom.h"
+#include "third_party/blink/public/mojom/frame/lifecycle.mojom.h"
 #include "third_party/blink/public/platform/platform.h"
 #include "third_party/blink/public/platform/web_input_event_result.h"
 #include "third_party/blink/public/platform/web_url_error.h"
@@ -269,11 +270,22 @@ void SecureEmbedWebPlugin::SynchronizeVisualProperties() {
   layer_->SetSurfaceId(surface_id, cc::DeadlinePolicy::UseDefaultDeadline());
 
   if (synchronized_props_changed) {
-    host_->SynchronizeVisualProperties(pending_visual_properties,
-                                       last_is_visible_);
+    host_->SynchronizeVisualProperties(pending_visual_properties);
+    UpdatePluginVisibility();
     sent_visual_properties_ = pending_visual_properties;
     container_->ScheduleAnimation();
   }
+}
+
+void SecureEmbedWebPlugin::UpdatePluginVisibility() {
+  blink::mojom::FrameVisibility visibility;
+  if (last_is_visible_) {
+    // TODO(secure-embed): Determine if in viewport or not.
+    visibility = blink::mojom::FrameVisibility::kRenderedInViewport;
+  } else {
+    visibility = blink::mojom::FrameVisibility::kNotRendered;
+  }
+  host_->VisibilityChanged(visibility);
 }
 
 void SecureEmbedWebPlugin::UpdateFocus(bool focused,
@@ -281,7 +293,13 @@ void SecureEmbedWebPlugin::UpdateFocus(bool focused,
   host_->SetFocus(focused, focus_type);
 }
 
-void SecureEmbedWebPlugin::UpdateVisibility(bool is_visible) {}
+void SecureEmbedWebPlugin::UpdateVisibility(bool is_visible) {
+  if (last_is_visible_ == is_visible) {
+    return;
+  }
+  last_is_visible_ = is_visible;
+  UpdatePluginVisibility();
+}
 
 void SecureEmbedWebPlugin::UpdateDataAttribute(
     const blink::WebString& attribute_name,

@@ -13,15 +13,19 @@ body {
 
   // Create and attach the embed element. Called from the browser test with the
   // content_id. Optional embedId can be provided to give the embed an ID
-  // attribute for later targeting.
-  function createEmbed(contentId, embedId) {
+  // attribute for later targeting. Optional parentId specifies the ID of the
+  // parent element to append to (defaults to document.body).
+  function createEmbed(contentId, embedId, parentId) {
     const embed = document.createElement('embed');
     embed.setAttribute('data-content-id', contentId);
     embed.setAttribute('type', 'application/x-google-chrome-secure-embed');
     if (embedId !== undefined) {
       embed.id = embedId;
     }
-    document.body.appendChild(embed);
+    const parent = parentId !== undefined
+        ? document.getElementById(parentId)
+        : document.body;
+    parent.appendChild(embed);
   }
 
   // Get the current data-content-id of a specific embed. If embedId is

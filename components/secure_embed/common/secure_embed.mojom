@@ -9,6 +9,7 @@ import "services/viz/public/mojom/compositing/local_surface_id.mojom";
 import "third_party/blink/public/mojom/input/focus_type.mojom";
 import "third_party/blink/public/mojom/input/input_handler.mojom";
 import "third_party/blink/public/mojom/frame/frame_visual_properties.mojom";
+import "third_party/blink/public/mojom/frame/lifecycle.mojom";
 
 enum FocusOperation {
   kFocusPlugin,
@@ -53,8 +54,12 @@ interface SecureEmbedHost {
   // `is_visible` here reports visibility with respect to visibility: CSS
   // property; the embed may also be hidden by display:none in which case
   // this pipe will be disconnected.
-  SynchronizeVisualProperties(blink.mojom.FrameVisualProperties visual_properties,
-                              bool is_visible);
+  SynchronizeVisualProperties(blink.mojom.FrameVisualProperties visual_properties);
+
+  // Notifies that the embed's visibility has changed. Visibility status changes
+  // occur when the frame moves in/out of the viewport, when the plugin is
+  // destroyed the embed is hidden with something like "visibility: hidden".
+  VisibilityChanged(blink.mojom.FrameVisibility visibility);
 
   // Notifies that the plugin either gained or lost focus.
   SetFocus(bool focused, blink.mojom.FocusType focus_type);

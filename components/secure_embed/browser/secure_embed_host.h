@@ -45,8 +45,8 @@ class COMPONENT_EXPORT(SECURE_EMBED) SecureEmbedHost
   void AttachConnector(int64_t content_id) override;
   void DetachConnector() override;
   void SynchronizeVisualProperties(
-      const blink::FrameVisualProperties& visual_properties,
-      bool is_visible) override;
+      const blink::FrameVisualProperties& visual_properties) override;
+  void VisibilityChanged(blink::mojom::FrameVisibility visibility) override;
   void SetFocus(bool focused, blink::mojom::FocusType focus_type) override;
 
   // content::SecureEmbedConnector::Delegate implementation:
