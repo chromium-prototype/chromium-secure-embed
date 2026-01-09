@@ -1099,10 +1099,6 @@ BrowserView* WebUIBrowserWindow::AsBrowserView() {
   return nullptr;
 }
 
-content::WebContents* WebUIBrowserWindow::GetSecureEmbedEmbedder() {
-  return GetUIWebContents();
-}
-
 gfx::Rect WebUIBrowserWindow::GetBounds() const {
   return widget_->GetWindowBoundsInScreen();
 }

@@ -221,7 +221,6 @@ class WebUIBrowserWindow : public BrowserWindow,
   void ShowChromeLabs() override;
   views::WebView* GetContentsWebView() override;
   BrowserView* AsBrowserView() override;
-  content::WebContents* GetSecureEmbedEmbedder() override;
 
   // ui::BaseWindow:
   void Show() override;
