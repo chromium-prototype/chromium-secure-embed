@@ -280,7 +280,6 @@ class WebUIBrowserWindow : public BrowserWindow,
 
   WebUIBrowserUI* GetWebUIBrowserUI() const;
   WebUIBrowserSidePanelUI* GetWebUIBrowserSidePanelUI();
-  content::WebContents* GetUIWebContents() const;
 
   Browser* browser() { return browser_.get(); }
   views::Widget* widget() { return widget_.get(); }

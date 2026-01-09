@@ -1252,7 +1252,3 @@ WebUIBrowserSidePanelUI* WebUIBrowserWindow::GetWebUIBrowserSidePanelUI() {
   return static_cast<WebUIBrowserSidePanelUI*>(
       browser_->browser_window_features()->side_panel_ui());
 }
-
-content::WebContents* WebUIBrowserWindow::GetUIWebContents() const {
-  return web_contents_delegate_->web_contents();
-}
