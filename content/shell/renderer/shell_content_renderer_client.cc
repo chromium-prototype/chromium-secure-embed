@@ -52,7 +52,7 @@
 #endif
 
 #if BUILDFLAG(ENABLE_SECURE_EMBED)
-#include "components/secure_embed/renderer/create_plugin.h"
+#include "components/surface_embed/renderer/create_plugin.h"
 #endif  // BUILDFLAG(ENABLE_SECURE_EMBED)
 
 #if (BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)) && \

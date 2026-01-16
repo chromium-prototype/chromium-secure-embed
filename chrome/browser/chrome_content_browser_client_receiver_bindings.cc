@@ -133,7 +133,7 @@
 #endif
 
 #if BUILDFLAG(ENABLE_SECURE_EMBED)
-#include "components/secure_embed/browser/secure_embed_host.h"
+#include "components/surface_embed/browser/surface_embed_host.h"
 #endif
 
 namespace {

@@ -124,7 +124,7 @@
 #include "content/browser/renderer_host/visible_time_request_trigger.h"
 #include "content/browser/screen_details/screen_change_monitor.h"
 #include "content/browser/screen_orientation/screen_orientation_provider.h"
-#include "content/browser/secure_embed_connector_impl.h"
+#include "content/browser/surface_embed_connector_impl.h"
 #include "content/browser/shared_storage/shared_storage_budget_charger.h"
 #include "content/browser/site_instance_impl.h"
 #include "content/browser/tpcd_heuristics/opener_heuristic_tab_helper.h"
