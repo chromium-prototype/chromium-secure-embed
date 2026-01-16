@@ -63,7 +63,7 @@ void ContentBrowserClient::RegisterAssociatedInterfaceBindersForRenderFrameHost(
              mojo::PendingAssociatedReceiver<
                  surface_embed::mojom::SurfaceEmbedHost> receiver) {
             surface_embed::SurfaceEmbedHost::Create(render_frame_host,
-                                                  std::move(receiver));
+                                                    std::move(receiver));
           },
           &render_frame_host));
 }

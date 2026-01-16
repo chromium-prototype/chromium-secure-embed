@@ -53,7 +53,8 @@ WebContentsView* WebContentsViewChildFrame::GetOuterView() {
   if (auto* outer_web_contents = web_contents_->GetOuterWebContents()) {
     return outer_web_contents->GetView();
   }
-  if (auto* surface_embed_connector = web_contents_->GetSurfaceEmbedConnector()) {
+  if (auto* surface_embed_connector =
+          web_contents_->GetSurfaceEmbedConnector()) {
     return static_cast<SurfaceEmbedConnectorImpl*>(surface_embed_connector)
         ->GetEmbedderWebContentsView();
   }
@@ -72,7 +73,8 @@ RenderViewHostDelegateView* WebContentsViewChildFrame::GetOuterDelegateView() {
     CHECK(outer_rvh);
     return outer_rvh->GetDelegate()->GetDelegateView();
   }
-  if (auto* surface_embed_connector = web_contents_->GetSurfaceEmbedConnector()) {
+  if (auto* surface_embed_connector =
+          web_contents_->GetSurfaceEmbedConnector()) {
     return static_cast<SurfaceEmbedConnectorImpl*>(surface_embed_connector)
         ->GetEmbedderRenderViewHostDelegateView();
   }

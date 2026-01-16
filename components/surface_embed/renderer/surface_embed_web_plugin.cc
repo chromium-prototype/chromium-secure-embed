@@ -131,7 +131,7 @@ void SurfaceEmbedWebPlugin::UpdateAllLifecyclePhases(
     blink::DocumentUpdateReason reason) {}
 
 void SurfaceEmbedWebPlugin::Paint(cc::PaintCanvas* canvas,
-                                 const gfx::Rect& rect) {
+                                  const gfx::Rect& rect) {
   // No-op: rendering is now handled by the compositor layer
   NOTREACHED();
 }
@@ -141,9 +141,9 @@ viz::FrameSinkId SurfaceEmbedWebPlugin::GetFrameSinkId() {
 }
 
 void SurfaceEmbedWebPlugin::UpdateGeometry(const gfx::Rect& window_rect,
-                                          const gfx::Rect& clip_rect,
-                                          const gfx::Rect& unobscured_rect,
-                                          bool is_visible) {
+                                           const gfx::Rect& clip_rect,
+                                           const gfx::Rect& unobscured_rect,
+                                           bool is_visible) {
   // Note: Layer bounds are set by WebPluginContainerImpl::Paint()
   // so we don't need to set them here for the time being.
 
@@ -279,7 +279,7 @@ void SurfaceEmbedWebPlugin::SynchronizeVisualProperties() {
 }
 
 void SurfaceEmbedWebPlugin::UpdateFocus(bool focused,
-                                       blink::mojom::FocusType focus_type) {
+                                        blink::mojom::FocusType focus_type) {
   host_->SetFocus(focused, focus_type);
 }
 

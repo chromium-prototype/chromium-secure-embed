@@ -50,8 +50,8 @@ class SurfaceEmbedConnectorImpl::WCObserver : public WebContentsObserver {
 
 // static
 void SurfaceEmbedConnector::Attach(WebContents* parent_web_contents,
-                                  WebContents* child_web_contents,
-                                  SurfaceEmbedConnector::Delegate* delegate) {
+                                   WebContents* child_web_contents,
+                                   SurfaceEmbedConnector::Delegate* delegate) {
   // Must Detach the child before re-Attaching.
   CHECK(!child_web_contents->GetSurfaceEmbedConnector());
   auto connector = std::make_unique<SurfaceEmbedConnectorImpl>(
@@ -218,7 +218,7 @@ SurfaceEmbedConnector::Delegate* SurfaceEmbedConnectorImpl::GetDelegate() {
 }
 
 void SurfaceEmbedConnectorImpl::SetFocus(bool focused,
-                                        blink::mojom::FocusType focus_type) {
+                                         blink::mojom::FocusType focus_type) {
   if (!guest_web_contents_ || !view_) {
     return;
   }
@@ -252,7 +252,7 @@ const viz::FrameSinkId& SurfaceEmbedConnectorImpl::GetFrameSinkId() const {
 }
 
 void SurfaceEmbedConnectorImpl::SetView(RenderWidgetHostViewChildFrame* view,
-                                       bool allow_paint_holding) {
+                                        bool allow_paint_holding) {
   // Detach ourselves from the previous |view_|.
   if (view_) {
     RenderWidgetHostViewBase* root_view = GetRootRenderWidgetHostView();
@@ -425,7 +425,8 @@ const display::ScreenInfos& SurfaceEmbedConnectorImpl::GetScreenInfos() const {
   return screen_infos_;
 }
 
-const viz::LocalSurfaceId& SurfaceEmbedConnectorImpl::GetLocalSurfaceId() const {
+const viz::LocalSurfaceId& SurfaceEmbedConnectorImpl::GetLocalSurfaceId()
+    const {
   return local_surface_id_;
 }
 
@@ -456,7 +457,7 @@ double SurfaceEmbedConnectorImpl::GetCssZoomFactor() const {
 }
 
 void SurfaceEmbedConnectorImpl::EnableAutoResize(const gfx::Size& min_size,
-                                                const gfx::Size& max_size) {
+                                                 const gfx::Size& max_size) {
   NOTIMPLEMENTED();
 }
 
@@ -545,8 +546,9 @@ void SurfaceEmbedConnectorImpl::SetRectInParentView(
   if (view_ /*&& frame_proxy_in_parent_renderer_*/) {
     view_->SetBounds(rect_in_parent_view_in_dip_);
 
-    // TODO(surface-embed): Notify the embedder of the rect change so that it can
-    // call SendScreenRects on all subtrees rooted at the guest web contents?
+    // TODO(surface-embed): Notify the embedder of the rect change so that it
+    // can call SendScreenRects on all subtrees rooted at the guest web
+    // contents?
 
     // Other local root frames nested underneath this one implicitly have their
     // view rects changed when their ancestor is repositioned, and therefore
@@ -565,8 +567,8 @@ void SurfaceEmbedConnectorImpl::SetRectInParentView(
 }
 
 void SurfaceEmbedConnectorImpl::SetIsInert(bool inert) {
-  // TODO(surface-embed): Do we want to support inert and other throttling states
-  // across embedder/guest boundaries?
+  // TODO(surface-embed): Do we want to support inert and other throttling
+  // states across embedder/guest boundaries?
   is_inert_ = inert;
   if (view_) {
     view_->SetIsInert();
@@ -708,7 +710,8 @@ SurfaceEmbedConnectorImpl::GetParentViewInput() {
   return GetParentRenderWidgetHostView();
 }
 
-input::RenderWidgetHostViewInput* SurfaceEmbedConnectorImpl::GetRootViewInput() {
+input::RenderWidgetHostViewInput*
+SurfaceEmbedConnectorImpl::GetRootViewInput() {
   return GetRootRenderWidgetHostView();
 }
 

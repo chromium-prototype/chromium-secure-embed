@@ -560,7 +560,7 @@ void ChromeContentBrowserClient::
 #endif  // BUILDFLAG(ENABLE_PDF)
 #if !BUILDFLAG(IS_ANDROID)
   associated_registry.AddInterface<search::mojom::EmbeddedSearchConnector>(
-      base::BindRepeating(g
+      base::BindRepeating(
           [](content::RenderFrameHost* render_frame_host,
              mojo::PendingAssociatedReceiver<
                  search::mojom::EmbeddedSearchConnector> receiver) {
@@ -578,7 +578,7 @@ void ChromeContentBrowserClient::
              mojo::PendingAssociatedReceiver<
                  surface_embed::mojom::SurfaceEmbedHost> receiver) {
             surface_embed::SurfaceEmbedHost::Create(render_frame_host,
-                                                  std::move(receiver));
+                                                    std::move(receiver));
           },
           &render_frame_host));
 #endif  // BUILDFLAG(ENABLE_SECURE_EMBED)

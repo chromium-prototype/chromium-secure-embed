@@ -100,8 +100,8 @@ class MockSurfaceEmbedHost : public mojom::SurfaceEmbedHost {
   }
 
   // mojom::SurfaceEmbedHost implementation
-  void SetSurfaceEmbed(
-      mojo::PendingAssociatedRemote<mojom::SurfaceEmbed> surface_embed) override {
+  void SetSurfaceEmbed(mojo::PendingAssociatedRemote<mojom::SurfaceEmbed>
+                           surface_embed) override {
     surface_embed_.Bind(std::move(surface_embed));
     surface_embed_.set_disconnect_handler(
         base::BindOnce(&MockSurfaceEmbedHost::OnSurfaceEmbedDisconnected,
@@ -148,7 +148,8 @@ class MockSurfaceEmbedHost : public mojom::SurfaceEmbedHost {
 class SurfaceEmbedTestContentBrowserClient
     : public content::ContentBrowserTestContentBrowserClient {
  public:
-  explicit SurfaceEmbedTestContentBrowserClient(SurfaceEmbedHostTracker* tracker)
+  explicit SurfaceEmbedTestContentBrowserClient(
+      SurfaceEmbedHostTracker* tracker)
       : tracker_(tracker) {}
   ~SurfaceEmbedTestContentBrowserClient() override = default;
 
@@ -273,8 +274,8 @@ IN_PROC_BROWSER_TEST_F(SurfaceEmbedRendererTest, MultipleEmbedTags) {
 
 IN_PROC_BROWSER_TEST_F(SurfaceEmbedRendererTest, PluginDestruction) {
   // Verifies that navigating away from a page with a plugin properly destroys
-  // the SurfaceEmbedWebPlugin and SurfaceEmbedHost, and that the Mojo connection
-  // is cleanly closed.
+  // the SurfaceEmbedWebPlugin and SurfaceEmbedHost, and that the Mojo
+  // connection is cleanly closed.
   NavigateToTestUrl(kTestUrl);
   ASSERT_EQ(kSingleEmbedCount, CountEmbedElementsInPage());
   ASSERT_EQ(kSingleEmbedCount, GetMockHostCount());

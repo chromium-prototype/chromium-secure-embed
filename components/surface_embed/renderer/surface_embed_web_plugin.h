@@ -30,11 +30,11 @@ class RenderFrame;
 namespace surface_embed {
 
 class SurfaceEmbedWebPlugin : public blink::WebPlugin,
-                             public mojom::SurfaceEmbed,
-                             public cc::ContentLayerClient {
+                              public mojom::SurfaceEmbed,
+                              public cc::ContentLayerClient {
  public:
   static SurfaceEmbedWebPlugin* Create(content::RenderFrame* render_frame,
-                                      const blink::WebPluginParams& params);
+                                       const blink::WebPluginParams& params);
 
   SurfaceEmbedWebPlugin(const SurfaceEmbedWebPlugin&) = delete;
   SurfaceEmbedWebPlugin& operator=(const SurfaceEmbedWebPlugin&) = delete;

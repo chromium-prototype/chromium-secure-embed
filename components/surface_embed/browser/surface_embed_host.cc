@@ -24,7 +24,8 @@ size_t SurfaceEmbedHost::instance_count_for_testing_ = 0;
 size_t SurfaceEmbedHost::attached_instance_count_for_testing_ = 0;
 
 SurfaceEmbedHost::SurfaceEmbedHost(content::RenderFrameHost* render_frame_host)
-    : render_frame_host_id_(render_frame_host->GetGlobalId()), surface_embed_() {
+    : render_frame_host_id_(render_frame_host->GetGlobalId()),
+      surface_embed_() {
   ++instance_count_for_testing_;
 }
 
@@ -98,7 +99,7 @@ void SurfaceEmbedHost::AttachConnector(int64_t content_id) {
       content::WebContents::FromRenderFrameHost(
           content::RenderFrameHost::FromID(render_frame_host_id_));
   content::SurfaceEmbedConnector::Attach(parent_web_contents,
-                                        web_contents_to_attach, this);
+                                         web_contents_to_attach, this);
 
   ++attached_instance_count_for_testing_;
 
@@ -136,7 +137,7 @@ void SurfaceEmbedHost::SynchronizeVisualProperties(
 }
 
 void SurfaceEmbedHost::SetFocus(bool focused,
-                               blink::mojom::FocusType focus_type) {
+                                blink::mojom::FocusType focus_type) {
   know_have_focus_ = false;
   if (content::SurfaceEmbedConnector* connector = GetConnector()) {
     connector->SetFocus(focused, focus_type);
@@ -157,9 +158,9 @@ size_t SurfaceEmbedHost::GetAttachedInstanceCountForTesting() {
 }
 
 void SurfaceEmbedHost::OnSurfaceEmbedDisconnected() {
-  // This will get hit when the renderer's SurfaceEmbedWebPlugin is destroyed. In
-  // that scenario, `this` will get destroyed next as its lifetime is managed by
-  // a SelfOwnedAssociatedReceiver.
+  // This will get hit when the renderer's SurfaceEmbedWebPlugin is destroyed.
+  // In that scenario, `this` will get destroyed next as its lifetime is managed
+  // by a SelfOwnedAssociatedReceiver.
   surface_embed_.reset();
 }
 
@@ -200,7 +201,8 @@ void SurfaceEmbedHost::FocusInEmbedder(
     return;
   }
 
-  if (focus_op == content::SurfaceEmbedConnector::FocusOperation::kFocusPlugin &&
+  if (focus_op ==
+          content::SurfaceEmbedConnector::FocusOperation::kFocusPlugin &&
       know_have_focus_) {
     return;
   }
@@ -222,7 +224,8 @@ void SurfaceEmbedHost::FocusInEmbedder(
 }
 
 content::SurfaceEmbedConnector* SurfaceEmbedHost::GetConnector() {
-  return guest_contents_ ? guest_contents_->GetSurfaceEmbedConnector() : nullptr;
+  return guest_contents_ ? guest_contents_->GetSurfaceEmbedConnector()
+                         : nullptr;
 }
 
 bool SurfaceEmbedHost::IsAttachedForTesting() const {

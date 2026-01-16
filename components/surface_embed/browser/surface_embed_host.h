@@ -40,8 +40,8 @@ class COMPONENT_EXPORT(SECURE_EMBED) SurfaceEmbedHost
   static size_t GetAttachedInstanceCountForTesting();
 
   // mojom::SurfaceEmbedHost implementation:
-  void SetSurfaceEmbed(
-      mojo::PendingAssociatedRemote<mojom::SurfaceEmbed> surface_embed) override;
+  void SetSurfaceEmbed(mojo::PendingAssociatedRemote<mojom::SurfaceEmbed>
+                           surface_embed) override;
   void AttachConnector(int64_t content_id) override;
   void DetachConnector() override;
   void SynchronizeVisualProperties(

@@ -20,13 +20,13 @@
 #include "content/public/test/content_browser_test_utils.h"
 #include "content/public/test/no_renderer_crashes_assertion.h"
 #include "content/public/test/text_input_test_utils.h"
-#include "content/shell/browser/dshell.h"
+#include "content/shell/browser/shell.h"
 #include "net/dns/mock_host_resolver.h"
 #include "third_party/skia/include/core/SkBitmap.h"
 #include "third_party/skia/include/core/SkColor.h"
 #include "ui/gfx/geometry/rect.h"
 
-namespace surface_embe {
+namespace surface_embed {
 
 namespace {
 constexpr char kAttachHarnessUrl[] =
@@ -360,7 +360,8 @@ IN_PROC_BROWSER_TEST_F(SurfaceEmbedBrowserTest,
   EXPECT_EQ(guest_contents_blue->GetSurfaceEmbedConnector(), nullptr);
 }
 
-IN_PROC_BROWSER_TEST_F(SurfaceEmbedBrowserTest, VisibilityHiddenStopsRendering) {
+IN_PROC_BROWSER_TEST_F(SurfaceEmbedBrowserTest,
+                       VisibilityHiddenStopsRendering) {
   auto guest_contents = SetupHarnessAndGuestWithContent(kRedBoxUrl);
   AttachGuestToEmbed(guest_contents.get());
   VerifyBoxRendering(SK_ColorRED);
@@ -1035,4 +1036,4 @@ IN_PROC_BROWSER_TEST_F(SurfaceEmbedBrowserTest, FocusByClick) {
   }
 }
 
-}  // namespace surface_embe
+}  // namespace surface_embed

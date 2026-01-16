@@ -41,12 +41,12 @@ class RenderViewHostDelegateView;
 class RenderWidgetHost;
 
 class SurfaceEmbedConnectorImpl : public SurfaceEmbedConnector,
-                                 public CrossProcessFrameConnectorBase {
+                                  public CrossProcessFrameConnectorBase {
  public:
   // `embedded_web_contents` will have ownership of this.
   SurfaceEmbedConnectorImpl(WebContentsImpl* embedder_web_contents,
-                           WebContentsImpl* embedded_web_contents,
-                           SurfaceEmbedConnector::Delegate* delegate);
+                            WebContentsImpl* embedded_web_contents,
+                            SurfaceEmbedConnector::Delegate* delegate);
   ~SurfaceEmbedConnectorImpl() override;
 
   WebContentsView* GetEmbedderWebContentsView();
@@ -74,8 +74,8 @@ class SurfaceEmbedConnectorImpl : public SurfaceEmbedConnector,
   SurfaceEmbedConnector::Delegate* GetDelegate() override;
 
   // CrossProcessFrameConnectorBase:
-  // TODO(surface-embed): Some of the methods that we override here don't need to
-  // be on CrossProcessFrameConnectorBase class at all. Go through them and
+  // TODO(surface-embed): Some of the methods that we override here don't need
+  // to be on CrossProcessFrameConnectorBase class at all. Go through them and
   // remove anything that isn't directly used by the view from the base class.
   void OnSynchronizeVisualProperties(
       const blink::FrameVisualProperties& visual_properties) override;
