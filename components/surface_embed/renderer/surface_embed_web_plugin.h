@@ -8,7 +8,7 @@
 #include "base/memory/raw_ptr.h"
 #include "base/memory/scoped_refptr.h"
 #include "cc/layers/content_layer_client.h"
-#include "components/secure_embed/common/secure_embed.mojom.h"
+#include "components/surface_embed/common/surface_embed.mojom.h"
 #include "mojo/public/cpp/bindings/associated_receiver.h"
 #include "mojo/public/cpp/bindings/associated_remote.h"
 #include "third_party/blink/public/web/web_plugin.h"
