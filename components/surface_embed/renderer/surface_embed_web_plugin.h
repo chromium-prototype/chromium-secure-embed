@@ -7,6 +7,7 @@
 
 #include "base/memory/raw_ptr.h"
 #include "base/memory/scoped_refptr.h"
+#include "base/memory/weak_ptr.h"
 #include "cc/layers/content_layer_client.h"
 #include "components/surface_embed/common/surface_embed.mojom.h"
 #include "mojo/public/cpp/bindings/associated_receiver.h"
@@ -78,11 +79,18 @@ class SurfaceEmbedWebPlugin : public blink::WebPlugin,
   bool FillsBoundsCompletely() const override;
 
  private:
+  class AccessibilityObserver;
+
   explicit SurfaceEmbedWebPlugin(
       mojo::AssociatedRemote<mojom::SurfaceEmbedHost> host,
-      int contents_id);
+      int contents_id,
+      content::RenderFrame* render_frame);
 
   void OnSurfaceEmbedHostDisconnected();
+
+  void OnAccessibilityModeEnabled();
+
+  void SendAccessibilityInfo();
 
   void SynchronizeVisualProperties();
 
@@ -113,6 +121,12 @@ class SurfaceEmbedWebPlugin : public blink::WebPlugin,
   mojo::AssociatedReceiver<mojom::SurfaceEmbed> receiver_{this};
   std::unique_ptr<viz::ParentLocalSurfaceIdAllocator>
       parent_local_surface_id_allocator_;
+
+  // Observer for accessibility mode changes.
+  std::unique_ptr<AccessibilityObserver> accessibility_observer_;
+
+  // Must be last member.
+  base::WeakPtrFactory<SurfaceEmbedWebPlugin> weak_ptr_factory_{this};
 };
 
 }  // namespace surface_embed

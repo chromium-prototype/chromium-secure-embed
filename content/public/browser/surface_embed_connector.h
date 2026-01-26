@@ -53,6 +53,10 @@ class CONTENT_EXPORT SurfaceEmbedConnector {
     // of the SurfaceEmbed's request.
     virtual void DetachedByHost() = 0;
 
+    // Called when the guest's AXTreeID has changed (e.g., after navigation)
+    // and the accessibility trees may need to be re-stitched.
+    virtual void UpdateAccessibilityTree() = 0;
+
     // Returns whether this delegate's host still has an attached guest.
     virtual bool IsAttachedForTesting() const = 0;
   };

@@ -150,6 +150,10 @@ class SurfaceEmbedConnectorImpl : public SurfaceEmbedConnector,
 
   void OnRenderViewReady();
 
+  // Called when the guest's accessibility tree ID changes. Notifies the
+  // delegate so it can re-stitch the accessibility trees.
+  void UpdateAccessibilityTree();
+
  private:
   void MaybeRefreshSurfaceKeepAlive();
 

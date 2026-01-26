@@ -4,6 +4,7 @@
 
 #include "components/surface_embed/renderer/surface_embed_web_plugin.h"
 
+#include "base/logging.h"
 #include "base/notimplemented.h"
 #include "base/notreached.h"
 #include "base/strings/string_number_conversions.h"
@@ -13,7 +14,9 @@
 #include "cc/paint/paint_flags.h"
 #include "cc/paint/paint_image_builder.h"
 #include "components/viz/common/surfaces/parent_local_surface_id_allocator.h"
+#include "content/public/browser/render_frame_host.h"
 #include "content/public/renderer/render_frame.h"
+#include "content/public/renderer/render_frame_observer.h"
 #include "third_party/blink/public/common/associated_interfaces/associated_interface_provider.h"
 #include "third_party/blink/public/common/frame/frame_visual_properties.h"
 #include "third_party/blink/public/common/input/web_coalesced_input_event.h"
@@ -21,6 +24,7 @@
 #include "third_party/blink/public/platform/platform.h"
 #include "third_party/blink/public/platform/web_input_event_result.h"
 #include "third_party/blink/public/platform/web_url_error.h"
+#include "third_party/blink/public/web/web_ax_object.h"
 #include "third_party/blink/public/web/web_element.h"
 #include "third_party/blink/public/web/web_frame_widget.h"
 #include "third_party/blink/public/web/web_local_frame.h"
@@ -32,6 +36,31 @@
 #include "v8/include/v8-local-handle.h"
 
 namespace surface_embed {
+
+// Helper class to detect when accessibility mode is enabled.
+class SurfaceEmbedWebPlugin::AccessibilityObserver
+    : public content::RenderFrameObserver {
+ public:
+  AccessibilityObserver(content::RenderFrame* render_frame,
+                        base::WeakPtr<SurfaceEmbedWebPlugin> plugin)
+      : content::RenderFrameObserver(render_frame),
+        plugin_(std::move(plugin)) {}
+  AccessibilityObserver(const AccessibilityObserver&) = delete;
+  AccessibilityObserver& operator=(const AccessibilityObserver&) = delete;
+  ~AccessibilityObserver() override = default;
+
+  // RenderFrameObserver:
+  void AccessibilityModeChanged(const ui::AXMode& mode) override {
+    if (plugin_ && mode.has_mode(ui::AXMode::kWebContents)) {
+      plugin_->OnAccessibilityModeEnabled();
+    }
+  }
+
+  void OnDestruct() override { delete this; }
+
+ private:
+  base::WeakPtr<SurfaceEmbedWebPlugin> plugin_;
+};
 
 // static
 SurfaceEmbedWebPlugin* SurfaceEmbedWebPlugin::Create(
@@ -49,16 +78,21 @@ SurfaceEmbedWebPlugin* SurfaceEmbedWebPlugin::Create(
     }
   }
 
-  return new SurfaceEmbedWebPlugin(std::move(host), contents_id);
+  return new SurfaceEmbedWebPlugin(std::move(host), contents_id, render_frame);
 }
 
 SurfaceEmbedWebPlugin::SurfaceEmbedWebPlugin(
     mojo::AssociatedRemote<mojom::SurfaceEmbedHost> host,
-    int contents_id)
+    int contents_id,
+    content::RenderFrame* render_frame)
     : contents_id_(contents_id),
       host_(std::move(host)),
       parent_local_surface_id_allocator_(
-          std::make_unique<viz::ParentLocalSurfaceIdAllocator>()) {}
+          std::make_unique<viz::ParentLocalSurfaceIdAllocator>()) {
+  // Create the observer after construction so weak_ptr_factory_ is initialized.
+  accessibility_observer_ = std::make_unique<AccessibilityObserver>(
+      render_frame, weak_ptr_factory_.GetWeakPtr());
+}
 
 SurfaceEmbedWebPlugin::~SurfaceEmbedWebPlugin() = default;
 
@@ -84,11 +118,46 @@ bool SurfaceEmbedWebPlugin::Initialize(blink::WebPluginContainer* container) {
     if (contents_id_ > 0) {
       host_->AttachConnector(contents_id_);
     }
+
+    // Send accessibility info if available.
+    SendAccessibilityInfo();
   }
+
   return true;
 }
 
+void SurfaceEmbedWebPlugin::OnAccessibilityModeEnabled() {
+  SendAccessibilityInfo();
+}
+
+void SurfaceEmbedWebPlugin::SendAccessibilityInfo() {
+  if (!container_ || !host_) {
+    return;
+  }
+
+  auto element_ax_object =
+      blink::WebAXObject::FromWebNode(container_->GetElement());
+  if (element_ax_object.AxID() == -1) {
+    return;
+  }
+
+  blink::WebLocalFrame* frame = container_->GetDocument().GetFrame();
+  if (!frame) {
+    return;
+  }
+
+  std::optional<base::UnguessableToken> frame_ax_tree_id_token =
+      frame->GetAXTreeID().token();
+  if (!frame_ax_tree_id_token) {
+    return;
+  }
+
+  host_->SetContainerAccessibilityInfo(element_ax_object.AxID(),
+                                       frame_ax_tree_id_token.value());
+}
+
 void SurfaceEmbedWebPlugin::Destroy() {
+  accessibility_observer_.reset();
   if (container_) {
     container_->SetCcLayer(nullptr);
   }

@@ -7,9 +7,11 @@
 
 #include "base/component_export.h"
 #include "base/memory/weak_ptr.h"
+#include "base/unguessable_token.h"
 #include "components/surface_embed/common/surface_embed.mojom.h"
 #include "content/public/browser/global_routing_id.h"
 #include "content/public/browser/surface_embed_connector.h"
+#include "content/public/browser/web_contents_observer.h"
 #include "mojo/public/cpp/bindings/associated_remote.h"
 #include "mojo/public/cpp/bindings/pending_associated_receiver.h"
 #include "mojo/public/cpp/bindings/self_owned_associated_receiver.h"
@@ -48,6 +50,9 @@ class COMPONENT_EXPORT(SURFACE_EMBED) SurfaceEmbedHost
       const blink::FrameVisualProperties& visual_properties,
       bool is_visible) override;
   void SetFocus(bool focused, blink::mojom::FocusType focus_type) override;
+  void SetContainerAccessibilityInfo(
+      int ax_node_id,
+      const base::UnguessableToken& ax_tree_token) override;
 
   // content::SurfaceEmbedConnector::Delegate implementation:
   void SetFrameSinkId(const viz::FrameSinkId& frame_sink_id) override;
@@ -58,6 +63,7 @@ class COMPONENT_EXPORT(SURFACE_EMBED) SurfaceEmbedHost
   void ChildProcessGone() override;
   void DetachedByHost() override;
   bool IsAttachedForTesting() const override;
+  void UpdateAccessibilityTree() override;
 
  private:
   explicit SurfaceEmbedHost(content::RenderFrameHost*);
@@ -67,12 +73,20 @@ class COMPONENT_EXPORT(SURFACE_EMBED) SurfaceEmbedHost
   // May return null.
   content::SurfaceEmbedConnector* GetConnector();
 
+  void StitchAccessibilityTrees();
+
   // Count of all alive instances for testing.
   static size_t instance_count_for_testing_;
   // Count of all alive and attached instance for testing.
   static size_t attached_instance_count_for_testing_;
 
+  // The accessibility node ID of the embed HTML element in the parent document.
+  int container_accessibility_node_id_ = -1;
+  // The accessibility tree token of the parent frame.
+  base::UnguessableToken container_accessibility_tree_token_;
+  // The RenderFrameHost of the parent frame.
   content::GlobalRenderFrameHostId render_frame_host_id_;
+  // The WebContents of the child document.
   base::WeakPtr<content::WebContents> guest_contents_ = nullptr;
   bool know_have_focus_ = false;
 

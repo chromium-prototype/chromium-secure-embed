@@ -25,8 +25,10 @@
 // TODO(surface-embed) I believe non-public code in /content is not supposed to
 // use the public APIs if there are /content implementations. It should just use
 // the implementation directly. Review all such includes below.
+#include "content/browser/renderer_host/render_frame_host_impl.h"
 #include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/web_contents_observer.h"
+#include "ui/accessibility/ax_updates_and_events.h"
 
 namespace content {
 
@@ -43,6 +45,15 @@ class SurfaceEmbedConnectorImpl::WCObserver : public WebContentsObserver {
 
   // WebContentsObserver:
   void RenderViewReady() override { guest_frame_->OnRenderViewReady(); }
+
+  void RenderFrameHostChanged(RenderFrameHost* old_host,
+                              RenderFrameHost* new_host) override {
+    guest_frame_->UpdateAccessibilityTree();
+  }
+
+  void AXTreeIDForMainFrameHasChanged() override {
+    guest_frame_->UpdateAccessibilityTree();
+  }
 
  private:
   raw_ptr<SurfaceEmbedConnectorImpl> guest_frame_;
@@ -61,6 +72,8 @@ void SurfaceEmbedConnector::Attach(WebContents* parent_web_contents,
   static_cast<WebContentsImpl*>(child_web_contents)
       ->SetSurfaceEmbedConnector(std::move(connector));
   connector_ptr->UpdateViewForCurrentRenderFrameHost();
+
+  connector_ptr->UpdateAccessibilityTree();
 }
 
 // static
@@ -72,6 +85,11 @@ void SurfaceEmbedConnector::Detach(WebContents* child_web_contents) {
     // something not top-level.
     connector->OnVisibilityChanged(blink::mojom::FrameVisibility::kNotRendered);
   }
+
+  // Clear the accessibility parent relationship.
+  auto* child_rfh = static_cast<RenderFrameHostImpl*>(
+      child_web_contents->GetPrimaryMainFrame());
+  child_rfh->SetEmbedParentAXTreeID(ui::AXTreeIDUnknown());
 
   // Connector will be freed by ClearSurfaceEmbedConnector().
   static_cast<WebContentsImpl*>(child_web_contents)
@@ -721,6 +739,12 @@ SurfaceEmbedConnectorImpl::GetRootViewInput() {
 void SurfaceEmbedConnectorImpl::OnRenderViewReady() {
   // When the RenderView is ready, update the view in case it has changed.
   UpdateViewForCurrentRenderFrameHost();
+}
+
+void SurfaceEmbedConnectorImpl::UpdateAccessibilityTree() {
+  if (delegate_) {
+    delegate_->UpdateAccessibilityTree();
+  }
 }
 
 void SurfaceEmbedConnectorImpl::UpdateViewForCurrentRenderFrameHost() {
