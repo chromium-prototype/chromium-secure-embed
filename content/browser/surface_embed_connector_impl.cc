@@ -28,6 +28,9 @@
 #include "content/browser/renderer_host/render_frame_host_impl.h"
 #include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/web_contents_observer.h"
+#include "ui/accessibility/ax_action_data.h"
+#include "ui/accessibility/ax_enums.mojom.h"
+#include "ui/accessibility/ax_tree_id.h"
 #include "ui/accessibility/ax_updates_and_events.h"
 
 namespace content {
@@ -84,6 +87,9 @@ void SurfaceEmbedConnector::Detach(WebContents* child_web_contents) {
     // performance_manager doesn't get perturbed by us messing w/visibility of
     // something not top-level.
     connector->OnVisibilityChanged(blink::mojom::FrameVisibility::kNotRendered);
+
+    // Clear the container accessibility info so we don't try to stitch later.
+    connector->SetContainerAccessibilityInfo(-1, base::UnguessableToken());
   }
 
   // Clear the accessibility parent relationship.
@@ -742,9 +748,51 @@ void SurfaceEmbedConnectorImpl::OnRenderViewReady() {
 }
 
 void SurfaceEmbedConnectorImpl::UpdateAccessibilityTree() {
-  if (delegate_) {
-    delegate_->UpdateAccessibilityTree();
+  if (!guest_web_contents_ || container_accessibility_node_id_ == -1 ||
+      !container_accessibility_tree_token_) {
+    return;
   }
+
+  auto child_ax_tree_id =
+      guest_web_contents_->GetPrimaryMainFrame()->GetAXTreeID();
+  // Check if both tree IDs are valid. The child's AXTreeID might not be
+  // available yet if the guest hasn't navigated or doesn't have an embedding
+  // token set.
+  if (child_ax_tree_id == ui::AXTreeIDUnknown()) {
+    return;
+  }
+
+  auto parent_ax_tree_id =
+      ui::AXTreeID::FromToken(container_accessibility_tree_token_);
+  auto* parent_render_frame_host =
+      content::RenderFrameHost::FromAXTreeID(parent_ax_tree_id);
+  if (!parent_render_frame_host) {
+    return;
+  }
+
+  // First tell the parent tree and element about the child tree.
+  ui::AXActionData action_data;
+  action_data.action = ax::mojom::Action::kStitchChildTree;
+  action_data.target_tree_id = parent_ax_tree_id;
+  // Note we set the target node ID and not the target role. Setting both is
+  // an error that is silently ignored.
+  action_data.target_node_id = container_accessibility_node_id_;
+  action_data.child_tree_id = child_ax_tree_id;
+
+  parent_render_frame_host->AccessibilityPerformAction(action_data);
+
+  // Second, tell the child tree about its parent.
+  auto* child_rfh = static_cast<content::RenderFrameHostImpl*>(
+      guest_web_contents_->GetPrimaryMainFrame());
+  child_rfh->SetEmbedParentAXTreeID(parent_ax_tree_id);
+}
+
+void SurfaceEmbedConnectorImpl::SetContainerAccessibilityInfo(
+    int ax_node_id,
+    const base::UnguessableToken& ax_tree_token) {
+  container_accessibility_node_id_ = ax_node_id;
+  container_accessibility_tree_token_ = ax_tree_token;
+  UpdateAccessibilityTree();
 }
 
 void SurfaceEmbedConnectorImpl::UpdateViewForCurrentRenderFrameHost() {

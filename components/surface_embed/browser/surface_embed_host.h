@@ -63,7 +63,6 @@ class COMPONENT_EXPORT(SURFACE_EMBED) SurfaceEmbedHost
   void ChildProcessGone() override;
   void DetachedByHost() override;
   bool IsAttachedForTesting() const override;
-  void UpdateAccessibilityTree() override;
 
  private:
   explicit SurfaceEmbedHost(content::RenderFrameHost*);
@@ -73,22 +72,22 @@ class COMPONENT_EXPORT(SURFACE_EMBED) SurfaceEmbedHost
   // May return null.
   content::SurfaceEmbedConnector* GetConnector();
 
-  void StitchAccessibilityTrees();
-
   // Count of all alive instances for testing.
   static size_t instance_count_for_testing_;
   // Count of all alive and attached instance for testing.
   static size_t attached_instance_count_for_testing_;
 
-  // The accessibility node ID of the embed HTML element in the parent document.
-  int container_accessibility_node_id_ = -1;
-  // The accessibility tree token of the parent frame.
-  base::UnguessableToken container_accessibility_tree_token_;
   // The RenderFrameHost of the parent frame.
   content::GlobalRenderFrameHostId render_frame_host_id_;
   // The WebContents of the child document.
   base::WeakPtr<content::WebContents> guest_contents_ = nullptr;
   bool know_have_focus_ = false;
+
+  // Cached accessibility info from the container element. These are stored
+  // here in case SetContainerAccessibilityInfo is called before the connector
+  // is attached, so we can pass them to the connector once it's ready.
+  int container_accessibility_node_id_ = -1;
+  base::UnguessableToken container_accessibility_tree_token_;
 
   mojo::AssociatedRemote<mojom::SurfaceEmbed> surface_embed_;
 };

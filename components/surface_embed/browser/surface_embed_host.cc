@@ -9,7 +9,6 @@
 #include "base/no_destructor.h"
 #include "base/supports_user_data.h"
 #include "components/guest_contents/browser/guest_contents_handle.h"
-#include "content/browser/renderer_host/render_frame_host_impl.h"
 #include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/surface_embed_connector.h"
 #include "content/public/browser/web_contents.h"
@@ -17,10 +16,6 @@
 #include "mojo/public/cpp/bindings/self_owned_associated_receiver.h"
 #include "third_party/blink/public/mojom/frame/intrinsic_sizing_info.mojom.h"
 #include "third_party/blink/public/mojom/frame/viewport_intersection_state.mojom.h"
-#include "ui/accessibility/ax_action_data.h"
-#include "ui/accessibility/ax_enums.mojom.h"
-#include "ui/accessibility/ax_tree_id.h"
-#include "ui/accessibility/ax_updates_and_events.h"
 
 namespace surface_embed {
 
@@ -116,9 +111,16 @@ void SurfaceEmbedHost::AttachConnector(int64_t content_id) {
     auto* connector = GetConnector();
     CHECK(connector->GetFrameSinkId().is_valid());
     surface_embed_->SetFrameSinkId(connector->GetFrameSinkId());
-  }
 
-  StitchAccessibilityTrees();
+    // If accessibility info was received before the connector was attached,
+    // pass it to the connector now.
+    if (container_accessibility_node_id_ != -1 &&
+        container_accessibility_tree_token_) {
+      connector->SetContainerAccessibilityInfo(
+          container_accessibility_node_id_,
+          container_accessibility_tree_token_);
+    }
+  }
 }
 
 void SurfaceEmbedHost::DetachConnector() {
@@ -126,8 +128,6 @@ void SurfaceEmbedHost::DetachConnector() {
     content::SurfaceEmbedConnector::Detach(guest_contents_.get());
     guest_contents_ = nullptr;
     attached_instance_count_for_testing_--;
-
-    StitchAccessibilityTrees();
   }
   know_have_focus_ = false;
   CHECK(!guest_contents_);
@@ -159,49 +159,13 @@ void SurfaceEmbedHost::SetFocus(bool focused,
 void SurfaceEmbedHost::SetContainerAccessibilityInfo(
     int ax_node_id,
     const base::UnguessableToken& ax_tree_token) {
+  // Cache the accessibility info in case the connector is not yet attached.
   container_accessibility_node_id_ = ax_node_id;
   container_accessibility_tree_token_ = ax_tree_token;
-  StitchAccessibilityTrees();
-}
 
-void SurfaceEmbedHost::StitchAccessibilityTrees() {
-  if (!guest_contents_ || container_accessibility_node_id_ == -1 ||
-      !container_accessibility_tree_token_) {
-    return;
+  if (content::SurfaceEmbedConnector* connector = GetConnector()) {
+    connector->SetContainerAccessibilityInfo(ax_node_id, ax_tree_token);
   }
-
-  auto child_ax_tree_id = guest_contents_->GetPrimaryMainFrame()->GetAXTreeID();
-  // Check if both tree IDs are valid. The child's AXTreeID might not be
-  // available yet if the guest hasn't navigated or doesn't have an embedding
-  // token set.
-  if (child_ax_tree_id == ui::AXTreeIDUnknown()) {
-    return;
-  }
-
-  auto parent_ax_tree_id =
-      ui::AXTreeID::FromToken(container_accessibility_tree_token_);
-  auto* parent_render_frame_host =
-      content::RenderFrameHost::FromAXTreeID(parent_ax_tree_id);
-  if (!parent_render_frame_host) {
-    return;
-  }
-
-  // First tell the parent tree and element about the child tree.
-  ui::AXActionData action_data;
-  action_data.action = ax::mojom::Action::kStitchChildTree;
-  action_data.target_tree_id = parent_ax_tree_id;
-  // Note we set the target node ID and not the target role. Setting both is
-  // an error that is silently ignored.
-  action_data.target_node_id = container_accessibility_node_id_;
-  action_data.child_tree_id = child_ax_tree_id;
-
-  parent_render_frame_host->AccessibilityPerformAction(action_data);
-
-  // Second, tell the child tree about its parent.
-  content::WebContents* child_web_contents = guest_contents_.get();
-  auto* child_rfh = static_cast<content::RenderFrameHostImpl*>(
-      child_web_contents->GetPrimaryMainFrame());
-  child_rfh->SetEmbedParentAXTreeID(parent_ax_tree_id);
 }
 
 // static
@@ -287,13 +251,6 @@ content::SurfaceEmbedConnector* SurfaceEmbedHost::GetConnector() {
 
 bool SurfaceEmbedHost::IsAttachedForTesting() const {
   return guest_contents_ != nullptr;
-}
-
-void SurfaceEmbedHost::UpdateAccessibilityTree() {
-  // The guest's accessibility tree ID changed because accessibility was enabled
-  // or the tree was recreated or we've reattached.
-  // Re-stitch the trees to update the connection.
-  StitchAccessibilityTrees();
 }
 
 }  // namespace surface_embed

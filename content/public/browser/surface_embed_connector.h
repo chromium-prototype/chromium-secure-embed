@@ -6,6 +6,7 @@
 #define CONTENT_PUBLIC_BROWSER_SURFACE_EMBED_CONNECTOR_H_
 
 #include "base/observer_list.h"
+#include "base/unguessable_token.h"
 #include "components/viz/common/surfaces/frame_sink_id.h"
 #include "components/viz/common/surfaces/local_surface_id.h"
 #include "content/common/content_export.h"
@@ -17,6 +18,10 @@
 namespace blink {
 struct FrameVisualProperties;
 }  // namespace blink
+
+namespace ui {
+class AXTreeID;
+}  // namespace ui
 
 namespace content {
 
@@ -53,10 +58,6 @@ class CONTENT_EXPORT SurfaceEmbedConnector {
     // of the SurfaceEmbed's request.
     virtual void DetachedByHost() = 0;
 
-    // Called when the guest's AXTreeID has changed (e.g., after navigation)
-    // and the accessibility trees may need to be re-stitched.
-    virtual void UpdateAccessibilityTree() = 0;
-
     // Returns whether this delegate's host still has an attached guest.
     virtual bool IsAttachedForTesting() const = 0;
   };
@@ -88,6 +89,12 @@ class CONTENT_EXPORT SurfaceEmbedConnector {
 
   // Gets the FrameSinkId of the guest's view.
   virtual const viz::FrameSinkId& GetFrameSinkId() const = 0;
+
+  // Sets the accessibility node ID and tree token of the container element
+  // in the parent document. This is used to stitch the accessibility trees.
+  virtual void SetContainerAccessibilityInfo(
+      int ax_node_id,
+      const base::UnguessableToken& ax_tree_token) = 0;
 };
 
 }  // namespace content

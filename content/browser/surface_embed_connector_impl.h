@@ -80,6 +80,9 @@ class SurfaceEmbedConnectorImpl : public SurfaceEmbedConnector,
   void OnSynchronizeVisualProperties(
       const blink::FrameVisualProperties& visual_properties) override;
   const viz::FrameSinkId& GetFrameSinkId() const override;
+  void SetContainerAccessibilityInfo(
+      int ax_node_id,
+      const base::UnguessableToken& ax_tree_token) override;
   void SetFocus(bool focused, blink::mojom::FocusType focus_type) override;
 
   void SetView(RenderWidgetHostViewChildFrame* view,
@@ -185,6 +188,11 @@ class SurfaceEmbedConnectorImpl : public SurfaceEmbedConnector,
   base::WeakPtr<WebContents> embedder_web_contents_;
   raw_ptr<WebContentsImpl> guest_web_contents_ = nullptr;  // Owns us.
   raw_ptr<RenderWidgetHostViewChildFrame> view_ = nullptr;
+
+  // The accessibility node ID of the embed HTML element in the parent document.
+  int container_accessibility_node_id_ = -1;
+  // The accessibility tree token of the parent frame.
+  base::UnguessableToken container_accessibility_tree_token_;
 
   // This is here rather than in the implementation class so that
   // `GetIntersectionState()` can return a reference.
