@@ -775,7 +775,7 @@ void SurfaceEmbedConnectorImpl::UpdateAccessibilityTree() {
   action_data.action = ax::mojom::Action::kStitchChildTree;
   action_data.target_tree_id = parent_ax_tree_id;
   // Note we set the target node ID and not the target role. Setting both is
-  // an error that is silently ignored.
+  // an error that is logged but the program proceeds without any other error.
   action_data.target_node_id = container_accessibility_node_id_;
   action_data.child_tree_id = child_ax_tree_id;
 
