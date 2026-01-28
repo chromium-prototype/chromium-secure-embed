@@ -11,7 +11,6 @@
 #include "components/surface_embed/common/surface_embed.mojom.h"
 #include "content/public/browser/global_routing_id.h"
 #include "content/public/browser/surface_embed_connector.h"
-#include "content/public/browser/web_contents_observer.h"
 #include "mojo/public/cpp/bindings/associated_remote.h"
 #include "mojo/public/cpp/bindings/pending_associated_receiver.h"
 #include "mojo/public/cpp/bindings/self_owned_associated_receiver.h"

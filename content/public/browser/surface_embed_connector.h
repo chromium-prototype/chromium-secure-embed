@@ -15,13 +15,13 @@
 #include "third_party/blink/public/mojom/input/focus_type.mojom.h"
 #include "ui/gfx/geometry/size.h"
 
+namespace base {
+class UnguessableToken;
+}  // namespace base
+
 namespace blink {
 struct FrameVisualProperties;
 }  // namespace blink
-
-namespace ui {
-class AXTreeID;
-}  // namespace ui
 
 namespace content {
 

@@ -250,8 +250,9 @@ class ResourceRequestBody;
 }  // namespace network
 
 namespace ui {
+class AXTreeID;
 class BrowserAccessibilityManager;
-}
+}  // namespace ui
 
 namespace ukm {
 class UkmRecorder;
