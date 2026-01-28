@@ -50,7 +50,7 @@ class COMPONENT_EXPORT(SURFACE_EMBED) SurfaceEmbedHost
       const blink::FrameVisualProperties& visual_properties,
       bool is_visible) override;
   void SetFocus(bool focused, blink::mojom::FocusType focus_type) override;
-  void SetContainerAccessibilityInfo(
+  void SetParentAccessibilityInfo(
       int ax_node_id,
       const base::UnguessableToken& ax_tree_token) override;
 
@@ -84,7 +84,7 @@ class COMPONENT_EXPORT(SURFACE_EMBED) SurfaceEmbedHost
   bool know_have_focus_ = false;
 
   // Cached accessibility info from the container element. These are stored
-  // here in case SetContainerAccessibilityInfo is called before the connector
+  // here in case SetParentAccessibilityInfo is called before the connector
   // is attached, so we can pass them to the connector once it's ready.
   int container_accessibility_node_id_ = -1;
   base::UnguessableToken container_accessibility_tree_token_;

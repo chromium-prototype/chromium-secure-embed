@@ -92,7 +92,7 @@ class CONTENT_EXPORT SurfaceEmbedConnector {
 
   // Sets the accessibility node ID and tree token of the container element
   // in the parent document. This is used to stitch the accessibility trees.
-  virtual void SetContainerAccessibilityInfo(
+  virtual void SetParentAccessibilityInfo(
       int ax_node_id,
       const base::UnguessableToken& ax_tree_token) = 0;
 };

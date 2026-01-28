@@ -80,7 +80,7 @@ class SurfaceEmbedConnectorImpl : public SurfaceEmbedConnector,
   void OnSynchronizeVisualProperties(
       const blink::FrameVisualProperties& visual_properties) override;
   const viz::FrameSinkId& GetFrameSinkId() const override;
-  void SetContainerAccessibilityInfo(
+  void SetParentAccessibilityInfo(
       int ax_node_id,
       const base::UnguessableToken& ax_tree_token) override;
   void SetFocus(bool focused, blink::mojom::FocusType focus_type) override;

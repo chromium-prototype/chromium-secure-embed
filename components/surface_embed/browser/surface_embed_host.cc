@@ -116,7 +116,7 @@ void SurfaceEmbedHost::AttachConnector(int64_t content_id) {
     // pass it to the connector now.
     if (container_accessibility_node_id_ != -1 &&
         container_accessibility_tree_token_) {
-      connector->SetContainerAccessibilityInfo(
+      connector->SetParentAccessibilityInfo(
           container_accessibility_node_id_,
           container_accessibility_tree_token_);
     }
@@ -156,7 +156,7 @@ void SurfaceEmbedHost::SetFocus(bool focused,
   }
 }
 
-void SurfaceEmbedHost::SetContainerAccessibilityInfo(
+void SurfaceEmbedHost::SetParentAccessibilityInfo(
     int ax_node_id,
     const base::UnguessableToken& ax_tree_token) {
   // Cache the accessibility info in case the connector is not yet attached.
@@ -164,7 +164,7 @@ void SurfaceEmbedHost::SetContainerAccessibilityInfo(
   container_accessibility_tree_token_ = ax_tree_token;
 
   if (content::SurfaceEmbedConnector* connector = GetConnector()) {
-    connector->SetContainerAccessibilityInfo(ax_node_id, ax_tree_token);
+    connector->SetParentAccessibilityInfo(ax_node_id, ax_tree_token);
   }
 }
 

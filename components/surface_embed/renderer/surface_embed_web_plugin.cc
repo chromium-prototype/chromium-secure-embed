@@ -4,7 +4,6 @@
 
 #include "components/surface_embed/renderer/surface_embed_web_plugin.h"
 
-#include "base/logging.h"
 #include "base/notimplemented.h"
 #include "base/notreached.h"
 #include "base/strings/string_number_conversions.h"
@@ -152,8 +151,8 @@ void SurfaceEmbedWebPlugin::SendAccessibilityInfo() {
     return;
   }
 
-  host_->SetContainerAccessibilityInfo(element_ax_object.AxID(),
-                                       frame_ax_tree_id_token.value());
+  host_->SetParentAccessibilityInfo(element_ax_object.AxID(),
+                                    frame_ax_tree_id_token.value());
 }
 
 void SurfaceEmbedWebPlugin::Destroy() {
