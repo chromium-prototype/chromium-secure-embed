@@ -188,7 +188,7 @@ Value::Value(const char* value) : Value(std::string(value)) {}
 Value::Value(const char16_t* value) : Value(UTF16ToUTF8(value)) {}
 
 Value::Value(std::string&& value) noexcept : data_(std::move(value)) {
-  // DCHECK(IsStringUTF8AllowingNoncharacters(GetString()));
+  DCHECK(IsStringUTF8AllowingNoncharacters(GetString()));
 }
 
 Value::Value(const std::vector<char>& value)
