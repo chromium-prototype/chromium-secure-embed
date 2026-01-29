@@ -10,6 +10,7 @@
 #include "components/input/render_widget_host_input_event_router.h"
 #include "content/browser/renderer_host/frame_tree.h"
 #include "content/browser/renderer_host/render_frame_host_delegate.h"
+#include "content/browser/renderer_host/render_frame_host_impl.h"
 #include "content/browser/renderer_host/render_frame_host_manager.h"
 #include "content/browser/renderer_host/render_view_host_impl.h"
 #include "content/browser/renderer_host/render_widget_host_delegate.h"
@@ -19,19 +20,18 @@
 #include "content/browser/web_contents/web_contents_impl.h"
 #include "third_party/blink/public/common/frame/frame_visual_properties.h"
 #include "third_party/blink/public/mojom/frame/intrinsic_sizing_info.mojom.h"
+#include "ui/accessibility/ax_action_data.h"
+#include "ui/accessibility/ax_enums.mojom.h"
+#include "ui/accessibility/ax_tree_id.h"
+#include "ui/accessibility/ax_updates_and_events.h"
 #include "ui/base/cursor/cursor.h"
 #include "ui/gfx/geometry/dip_util.h"
 
 // TODO(surface-embed) I believe non-public code in /content is not supposed to
 // use the public APIs if there are /content implementations. It should just use
 // the implementation directly. Review all such includes below.
-#include "content/browser/renderer_host/render_frame_host_impl.h"
 #include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/web_contents_observer.h"
-#include "ui/accessibility/ax_action_data.h"
-#include "ui/accessibility/ax_enums.mojom.h"
-#include "ui/accessibility/ax_tree_id.h"
-#include "ui/accessibility/ax_updates_and_events.h"
 
 namespace content {
 
@@ -89,7 +89,7 @@ void SurfaceEmbedConnector::Detach(WebContents* child_web_contents) {
     connector->OnVisibilityChanged(blink::mojom::FrameVisibility::kNotRendered);
 
     // Clear the container accessibility info so we don't try to stitch later.
-    connector->SetParentAccessibilityInfo(-1, base::UnguessableToken());
+    connector->SetParentAccessibilityInfo(ui::kInvalidAXNodeID, base::UnguessableToken());
   }
 
   // Clear the accessibility parent relationship.
@@ -748,7 +748,7 @@ void SurfaceEmbedConnectorImpl::OnRenderViewReady() {
 }
 
 void SurfaceEmbedConnectorImpl::UpdateAccessibilityTree() {
-  if (!guest_web_contents_ || container_accessibility_node_id_ == -1 ||
+  if (!guest_web_contents_ || container_accessibility_node_id_ == ui::kInvalidAXNodeID ||
       !container_accessibility_tree_token_) {
     return;
   }
@@ -788,7 +788,7 @@ void SurfaceEmbedConnectorImpl::UpdateAccessibilityTree() {
 }
 
 void SurfaceEmbedConnectorImpl::SetParentAccessibilityInfo(
-    int ax_node_id,
+    ui::AXNodeID ax_node_id,
     const base::UnguessableToken& ax_tree_token) {
   container_accessibility_node_id_ = ax_node_id;
   container_accessibility_tree_token_ = ax_tree_token;

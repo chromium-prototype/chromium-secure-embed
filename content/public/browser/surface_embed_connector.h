@@ -13,6 +13,7 @@
 #include "third_party/blink/public/common/input/web_keyboard_event.h"
 #include "third_party/blink/public/mojom/frame/lifecycle.mojom.h"
 #include "third_party/blink/public/mojom/input/focus_type.mojom.h"
+#include "ui/accessibility/ax_node_id_forward.h"
 #include "ui/gfx/geometry/size.h"
 
 namespace base {
@@ -93,7 +94,7 @@ class CONTENT_EXPORT SurfaceEmbedConnector {
   // Sets the accessibility node ID and tree token of the container element
   // in the parent document. This is used to stitch the accessibility trees.
   virtual void SetParentAccessibilityInfo(
-      int ax_node_id,
+      ui::AXNodeID ax_node_id,
       const base::UnguessableToken& ax_tree_token) = 0;
 };
 

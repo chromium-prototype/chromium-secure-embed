@@ -114,7 +114,7 @@ void SurfaceEmbedHost::AttachConnector(int64_t content_id) {
 
     // If accessibility info was received before the connector was attached,
     // pass it to the connector now.
-    if (container_accessibility_node_id_ != -1 &&
+    if (container_accessibility_node_id_ != ui::kInvalidAXNodeID &&
         container_accessibility_tree_token_) {
       connector->SetParentAccessibilityInfo(
           container_accessibility_node_id_,

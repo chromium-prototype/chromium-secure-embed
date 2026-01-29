@@ -16,6 +16,7 @@
 #include "mojo/public/cpp/bindings/self_owned_associated_receiver.h"
 #include "services/viz/public/mojom/compositing/local_surface_id.mojom-forward.h"
 #include "third_party/blink/public/common/frame/frame_visual_properties.h"
+#include "ui/accessibility/ax_node_id_forward.h"
 
 namespace content {
 class RenderFrameHost;
@@ -85,7 +86,7 @@ class COMPONENT_EXPORT(SURFACE_EMBED) SurfaceEmbedHost
   // Cached accessibility info from the container element. These are stored
   // here in case SetParentAccessibilityInfo is called before the connector
   // is attached, so we can pass them to the connector once it's ready.
-  int container_accessibility_node_id_ = -1;
+  ui::AXNodeID container_accessibility_node_id_ = ui::kInvalidAXNodeID;
   base::UnguessableToken container_accessibility_tree_token_;
 
   mojo::AssociatedRemote<mojom::SurfaceEmbed> surface_embed_;

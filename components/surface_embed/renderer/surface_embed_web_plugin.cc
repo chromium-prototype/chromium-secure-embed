@@ -41,24 +41,28 @@ class SurfaceEmbedWebPlugin::AccessibilityObserver
     : public content::RenderFrameObserver {
  public:
   AccessibilityObserver(content::RenderFrame* render_frame,
-                        base::WeakPtr<SurfaceEmbedWebPlugin> plugin)
-      : content::RenderFrameObserver(render_frame),
-        plugin_(std::move(plugin)) {}
+                        SurfaceEmbedWebPlugin* plugin)
+      : content::RenderFrameObserver(render_frame), plugin_(plugin) {}
   AccessibilityObserver(const AccessibilityObserver&) = delete;
   AccessibilityObserver& operator=(const AccessibilityObserver&) = delete;
   ~AccessibilityObserver() override = default;
 
   // RenderFrameObserver:
   void AccessibilityModeChanged(const ui::AXMode& mode) override {
-    if (plugin_ && mode.has_mode(ui::AXMode::kWebContents)) {
+    if (mode.has_mode(ui::AXMode::kWebContents)) {
       plugin_->OnAccessibilityModeEnabled();
     }
   }
 
-  void OnDestruct() override { delete this; }
+  void OnDestruct() override {
+    // Don't delete - we're owned by the plugin's unique_ptr.
+    // The destructor will call Dispose() to unregister from RenderFrame.
+  }
 
  private:
-  base::WeakPtr<SurfaceEmbedWebPlugin> plugin_;
+  // Safe to use raw_ptr because the plugin owns this observer via unique_ptr,
+  // so the observer's lifetime can never exceed the plugin's.
+  raw_ptr<SurfaceEmbedWebPlugin> plugin_;
 };
 
 // static
@@ -88,9 +92,8 @@ SurfaceEmbedWebPlugin::SurfaceEmbedWebPlugin(
       host_(std::move(host)),
       parent_local_surface_id_allocator_(
           std::make_unique<viz::ParentLocalSurfaceIdAllocator>()) {
-  // Create the observer after construction so weak_ptr_factory_ is initialized.
-  accessibility_observer_ = std::make_unique<AccessibilityObserver>(
-      render_frame, weak_ptr_factory_.GetWeakPtr());
+  accessibility_observer_ =
+      std::make_unique<AccessibilityObserver>(render_frame, this);
 }
 
 SurfaceEmbedWebPlugin::~SurfaceEmbedWebPlugin() = default;
@@ -136,7 +139,7 @@ void SurfaceEmbedWebPlugin::SendAccessibilityInfo() {
 
   auto element_ax_object =
       blink::WebAXObject::FromWebNode(container_->GetElement());
-  if (element_ax_object.AxID() == -1) {
+  if (element_ax_object.AxID() == ui::kInvalidAXNodeID) {
     return;
   }
 

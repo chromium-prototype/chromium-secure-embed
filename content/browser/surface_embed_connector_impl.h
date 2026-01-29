@@ -20,6 +20,7 @@
 #include "third_party/blink/public/mojom/frame/viewport_intersection_state.mojom.h"
 #include "third_party/blink/public/mojom/input/input_event_result.mojom-shared.h"
 #include "third_party/blink/public/mojom/input/pointer_lock_result.mojom-shared.h"
+#include "ui/accessibility/ax_node_id_forward.h"
 #include "ui/compositor/compositor.h"
 #include "ui/display/screen_infos.h"
 #include "ui/gfx/geometry/rect.h"
@@ -81,7 +82,7 @@ class SurfaceEmbedConnectorImpl : public SurfaceEmbedConnector,
       const blink::FrameVisualProperties& visual_properties) override;
   const viz::FrameSinkId& GetFrameSinkId() const override;
   void SetParentAccessibilityInfo(
-      int ax_node_id,
+      ui::AXNodeID ax_node_id,
       const base::UnguessableToken& ax_tree_token) override;
   void SetFocus(bool focused, blink::mojom::FocusType focus_type) override;
 
@@ -190,7 +191,7 @@ class SurfaceEmbedConnectorImpl : public SurfaceEmbedConnector,
   raw_ptr<RenderWidgetHostViewChildFrame> view_ = nullptr;
 
   // The accessibility node ID of the embed HTML element in the parent document.
-  int container_accessibility_node_id_ = -1;
+  ui::AXNodeID container_accessibility_node_id_ = ui::kInvalidAXNodeID;
   // The accessibility tree token of the parent frame.
   base::UnguessableToken container_accessibility_tree_token_;
 
