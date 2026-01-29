@@ -89,7 +89,8 @@ void SurfaceEmbedConnector::Detach(WebContents* child_web_contents) {
     connector->OnVisibilityChanged(blink::mojom::FrameVisibility::kNotRendered);
 
     // Clear the container accessibility info so we don't try to stitch later.
-    connector->SetParentAccessibilityInfo(ui::kInvalidAXNodeID, base::UnguessableToken());
+    connector->SetParentAccessibilityInfo(ui::kInvalidAXNodeID,
+                                          base::UnguessableToken());
   }
 
   // Clear the accessibility parent relationship.
@@ -748,7 +749,8 @@ void SurfaceEmbedConnectorImpl::OnRenderViewReady() {
 }
 
 void SurfaceEmbedConnectorImpl::UpdateAccessibilityTree() {
-  if (!guest_web_contents_ || container_accessibility_node_id_ == ui::kInvalidAXNodeID ||
+  if (!guest_web_contents_ ||
+      container_accessibility_node_id_ == ui::kInvalidAXNodeID ||
       !container_accessibility_tree_token_) {
     return;
   }
