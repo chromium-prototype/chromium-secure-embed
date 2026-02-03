@@ -30,7 +30,8 @@ interface Page {
 
   // Shows the side panel UI. The side panel contents is hosted by a guest
   // contents.
-  ShowSidePanel(mojo_base.mojom.UnguessableToken guest_contents_id, string title);
+  ShowSidePanel(mojo_base.mojom.UnguessableToken guest_contents_id,
+                string title);
 
   // Closes the side panel, destroys the webview.
   CloseSidePanel();

@@ -16,11 +16,11 @@ interface PageHandlerFactory {
 // Browser-side handler for requests from WebUI page.
 interface PageHandler {
   // Navigates the WebView with `guest_contents_id` to `src`.
-  Navigate(int32 guest_contents_id, url.mojom.Url src);
+  Navigate(string guest_contents_id, url.mojom.Url src);
 
   // Navigates the WebView with `guest_contents_id` to back in the nav stack.
-  GoBack(int32 guest_contents_id);
+  GoBack(string guest_contents_id);
 
   // Navigates the WebView with `guest_contents_id` to forward in the nav stack.
-  GoForward(int32 guest_contents_id);
+  GoForward(string guest_contents_id);
 };
