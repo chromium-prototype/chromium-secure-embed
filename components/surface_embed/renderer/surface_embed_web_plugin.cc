@@ -36,6 +36,20 @@
 
 namespace surface_embed {
 
+namespace {
+
+base::UnguessableToken DecodeContentId(const std::string& id_string) {
+  if (id_string.empty()) {
+    return base::UnguessableToken();
+  }
+  std::optional<base::UnguessableToken> maybe_id =
+      base::UnguessableToken::DeserializeFromString(id_string);
+  CHECK(maybe_id.has_value());
+  return *maybe_id;
+}
+
+}  // namespace
+
 // Helper class to detect when accessibility mode is enabled.
 class SurfaceEmbedWebPlugin::AccessibilityObserver
     : public content::RenderFrameObserver {
@@ -76,9 +90,7 @@ SurfaceEmbedWebPlugin* SurfaceEmbedWebPlugin::Create(
   base::UnguessableToken contents_id;
   for (size_t i = 0; i < params.attribute_names.size(); ++i) {
     if (params.attribute_names[i].Utf8() == "data-content-id") {
-      contents_id = base::UnguessableToken::DeserializeFromString(
-                        params.attribute_values[i].Utf8())
-                        .value_or(base::UnguessableToken());
+      contents_id = DecodeContentId(params.attribute_values[i].Utf8());
       break;
     }
   }
@@ -368,8 +380,7 @@ void SurfaceEmbedWebPlugin::UpdateDataAttribute(
   // We treat invalid values as empty/detach here to make detach syntax not
   // rely on our implementation details.
   base::UnguessableToken new_contents_id =
-      base::UnguessableToken::DeserializeFromString(attribute_value.Utf8())
-          .value_or(base::UnguessableToken());
+      DecodeContentId(attribute_value.Utf8());
   if (new_contents_id == contents_id_) {
     return;
   }

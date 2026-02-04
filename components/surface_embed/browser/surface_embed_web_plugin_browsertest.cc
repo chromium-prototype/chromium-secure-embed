@@ -493,20 +493,21 @@ IN_PROC_BROWSER_TEST_F(SurfaceEmbedRendererTest, Detach) {
   EXPECT_EQ(1, host->attach_call_count());
   EXPECT_FALSE(host->last_content_id().is_empty());
 
-  // Change the data-content-id attribute to 0 to trigger a detach.
+  // Change the data-content-id attribute to an empty string to trigger a
+  // detach.
   ASSERT_TRUE(content::ExecJs(
       web_contents(),
-      "document.embeds[0].setAttribute('data-content-id', '0');"));
+      "document.embeds[0].setAttribute('data-content-id', '');"));
 
   ASSERT_TRUE(WaitForDetachCall(host));
   EXPECT_EQ(1, host->detach_call_count());
   EXPECT_TRUE(host->last_content_id().is_empty());
 }
 
-IN_PROC_BROWSER_TEST_F(SurfaceEmbedRendererTest,
-                       UpdateDataAttributeWithInvalidStrings) {
+IN_PROC_BROWSER_TEST_F(SurfaceEmbedRendererTest, Detach2) {
   NavigateToTestUrl(kTestUrl);
-  ASSERT_EQ(kSingleEmbedCount, CountEmbedElementsInPage());
+
+  EXPECT_EQ(kSingleEmbedCount, CountEmbedElementsInPage());
   ASSERT_EQ(kSingleEmbedCount, GetMockHostCount());
 
   MockSurfaceEmbedHost* host = GetMockHost(0);
@@ -516,38 +517,14 @@ IN_PROC_BROWSER_TEST_F(SurfaceEmbedRendererTest,
   EXPECT_EQ(1, host->attach_call_count());
   EXPECT_FALSE(host->last_content_id().is_empty());
 
-  // Test a variety of invalid data-content-id attribute values to ensure that
-  // they don't lead to calls to attach on the host. The first one will cause a
-  // detach.
+  // Remove the data-content-id attribute to trigger a detach.
   ASSERT_TRUE(content::ExecJs(
       web_contents(),
-      "document.embeds[0].setAttribute('data-content-id', 'invalid');"));
-  EXPECT_EQ(1, host->attach_call_count());
+      "document.embeds[0].removeAttribute('data-content-id');"));
+
+  ASSERT_TRUE(WaitForDetachCall(host));
   EXPECT_EQ(1, host->detach_call_count());
   EXPECT_TRUE(host->last_content_id().is_empty());
-
-  ASSERT_TRUE(content::ExecJs(
-      web_contents(),
-      "document.embeds[0].setAttribute('data-content-id', '123abc');"));
-  EXPECT_EQ(1, host->attach_call_count());
-  EXPECT_EQ(1, host->detach_call_count());
-  EXPECT_TRUE(host->last_content_id().is_empty());
-
-  ASSERT_TRUE(content::ExecJs(
-      web_contents(),
-      "document.embeds[0].setAttribute('data-content-id', '');"));
-  EXPECT_EQ(1, host->attach_call_count());
-  EXPECT_EQ(1, host->detach_call_count());
-  EXPECT_TRUE(host->last_content_id().is_empty());
-
-  base::UnguessableToken id2 = base::UnguessableToken::Create();
-  ASSERT_TRUE(content::ExecJs(
-      web_contents(),
-      base::StrCat({"document.embeds[0].setAttribute('data-content-id', '",
-                    id2.ToString(), "');"})));
-  ASSERT_TRUE(WaitForAttachCall(host));
-  EXPECT_EQ(2, host->attach_call_count());
-  EXPECT_EQ(id2, host->last_content_id());
 }
 
 }  // namespace surface_embed

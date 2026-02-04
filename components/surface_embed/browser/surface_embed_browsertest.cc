@@ -603,8 +603,8 @@ IN_PROC_BROWSER_TEST_F(SurfaceEmbedBrowserTest, Detach) {
 
   VerifyBoxRendering(SK_ColorRED);
 
-  // Change the data-content-id attribute to 0 to trigger a detach.
-  std::string script_cause_detach = "setDataContentId(0);";
+  // Change the data-content-id attribute to '' to trigger a detach.
+  std::string script_cause_detach = "setDataContentId('');";
   ASSERT_TRUE(content::ExecJs(web_contents(), script_cause_detach));
   EXPECT_EQ(guest_contents->GetSurfaceEmbedConnector(), nullptr);
   VerifyBoxRendering(SK_ColorWHITE);
@@ -679,8 +679,8 @@ IN_PROC_BROWSER_TEST_F(SurfaceEmbedBrowserTest,
   AttachGuestToEmbed(guest_contents.get());
   VerifyBoxRendering(SK_ColorRED);
 
-  // Change the data-content-id attribute to 0 to trigger a detach.
-  std::string script_cause_detach = "setDataContentId(0);";
+  // Change the data-content-id attribute to '' to trigger a detach.
+  std::string script_cause_detach = "setDataContentId('');";
   ASSERT_TRUE(content::ExecJs(web_contents(), script_cause_detach));
   EXPECT_EQ(guest_contents->GetSurfaceEmbedConnector(), nullptr);
   VerifyBoxRendering(SK_ColorWHITE);
@@ -691,40 +691,6 @@ IN_PROC_BROWSER_TEST_F(SurfaceEmbedBrowserTest,
       "setDataContentId(" + FormatGuestId(guest_id) + ");";
   ASSERT_TRUE(content::ExecJs(web_contents(), script_reattach));
   VerifyBoxRendering(SK_ColorRED);
-}
-
-IN_PROC_BROWSER_TEST_F(SurfaceEmbedBrowserTest, InvalidContentIdNegative) {
-  // Test that specifying an invalid (negative) content_id creates a host but
-  // doesn't attach any guest, resulting in white rendering.
-  NavigateToAttachHarness();
-
-  std::string script = "createEmbed(-1);";
-  ASSERT_TRUE(content::ExecJs(web_contents(), script));
-
-  // Host should be created even with invalid content_id but no attach should
-  // happen.
-  ASSERT_TRUE(WaitForHostCreation());
-  EXPECT_EQ(1u, SurfaceEmbedHost::GetInstanceCountForTesting());
-  EXPECT_EQ(0u, SurfaceEmbedHost::GetAttachedInstanceCountForTesting());
-  VerifyBoxRendering(SK_ColorWHITE);
-}
-
-IN_PROC_BROWSER_TEST_F(SurfaceEmbedBrowserTest,
-                       AttachValidGuestThenUpdateToNegativeContentId) {
-  // Test that attaching a valid guest shows its content, but updating to a
-  // negative content_id detaches and results in white rendering.
-  auto guest_contents = SetupHarnessAndGuestWithContent(kRedBoxUrl);
-  AttachGuestToEmbed(guest_contents.get());
-
-  VerifyBoxRendering(SK_ColorRED);
-  EXPECT_NE(guest_contents->GetSurfaceEmbedConnector(), nullptr);
-
-  // Update the data-content-id to a negative number to trigger detachment.
-  std::string script_detach = "setDataContentId(-5);";
-  ASSERT_TRUE(content::ExecJs(web_contents(), script_detach));
-
-  VerifyBoxRendering(SK_ColorWHITE);
-  EXPECT_EQ(guest_contents->GetSurfaceEmbedConnector(), nullptr);
 }
 
 // Tests that calling focus() on an <embed> makes the guest WebContents focused.
