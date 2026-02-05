@@ -127,7 +127,7 @@ class MockSurfaceEmbedHost : public mojom::SurfaceEmbedHost {
 
   void SetParentAccessibilityInfo(
       int32_t ax_node_id,
-      const base::UnguessableToken& ax_tree_token) override {}
+      const ::base::UnguessableToken& ax_tree_token) override {}
 
   void OnSurfaceEmbedDisconnected() { surface_embed_.reset(); }
 
